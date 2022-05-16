@@ -1,7 +1,187 @@
+=== release 1.20.2 ===
+
+2022-05-02 23:29:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* docs/gst_plugins_cache.json:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.20.2
+
+2022-05-02 23:29:19 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.20.2
+
+2022-04-27 12:24:23 +0900  dongil.park <dongil.park@lge.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: Unset DISCONT buffer flag for divided into multiple buffers in push mode
+	  In push mode (streaming), if the received chunk buffer size from _chain is bigger
+	  than output buffer size, the flags of the divided-buffers are propagated to the
+	  DISCONT flag from first received chunk buffer. This unexpected buffers contained DISCONT
+	  flags are abnormally transformed when changing the sampling rate by audioresample element.
+	  So unset unnecessary DISCONT flag before pad_push().
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2322>
+
+2022-04-23 01:57:53 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtp/gstrtpredenc.c:
+	* gst/rtp/gstrtpredenc.h:
+	  rtpredenc: quieten warning about ignoring header extensions
+	  Turn it into a FIXME, and only log once
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2281>
+
+2022-04-15 09:53:19 +0800  Hou Qi <qi.hou@nxp.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: copy colorimetry values to output_state caps
+	  This is to avoid transcoding negotiation fail between v4l2h265dec
+	  and v4l2h264enc caused by colorimetry mismatch.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2220>
+
+2022-04-07 11:12:47 +1000  Havard Graff <havard.graff@gmail.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: fix leak of channel_mapping
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2184>
+
+2022-04-06 09:46:30 -0400  Tristan Matthews <tmatth@videolan.org>
+
+	* gst/rtp/gstrtpopusdepay.c:
+	  rtpopusdepay: assume 2 channels if sprop-stereo is missing
+	  Fixes #1064
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2139>
+
+2022-03-26 01:02:02 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/soup/meson.build:
+	  meson: Add some messages when selecting libsoup
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2082>
+
+2022-03-26 00:59:12 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  soup: Fix usage of symbols / defines that are gone in libsoup3
+	  I am not sure about the SOUP_MESSAGE_OVERWRITE_CHUNKS change, but it
+	  was definitely already broken when using libsoup-3.0 in a shared
+	  build. souphttpsrc probably needs to be ported from SoupMessage to
+	  SoupServerMessage when using libsoup-3.0.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1111
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2082>
+
+2022-03-26 00:56:04 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/soup/gstsouploader.c:
+	* ext/soup/gstsouploader.h:
+	  soup: Fix pre-processor macros in souploader for libsoup-3.0
+	  Some of the preprocessor conditionals in the loader were very broken
+	  with libsoup-3.0 + --default-library=static
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1111
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2082>
+
+2022-03-28 18:12:03 +1100  Matthew Waters <matthew@centricular.com>
+
+	* sys/osxaudio/gstosxcoreaudio.c:
+	  osxcoreaudio: fix unused-but-set warning
+	  ../sys/osxaudio/gstosxcoreaudio.c:480:18: error: variable 'interleaved' set but not used [-Werror,-Wunused-but-set-variable]
+	  gboolean sign, interleaved;
+	  ^
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2068>
+
+2022-03-28 13:35:17 +1100  Matthew Waters <matthew@centricular.com>
+
+	* gst/deinterlace/tvtime/tomsmocomp/SearchLoopTop.inc:
+	  deinterlace: silence unused-but-set werror from imported code
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2062>
+
+2022-03-28 09:50:38 +1100  Matthew Waters <matthew@centricular.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: fix unused-but-set-variable warning
+	  ../sys/osxvideo/osxvideosink.m:859:11: error: variable 'data' set but not used [-Werror,-Wunused-but-set-variable]
+	  guint8 *data, *readp, *writep;
+	  ^
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2055>
+
+2021-11-17 17:27:13 +1100  Matthew Waters <matthew@centricular.com>
+
+	* gst/rtpmanager/gstrtpptdemux.c:
+	  rtpptdemux: fix leak of caps when ignoring a pt
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2033>
+
+2022-03-18 15:20:49 +0100  Stéphane Cerveau <scerveau@collabora.com>
+
+	* gst/wavparse/gstwavparse.c:
+	* tests/check/elements/wavparse.c:
+	  wavparse: handle query in any parse state
+	  In order to create the stream_id, we need to
+	  pass the query to the default query handler.
+	  If the parse state is different from GST_WAVPARSE_DATA
+	  the query should be passed to the default query
+	  handler.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2011>
+
+2022-03-15 15:44:17 +0900  Sangchul Lee <sc11.lee@samsung.com>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  rtpjitterbuffer: Fix invalid memory access in rtp_jitter_buffer_pop()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1994>
+
+2022-01-26 10:06:50 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: Handle caps changes
+	  As this element is single threaded, we only need to stop the objects to
+	  allow changing the format again. Fixes assertion notably on shutdown and
+	  on some other situation where the format may be set twice without
+	  actually activating the element.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1991>
+
+2022-01-26 09:55:09 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Avoid crash on early failure
+	  This happens while an external error lead to an early shutdown.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1991>
+
+2022-03-14 16:19:33 +0800  Hou Qi <qi.hou@nxp.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: set frame duration according to framerate
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1989>
+
+2022-03-14 12:29:04 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtptwcc.c:
+	  twcc: Add some logging to debug TWCC feedback
+	  This should allow people to debug when TWCC feedback is not enabled
+	  because they haven't set the extmap in the caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1979>
+
+2022-03-14 13:45:36 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  twcc: Note that packet-loss-pct can count reordering as loss
+	  This is difficult to encounter in ordinary networks, but is
+	  encountered when using tc-netem to add random delays to packets, and
+	  also when your UDP stream is bonded over multiple links with varying
+	  characteristics.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1979>
+
+2022-03-14 14:48:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
 === release 1.20.1 ===
 
 2022-03-14 11:33:33 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* docs/gst_plugins_cache.json:
