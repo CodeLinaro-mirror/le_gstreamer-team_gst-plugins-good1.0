@@ -1,4 +1,4 @@
-gst-plugins-good1.0 (1.20.2-1ubuntu1) UNRELEASED; urgency=medium
+gst-plugins-good1.0 (1.20.2-1ubuntu1) kinetic; urgency=medium
 
   * Merge from Debian unstable. Remaining changes:
     + Import plugins from -bad that are needed for main applications.
@@ -11,8 +11,10 @@ gst-plugins-good1.0 (1.20.2-1ubuntu1) UNRELEASED; urgency=medium
       some external software
     + debian/control{,.in}: Update Vcs-* for Ubuntu
     + Don't require libqt5waylandclient5-dev Build-Depends on i386
+  * Don't ignore dh_auto_test failures
+  * Add a patch to skip 2 test failures
 
- -- Jeremy Bicha <jeremy.bicha@canonical.com>  Tue, 15 Mar 2022 10:17:46 -0400
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Mon, 16 May 2022 14:44:44 -0400
 
 gst-plugins-good1.0 (1.20.2-1) unstable; urgency=medium
 
