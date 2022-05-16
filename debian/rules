@@ -49,7 +49,7 @@ override_dh_auto_clean:
 	dh_auto_clean
 
 override_dh_auto_test:
-	xvfb-run dh_auto_test || true
+	xvfb-run dh_auto_test
 
 override_dh_strip:
 	dh_strip --dbgsym-migration='gstreamer1.0-plugins-good-dbg (<< 1.17.1-1~)'
