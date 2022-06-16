@@ -1,3 +1,9 @@
+gst-plugins-good1.0 (1.20.2-1ubuntu2) kinetic; urgency=medium
+
+  * Only make dh_auto_test fail the build for key architectures
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Mon, 23 May 2022 16:04:10 -0400
+
 gst-plugins-good1.0 (1.20.2-1ubuntu1) kinetic; urgency=medium
 
   * Merge from Debian unstable. Remaining changes:
