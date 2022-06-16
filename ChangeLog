@@ -1,7 +1,377 @@
+=== release 1.20.3 ===
+
+2022-06-15 23:36:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* docs/gst_plugins_cache.json:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.20.3
+
+2022-06-15 23:36:10 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.20.3
+
+2022-05-18 10:23:15 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Avoid integer-overflow resulting in heap corruption in WavPack header handling code
+	  blocksize + WAVPACK4_HEADER_SIZE might overflow gsize, which then
+	  results in allocating a very small buffer. Into that buffer blocksize
+	  data is memcpy'd later which then causes out of bound writes and can
+	  potentially lead to anything from crashes to remote code execution.
+	  Thanks to Adam Doupe for analyzing and reporting the issue.
+	  CVE: CVE-2022-1920
+	  https://gstreamer.freedesktop.org/security/sa-2022-0004.html
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1226
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2613>
+
+2022-05-30 10:15:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Fix integer overflows in zlib decompression code
+	  Various variables were of smaller types than needed and there were no
+	  checks for any overflows when doing additions on the sizes. This is all
+	  checked now.
+	  In addition the size of the decompressed data is limited to 200MB now as
+	  any larger sizes are likely pathological and we can avoid out of memory
+	  situations in many cases like this.
+	  Also fix a bug where the available output size on the next iteration in
+	  the zlib decompression code was provided too large and could
+	  potentially lead to out of bound writes.
+	  Thanks to Adam Doupe for analyzing and reporting the issue.
+	  CVE: tbd
+	  https://gstreamer.freedesktop.org/security/sa-2022-0003.html
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1225
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2611>
+
+2022-05-18 11:24:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-read-common.c:
+	  matroskademux: Fix integer overflows in zlib/bz2/etc decompression code
+	  Various variables were of smaller types than needed and there were no
+	  checks for any overflows when doing additions on the sizes. This is all
+	  checked now.
+	  In addition the size of the decompressed data is limited to 120MB now as
+	  any larger sizes are likely pathological and we can avoid out of memory
+	  situations in many cases like this.
+	  Also fix a bug where the available output size on the next iteration in
+	  the zlib/bz2 decompression code was provided too large and could
+	  potentially lead to out of bound writes.
+	  Thanks to Adam Doupe for analyzing and reporting the issue.
+	  CVE: CVE-2022-1922, CVE-2022-1923, CVE-2022-1924, CVE-2022-1925
+	  https://gstreamer.freedesktop.org/security/sa-2022-0002.html
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1225
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2611>
+
+2022-05-18 12:00:48 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Fix integer overflow resulting in heap corruption in DIB buffer inversion code
+	  Check that width*bpp/8 doesn't overflow a guint and also that
+	  height*stride fits into the provided buffer without overflowing.
+	  Thanks to Adam Doupe for analyzing and reporting the issue.
+	  CVE: CVE-2022-1921
+	  See https://gstreamer.freedesktop.org/security/sa-2022-0001.html
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1224
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2609>
+
+2022-05-19 04:16:25 +0000  Adam Doupe <adamdoupe@gmail.com>
+
+	* gst/smpte/gstmask.c:
+	  smpte: Fix integer overflow with possible heap corruption in GstMask creation.
+	  Check that width*height*sizeof(guint32) doesn't overflow when
+	  allocated user_data for mask, potential for heap overwrite when
+	  inverting.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1231
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2605>
+
+2022-06-07 17:31:43 +0200  Bastien Nocera <hadess@hadess.net>
+
+	* ext/gtk/gtkgstglwidget.c:
+	  gtk: Fix double-free when OpenGL can't be initialised
+	  gtk_gl_area_get_error() doesn't return a copy of the error, but just the
+	  error. If initialising OpenGL fails, then GtkGstGLWidget will consume
+	  the error, and cause GTK to try and display freed memory.
+	  ==50914== Invalid read of size 8
+	  ==50914==    at 0x4C4CB8A: gtk_gl_area_draw_error_screen (gtkglarea.c:663)
+	  ==50914==    by 0x4C4CB8A: gtk_gl_area_draw (gtkglarea.c:687)
+	  ==50914==    by 0x4E061CA: gtk_widget_draw_internal (gtkwidget.c:7084)
+	  ==50914==    by 0x4BAEFB1: gtk_container_propagate_draw (gtkcontainer.c:3854)
+	  ==50914==    by 0x4D4B6BF: gtk_stack_render (gtkstack.c:2207)
+	  ==50914==    by 0x4BB4B03: gtk_css_custom_gadget_draw (gtkcsscustomgadget.c:159)
+	  ==50914==    by 0x4BBA4C4: gtk_css_gadget_draw (gtkcssgadget.c:885)
+	  ==50914==    by 0x4D4D780: gtk_stack_draw (gtkstack.c:2119)
+	  ==50914==    by 0x4E061CA: gtk_widget_draw_internal (gtkwidget.c:7084)
+	  ==50914==    by 0x4BAEFB1: gtk_container_propagate_draw (gtkcontainer.c:3854)
+	  ==50914==    by 0x4BAF0C3: gtk_container_draw (gtkcontainer.c:3674)
+	  ==50914==    by 0x4E061CA: gtk_widget_draw_internal (gtkwidget.c:7084)
+	  ==50914==    by 0x4BAEFB1: gtk_container_propagate_draw (gtkcontainer.c:3854)
+	  ==50914==  Address 0x187a0818 is 8 bytes inside a block of size 16 free'd
+	  ==50914==    at 0x48480E4: free (vg_replace_malloc.c:872)
+	  ==50914==    by 0x49A5B8C: g_free (gmem.c:218)
+	  ==50914==    by 0x49C1013: g_slice_free1 (gslice.c:1183)
+	  ==50914==    by 0x4990DE4: g_error_free (gerror.c:870)
+	  ==50914==    by 0x4990FE9: g_clear_error (gerror.c:1052)
+	  ==50914==    by 0x1A489780: _get_gl_context (gtkgstglwidget.c:540)
+	  ==50914==    by 0x1A4863CB: gst_gtk_invoke_func (gstgtkutils.c:39)
+	  ==50914==    by 0x49A3834: g_main_context_invoke_full (gmain.c:6137)
+	  ==50914==    by 0x1A486450: gst_gtk_invoke_on_main (gstgtkutils.c:59)
+	  ==50914==    by 0x1A48A29E: gtk_gst_gl_widget_init_winsys (gtkgstglwidget.c:632)
+	  ==50914==    by 0x1A4887E7: gst_gtk_gl_sink_start (gstgtkglsink.c:267)
+	  ==50914==    by 0x6579810: gst_base_sink_change_state (gstbasesink.c:5662)
+	  ==50914==  Block was alloc'd at
+	  ==50914==    at 0x484586F: malloc (vg_replace_malloc.c:381)
+	  ==50914==    by 0x49A9278: g_malloc (gmem.c:125)
+	  ==50914==    by 0x49C1BA5: g_slice_alloc (gslice.c:1072)
+	  ==50914==    by 0x49C3BCC: g_slice_alloc0 (gslice.c:1098)
+	  ==50914==    by 0x499096B: g_error_allocate (gerror.c:708)
+	  ==50914==    by 0x4990AF1: UnknownInlinedFun (gerror.c:722)
+	  ==50914==    by 0x4990AF1: g_error_copy (gerror.c:892)
+	  ==50914==    by 0x4C4B9F9: gtk_gl_area_set_error (gtkglarea.c:1036)
+	  ==50914==    by 0x4C4BAF7: gtk_gl_area_real_create_context (gtkglarea.c:346)
+	  ==50914==    by 0x4B21B28: _gtk_marshal_OBJECT__VOIDv (gtkmarshalers.c:2730)
+	  ==50914==    by 0x4920B78: UnknownInlinedFun (gclosure.c:893)
+	  ==50914==    by 0x4920B78: g_signal_emit_valist (gsignal.c:3406)
+	  ==50914==    by 0x4920CB2: g_signal_emit (gsignal.c:3553)
+	  ==50914==    by 0x4C4B927: gtk_gl_area_realize (gtkglarea.c:308)
+	  Reproduced by running:
+	  MESA_GL_VERSION_OVERRIDE=2.7 totem
+	  See https://gitlab.gnome.org/GNOME/totem/-/issues/522
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2567>
+
+2022-06-03 18:35:54 +0200  Jan Alexander Steffens (heftig) <jan.steffens@ltnglobal.com>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: Avoid mismatch between src_caps and output_header_type
+	  If our downstream caps didn't intersect, we attempted to convert between
+	  raw and ADTS stream formats, if possible. If the caps still did not
+	  intersect, we then used the modified `src_caps` but left the
+	  `output_header_type` unmodified.
+	  This caused a mismatch between caps and actual stream format.
+	  Avoid this by first copying the `src_caps` to `convcaps` for the
+	  additional intersection tests, replacing `src_caps` if we succeed.
+	  While we're here, clean up the code a bit and remove the `codec_data`
+	  field from outgoing ADTS caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2563>
+
+2022-06-04 10:27:09 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvelement.c:
+	  flvdemux: Actually make use of the debug category
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2560>
+
+2022-06-01 16:14:24 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ext/soup/gstsoup.c:
+	* ext/soup/gstsoupelement.c:
+	* ext/soup/gstsouploader.c:
+	  soup: fix soup debug category
+	  Use soup debug category in souploader
+	  for soup plugin element load.
+	  Inititalize properly soup utils category.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2547>
+
+2022-05-29 20:27:38 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtpmanager/gstrtpptdemux.c:
+	  rtpptdemux: Don't GST_FLOW_ERROR when ignoring invalid packets
+	  https://bugzilla.gnome.org/show_bug.cgi?id=741398 changed
+	  rtpptdemux in 2014 to not post a GST_ELEMENT_ERROR on the
+	  bus when dropping an invalid (non-RTP) packet, but still
+	  returned GST_FLOW_ERROR upstream - so the pipeline still
+	  stops, but now without a useful bus error.
+	  Return GST_FLOW_OK instead, so the pipeline keeps
+	  running. Some old telephony equipment can send invalid
+	  packets before the real RTP traffic starts.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2523>
+
+2022-05-28 16:46:04 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/jack/gstjackaudiosrc.c:
+	  jack: Always use jack_free as specified by the docs
+	  Fixes a crash on Windows due to a CRT mismatch. The JACK installation
+	  still uses MSVCRT, and we the Universal CRT for both MinGW and MSVC.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2515>
+
+2022-05-26 01:21:43 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/jack/meson.build:
+	  jack: Add support for detecting libjack on Windows
+	  No source code changes were necessary to get the plugin working on
+	  Windows with MSVC.
+	  Run QJackCtl and audiotestsrc ! jackaudiosink just works.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2515>
+
+2022-05-24 16:07:13 +0800  Hou Qi <qi.hou@nxp.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: Reset transfer in gst_v4l2_object_acquire_format()
+	  get_colorspace() checks input caps transfer when mapping V4L2_XFER_FUNC_709
+	  back to V4L2_COLORSPACE_BT2020 and GST_VIDEO_TRANSFER_BT2020_12. After
+	  receiving source change event, decoder will G_FMT and S_FMT again. So need
+	  to reset transfer when acquiring format to avoid using the old transfer.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2505>
+
+2022-05-03 11:34:15 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ext/soup/gstsoup.c:
+	* ext/soup/gstsoupelement.c:
+	* ext/soup/gstsoupelements.h:
+	* ext/soup/gstsouphttpclientsink.c:
+	* ext/soup/gstsouphttpsrc.c:
+	  soup: Fix plugin/element init
+	  In case of per features registration such as the
+	  customizable gstreamer-full library, each
+	  element should check that the soup library can be loaded to
+	  facilitate the element registration.
+	  Initialize the debug category properly
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2491>
+
+2022-05-23 21:24:40 -0400  Eli Schwartz <eschwartz@archlinux.org>
+
+	* meson.build:
+	  meson: use better zlib dependency fallback
+	  zlib is required, and if it isn't found it is checked several ways and
+	  then forced via subproject(). This code was added in commit
+	  b93e37592a3ccc0eaece1c8fef2d362b1e5fe685, to account for systems where
+	  zlib doesn't have pkg-config files installed.
+	  But Meson already does dependency fallback, and also, since 0.54.0, does
+	  the in-between checks for find_library('z') and has_header('zlib.h') via
+	  the "system" type dependency. Simplify dependency lookup by marking it
+	  as required, which also makes sure that the console log doesn't
+	  confusingly list "not found".
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2486>
+
+2022-05-16 14:14:46 +0200  Jan Alexander Steffens (heftig) <jan.steffens@ltnglobal.com>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: Clean up error handling in chain and _push_history
+	  - Consistently unref the chained buffer at the end of the chain
+	  function, if we're not handing it off to `gst_pad_push`. This avoids a
+	  few buffer leaks in the error paths in `_chain` and `_push_history`.
+	  - When mapping the video frame fails, return a flow error instead of
+	  crashing.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2444>
+
+2022-05-11 15:18:42 +0200  Guillaume Desmottes <guillaume.desmottes@onestream.live>
+
+	* ext/vpx/gstvpxenc.c:
+	  vpxenc: fix crash if encoder produces unmatching ts
+	  If for some reason the encoder produces frames with a pts higher than
+	  the input one, we were dropping all the video encoder frames and ended
+	  up crashing when trying to access the pts of a NULL pointer returned by
+	  gst_video_encoder_get_oldest_frame().
+	  I hit this scenario by feeding a decreasing timestamp to vp8enc which
+	  seem to confuse the encoder.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2436>
+
+2022-05-13 01:42:21 +0000  Thibault Saunier <tsaunier@igalia.com>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  rtpbin: Avoid holding lock GST_RTP_BIN_LOCK  when emitting pad-added
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2415>
+
+2022-05-12 17:11:38 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Don't use tfdt for parsing subsequent trun boxes
+	  The timestamp in the tfdt refers to the first trun box and if there are
+	  multiple trun boxes then the distance between the first timestamps will
+	  grow.
+	  At some point this distance reaches a threshold and triggers the
+	  resetting of the first sample's timestamp of this trun box to be reset
+	  to the tfdt.
+	  This threshold is implemented for files where there is a jump in the
+	  timeline between fragments and where this can be detected via a jump
+	  between the end timestamp of the previous fragment and the tfdt of the
+	  next. This behaviour is preserved.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2414>
+
+2022-04-28 09:19:57 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2videoenc.c:
+	  v4l2videoenc: Setup crop rectangle if needed
+	  Hantro H1 and Rockchip VEPU2 drivers will pad the width/height to a
+	  multiple of 16. In order to obtain the right JPEG size, the image needs
+	  to be cropped using the S_SELECTION API. This support is added as best
+	  effort since older drivers may emulate this by looking at the capture
+	  queue width/height.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2392>
+
+2021-09-30 17:56:56 +0900  Damian Hobson-Garcia <dhobsong@igel.co.jp>
+
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2object: rename crop function to reflect its usage
+	  The gst_v4l2_object_set_crop() is used for removing buffer
+	  alignment padding. Give it a name that better reflects
+	  that usage.  This helps to distinguish from cropping of the
+	  input image (e.g. cropping at the image sensor on a captre
+	  device), which can be  unrelated to the memory buffer padding,
+	  especially if scaling is involved.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2392>
+
+2022-05-05 20:36:04 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  mp4mux: Disable aggregator's default negotiation
+	  mp4mux can't negotiate caps with upstream/downstream and always outputs
+	  specific caps based on the input streams. This will always happen before
+	  it produces the first buffers.
+	  By having the default aggregator negotiation enabled the same caps
+	  would be pushed twice in the beginning, and again every time a
+	  reconfigure event is received.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2381>
+
+2022-05-05 20:24:57 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/flv/gstflvmux.c:
+	  flvmux: Disable aggregator's default negotiation
+	  flvmux can't negotiate caps with upstream/downstream and always outputs
+	  specific caps based on the input streams. This will always happen before
+	  it produces the first buffers.
+	  By having the default aggregator negotiation enabled the same caps
+	  would be pushed twice in the beginning, and again every time a
+	  reconfigure event is received.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2381>
+
+2022-05-03 17:27:32 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: ensure that any pending segment is sent before an EOS event is sent
+	  Specifically fixes seqnum handling when an aggregator-based element
+	  (audiomixer et al) is downstream and a seek is performed that
+	  immediately causes an EOS from wavparse.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2369>
+
+2021-11-12 20:13:10 +0100  Ruben Gonzalez <rgonzalez@fluendo.com>
+
+	* docs/gst_plugins_cache.json:
+	  gst_plugin_load_file: force plugin reload if diff filename
+	  If a file includes a new version of a plugin that exits in the
+	  registry, the output of gst-inspect is incorrect. The output has the
+	  correct version but incorrect filename, and element description.
+	  This seems to have also fixed some documentation issues.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2357>
+
+2022-05-03 00:39:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2347>
+
 === release 1.20.2 ===
 
 2022-05-02 23:29:25 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* docs/gst_plugins_cache.json:

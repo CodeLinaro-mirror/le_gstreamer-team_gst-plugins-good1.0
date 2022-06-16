@@ -1,3 +1,38 @@
+gst-plugins-good1.0 (1.20.3-1ubuntu1) UNRELEASED; urgency=medium
+
+  * Merge from Debian unstable. Remaining changes:
+    + Import plugins from -bad that are needed for main applications.
+      - jpegformat
+      - camerabin (+ basecamerabinsrc + photography)
+    + Add a library package containing the shared library and a -dev package for
+      compiling against it. Add Breaks and Replaces against the plugins packages
+      which formerly contained files shipped here.
+    + Add 'pluginsdir' variable to our added pcfile for compatibility with
+      some external software
+    + debian/control{,.in}: Update Vcs-* for Ubuntu
+    + Don't require libqt5waylandclient5-dev Build-Depends on i386
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Mon, 16 May 2022 14:44:44 -0400
+
+gst-plugins-good1.0 (1.20.3-1) unstable; urgency=medium
+
+  [ Sebastian Dröge ]
+  * New upstream bugfix release.
+
+  [ Debian Janitor ]
+  * Add missing ${misc:Depends} to Depends for gstreamer1.0-pulseaudio.
+  * Move transitional package gstreamer1.0-pulseaudio to oldlibs/optional per
+    policy 4.0.1.
+  * Update standards version to 4.6.0, no changes needed.
+  * Remove field Section on binary package gstreamer1.0-plugins-good that
+    duplicates source.
+
+  [ Jeremy Bicha ]
+  * Don't ignore dh_auto_test failures on amd64 & arm64.
+  * Add a patch to skip 2 test failures.
+
+ -- Sebastian Dröge <slomo@debian.org>  Thu, 16 Jun 2022 09:36:08 +0300
+
 gst-plugins-good1.0 (1.20.2-1ubuntu2) kinetic; urgency=medium
 
   * Only make dh_auto_test fail the build for key architectures

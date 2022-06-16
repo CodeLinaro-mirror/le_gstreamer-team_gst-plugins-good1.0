@@ -53,7 +53,7 @@ Build-Depends: debhelper,
                libv4l-dev [linux-any],
                libgudev-1.0-dev (>= 147) [linux-any],
                nasm (>= 2.13) [any-amd64]
-Standards-Version: 4.5.0
+Standards-Version: 4.6.0
 Vcs-Git: git://git.launchpad.net/~ubuntu-desktop/ubuntu/+source/gst-plugins-good1.0
 Vcs-Browser: https://code.launchpad.net/~ubuntu-desktop/ubuntu/+source/gst-plugins-good1.0/+git/gst-plugins-good1.0
 XS-Debian-Vcs-Git: https://salsa.debian.org/gstreamer-team/gst-plugins-good1.0.git
@@ -63,8 +63,8 @@ Homepage: https://gstreamer.freedesktop.org
 Package: gstreamer1.0-pulseaudio
 Architecture: any
 Multi-Arch: same
-Section: sound
-Depends: gstreamer1.0-plugins-good (>= 1.20.0)
+Section: oldlibs
+Depends: gstreamer1.0-plugins-good (>= 1.20.0), ${misc:Depends}
 Description: GStreamer plugin for PulseAudio (transitional package)
  GStreamer is a streaming media framework, based on graphs of filters
  which operate on media data.  Applications using this library can do
@@ -131,7 +131,6 @@ Description: GStreamer plugin for GTK+3
 Package: gstreamer1.0-plugins-good
 Architecture: any
 Multi-Arch: same
-Section: libs
 Depends: ${misc:Depends},
          ${shlibs:Depends},
          gstreamer1.0-audiosink,
