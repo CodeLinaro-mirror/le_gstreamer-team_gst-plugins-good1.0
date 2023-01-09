@@ -8407,7 +8407,7 @@ index cbc28ca..05b0b06 100644
                    'goom2k1', 'icydemux', 'id3demux', 'imagefreeze',
                    'interleave', 'isomp4', 'law', 'level', 'matroska',
 diff --git a/meson.build b/meson.build
-index 517bde4..4d4092f 100644
+index a68126b..b1aacd9 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -29,6 +29,12 @@ else
@@ -8459,7 +8459,7 @@ index 517bde4..4d4092f 100644
  
  check_headers = [
    ['HAVE_DLFCN_H', 'dlfcn.h'],
-@@ -251,6 +271,11 @@ endif
+@@ -250,6 +270,11 @@ endif
  cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
  cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
  
@@ -8471,7 +8471,7 @@ index 517bde4..4d4092f 100644
  # Mandatory GST deps
  gst_dep = dependency('gstreamer-1.0', version : gst_req,
    fallback : ['gstreamer', 'gst_dep'])
-@@ -439,6 +464,10 @@ else
+@@ -432,6 +457,10 @@ else
    message('GStreamer debug system is enabled')
  endif
  
@@ -8482,7 +8482,7 @@ index 517bde4..4d4092f 100644
  presetdir = join_paths(get_option('datadir'), 'gstreamer-' + api_version, 'presets')
  
  python3 = import('python').find_installation()
-@@ -449,6 +478,16 @@ if get_option('default_library') == 'shared'
+@@ -442,6 +471,16 @@ if get_option('default_library') == 'shared'
    plugins_pkgconfig_install_dir = disabler()
  endif
  
@@ -10520,18 +10520,18 @@ index 0000000..664e710
 +
 +GST_CHECK_MAIN (camerabin);
 diff --git a/tests/check/meson.build b/tests/check/meson.build
-index 1920768..4a3f152 100644
+index 5776067..62f9387 100644
 --- a/tests/check/meson.build
 +++ b/tests/check/meson.build
 @@ -30,6 +30,7 @@ good_tests = [
-   [ 'elements/alpha' ],
-   [ 'elements/avimux', false, [gstriff_dep] ],
-   [ 'elements/avisubtitle', false, [gstriff_dep] ],
-+  [ 'elements/camerabin' ],
-   [ 'elements/capssetter' ],
-   [ 'elements/aacparse', false, [libparser_dep] ],
-   [ 'elements/ac3parse', false, [libparser_dep] ],
-@@ -193,7 +194,7 @@ state_ignore_elements = '''aasink autoaudiosrc autoaudiosink autovideosrc
+   [ 'elements/alpha', get_option('alpha').disabled()],
+   [ 'elements/avimux', get_option('avi').disabled(), [gstriff_dep] ],
+   [ 'elements/avisubtitle', get_option('avi').disabled(), [gstriff_dep] ],
++  [ 'elements/camerabin', get_option('camerabin2').disabled()],
+   [ 'elements/capssetter', get_option('debugutils').disabled()],
+   [ 'elements/aacparse', get_option('audioparsers').disabled(), [libparser_dep] ],
+   [ 'elements/ac3parse', get_option('audioparsers').disabled(), [libparser_dep] ],
+@@ -198,7 +199,7 @@ state_ignore_elements = '''aasink autoaudiosrc autoaudiosink autovideosrc
   pulsesink pulsesrc pulsemixer v4l2src'''
  
  # FIXME: check, also + PTHREAD_CFLAGS
