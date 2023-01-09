@@ -1,7 +1,648 @@
+=== release 1.20.5 ===
+
+2022-12-19 23:34:42 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* docs/gst_plugins_cache.json:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.20.5
+
+2022-12-19 23:34:34 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.20.5
+
+2022-11-14 13:53:02 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/multifile/gstimagesequencesrc.c:
+	  imagesequencesrc: Don't leak caps
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3597>
+
+2022-11-16 13:33:39 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Fix regression when using hostname in the location property
+	  When the address can't be parsed as an IP address, it should just be
+	  treated as a hostname and used as-is.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1576
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3596>
+
+2022-03-01 16:30:10 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Fix usage of IPv6 connections in SETUP
+	  If the SETUP request returns an IPv6 server address in the Transport
+	  field, we would generate an incorrect URI, and multiudpsink would fail
+	  to initialize:
+	  ```
+	  rtspsrc gstrtspsrc.c:9780:dump_key_value:<source>    key: 'Transport', value: 'RTP/AVP;unicast;source=fe80::dc27:25ff:fe5e:bd13:8080;client_port=62696-62697;server_port=4000-4001'
+	  ...
+	  rtspsrc gstrtspsrc.c:4595:gst_rtspsrc_stream_configure_udp_sinks:<source> configure RTP UDP sink for fe80::dc27:25ff:fe5e:bd13:8080:4000
+	  ...
+	  multiudpsink gstmultiudpsink.c:1229:gst_multiudpsink_configure_client:<udpsink0> error: Invalid address family (got 23)
+	  ```
+	  We can't look at stream->is_ipv6 because we can't rely on the server
+	  returning the right value there. In the issue reported about this,
+	  server reported itself as `KuP RTSP Server/0.1`, and the SDP was:
+	  ```
+	  c=IN IP4
+	  m=video 54608 RTP/AVP 96
+	  a=rtpmap:96 H264/90000
+	  ```
+	  So we need to parse the string value and figure out the family
+	  ourselves.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1058
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3596>
+
+2022-05-19 15:51:03 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Fix activation of internal pool
+	  If the driver does not support VIDIOC_CREATE_BUFS ioctl, the pool
+	  configuration may get changed, which requires a validation. This would
+	  fail to activate a pool in a case it shouldn't normally fail unless we
+	  are out of memory.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2677>
+
+2022-12-16 01:00:46 -0600  A. Wilcox <AWilcox@Wilcox-Tech.com>
+
+	* tests/check/elements/rtpjitterbuffer.c:
+	  tests: Cast drop-messages-interval type properly
+	  The rtpjitterbuffer test drop_messages_interval uses a GstClockTime for
+	  the message drop interval.  This property is defined as a guint.  On
+	  systems with 64-bit time_t but 32-bit uint, this can cause the
+	  g_object_set function to fail to read the arguments properly.
+	  Fixes: #1656
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3582>
+
+2022-10-11 15:00:37 +0200  Edward Hervey <edward@centricular.com>
+
+	* sys/oss4/oss4-sink.c:
+	* sys/oss4/oss4-source.c:
+	  oss4: Fix debug category initialization
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1456
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3577>
+
+2022-11-30 14:32:52 +0100  Bo Elmgreen <bo.elmgreen@gmail.com>
+
+	* ext/qt/gstqtglutility.cc:
+	  qt: deactivate context if fill_info fails
+	  Now the OpenGL context is deactivated if call to gst_gl_context_fill_info()
+	  fails in gst_qt_get_gl_wrapcontext(), preventing that the context is left
+	  activated, which could lead to invalid memory reads.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3575>
+
+2022-12-02 12:15:34 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2src.c:
+	  v4l2src: Fix crash in renegotiation
+	  This regression was introduce by fix for making buffer pool thread safe. When
+	  we renegotiate, the pool will be setup after we set the format. But the code
+	  has been simplified to only get the pool once before, which caused a null
+	  pointer deref.
+	  Fixes 94ba019 ("v4l2: Fix SIGSEGV on 'change state' during 'format change'")
+	  Related to !3481
+	  Fixes #1626
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3504>
+
+2022-11-28 22:26:50 +0000  Pawel Stawicki <stawel+gstreamer@gmail.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2sink.c:
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2transform.c:
+	* sys/v4l2/gstv4l2videodec.c:
+	* sys/v4l2/gstv4l2videoenc.c:
+	  v4l2: Fix SIGSEGV on 'change state' during 'format change'
+	  Ensure all access to v4l2object->pool imply taking a lock and a hard ref on the pool
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3504>
+
+2022-12-07 09:47:49 +0100  Jacek Skiba <jacek.skiba@consult.red>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: exit when protection caps are not defined during PIFF parsing
+	  Reproduction testcase (uses PlayReady):
+	  https://developers.canal-plus.com/rx-player/upc/?appTileLocation=[object%20Object]
+	  In test streams we are using PIFF box, but caps did not had
+	  present GST_PROTECTION_SYSTEM_ID_CAPS_FIELD. In consequence, invalid
+	  system_id was returned which caused SIGSEGV crash.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3549>
+
+2022-12-01 10:34:10 +0100  Aleksandr Slobodeniuk <aslobodeniuk@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: fix seek event leaks
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3507>
+
+2022-12-04 11:44:17 +0000  Philippe Normand <philn@igalia.com>
+
+	* gst/audioparsers/gstflacparse.c:
+	  flacparse: Fix handling of headers advertising 32bps
+	  According to the flac bitstream format specification, the sample size in bits
+	  corresponding to `111` is 32 bits per sample.
+	  https://xiph.org/flac/format.html#frame_header
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3518>
+
+2022-11-15 11:56:35 +0100  Jan Alexander Steffens (heftig) <jan.steffens@ltnglobal.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Don't replace 404 errors with "no auth protocol found"
+	  When getting a "404 Not Found" response from the DESCRIBE request, the
+	  source produced a "No supported authentication protocol was found" error
+	  instead of passing on the 404, which was confusing.
+	  Only produce this error message when we're handling a response of "401
+	  Unauthorized" without a compatible WWW-Authenticate header.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3493>
+
+2022-11-16 10:36:32 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  Revert "rtspsrc: Only EOS on timeout if all streams are timed out/EOS"
+	  This reverts commit d186e195684548f13855ba5e9ef618a0a5b8951b.
+	  This unearthed a whole bunch of other issues for which lots of
+	  other fixes all over the place were required, so let's revert
+	  the backport into the stable branch for now.
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1530
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3271
+	  Fixes #1532
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3422>
+
+2020-09-02 10:49:40 +0100  Justin Chadwell <me@jedevc.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: use unsigned int types to store result of QT_UINT32
+	  In a few cases throughout qtdemux, the results of QT_UINT32 were being
+	  stored in a signed integer, which could cause subtle bugs in the case of
+	  an integer overflow, even allowing the the result to equal a negative
+	  number!
+	  This patch prevents this by simply storing the results of this function
+	  call properly in an unsigned integer type. Additionally, we fix up the
+	  length checking with stsd parsing to prevent cases of child atoms
+	  exceeding their parent atom sizes.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3367>
+
+2022-11-04 17:48:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/qt/gstqtglutility.cc:
+	  qt: initialize GError properly in gst_qt_get_gl_wrapcontext()
+	  Spotted by Claus Stovgaard.
+	  Fixes #1545
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3339>
+
+2022-11-04 11:10:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: Add durations to raw audio buffers from the raw audio adapter in prefill mode
+	  This ensures that a duration can also be calculated and stored for the
+	  last buffer at EOS.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3338>
+
+2022-11-04 10:49:31 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: Release object lock before posting an error message
+	  GST_ELEMENT_ERROR() also takes the object lock and this would then
+	  deadlock.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3338>
+
+2022-10-21 16:23:08 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Only EOS on timeout if all streams are timed out/EOS
+	  Otherwise a stream that is just temporarily inactive might time out and
+	  then can never become active again because the EOS event was sent
+	  already.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3271>
+
+2022-01-21 14:21:18 +0100  Jonas Bonn <jonas@norrbonn.se>
+
+	* gst/udp/gstmultiudpsink.c:
+	  multiudpsink: allow binding to IPv6 address
+	  When the sink is configured to create sockets with an explicit bind
+	  address, then the created socket gets set to the udp_socket field
+	  irregardless of whether the bind address indicated that the socket
+	  family should be IPv4 or IPv6.  When binding to an IPv6 address, this
+	  results in the following error:
+	  gstmultiudpsink.c:1285:gst_multiudpsink_configure_client:<rtcpsink>
+	  error: Invalid address family (got 10)
+	  This patch adds a check of the address family being bound to and sets
+	  the created socket to used_socket or used_socket_v6, accordingly.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3183>
+
+2022-10-14 01:23:04 +0000  Devin Anderson <danderson@microsoft.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: Avoid occasional crash due to referencing freed buffer.
+	  We've seen occasional crashes in the `wavparse` module associated with
+	  referencing a buffer in `gst_wavparse_chain` that's already been freed.  The
+	  reference is stolen when the buffer is transferred to the adapter with
+	  `gst_adapter_push` and, IIUC, assuming the source doesn't hold a reference to
+	  the buffer, the buffer could be freed during interaction with the adapter in
+	  `gst_wavparse_stream_headers`.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3181>
+
+2022-10-13 00:20:45 +0000  Devin Anderson <danderson@microsoft.com>
+
+	* gst/wavparse/gstwavparse.c:
+	* tests/check/elements/wavparse.c:
+	* tests/files/corruptheadertestsrc.wav:
+	  wavparse: Fix crash that occurs in push mode when header chunks are corrupted in certain ways.
+	  In the case that a test is provided for, the size of the `fmt ` chunk is
+	  changed from 16 bytes to 18 bytes (bytes 17 - 20 below):
+	  ```
+	  $ hexdump -C corruptheadertestsrc.wav
+	  00000000  52 49 46 46 e4 fd 00 00  57 41 56 45 66 6d 74 20  |RIFF....WAVEfmt |
+	  00000010  12 00 00 00 01 00 01 00  80 3e 00 00 00 7d 00 00  |.........>...}..|
+	  00000020  02 00 10 00 64 61 74 61                           |....data|
+	  00000028
+	  ```
+	  (Note that the original file is much larger.  This was the smallest sub-file
+	  I could find that would generate the crash.)
+	  Note that, while the same issue doesn't cause a crash in pull mode, there's a
+	  different issue in that the file is processed successfully as if it was a .wav
+	  file with zero samples.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3174>
+
+2022-10-08 01:03:13 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/multifile/gstsplitmuxpartreader.c:
+	  splitmuxsrc: don't queue data on unlinked pads
+	  Once a pad has returned NOT_LINKED, the part reader shouldn't let its
+	  corresponding data queue run full and eventually (after 20 seconds)
+	  stall playback.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3169>
+
+2022-10-12 18:40:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
+=== release 1.20.4 ===
+
+2022-10-12 16:39:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* docs/gst_plugins_cache.json:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.20.4
+
+2022-10-12 16:39:40 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.20.4
+
+2022-09-30 18:57:01 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/multifile/gstsplitmuxpartreader.c:
+	  splitmuxsrc: don't consider unlinked pads when deactivating part
+	  If splitmuxsrc exposes multiple pads, but only one is linked, part pads
+	  will never see an EOS event. This shouldn't prevent the part from being
+	  eventually deactivated.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3148>
+
+2022-10-06 15:02:22 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Retry SETUP with non-compliant URL resolution on "Bad Request" and "Not found"
+	  Various RTSP servers/cameras assume base and control URL to be simply
+	  appended instead of being resolved according to the relative URL
+	  resolution algorithm as mandated by the RTSP specification.
+	  To work around this, try using such a non-compliant control URL if the
+	  server didn't like the URL used in the first SETUP request.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1447
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/922
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3137>
+
+2022-09-27 13:56:54 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: guard against timestamp calculation overflow in gap event loop
+	  Could possibly cause an endless loop.
+	  Fixes #1400.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3085>
+
+2022-09-02 17:21:43 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/elements/rtpjitterbuffer.c:
+	  rtpjitterbuffer: Add test for crash caused by removing timers twice
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2996>
+
+2022-09-02 12:20:58 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: Make it more explicit that update_rtx_timers() takes ownership of the passed in timer
+	  It is not valid anymore afterwards and must not be used, otherwise an
+	  already freed pointer might be used.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2996>
+
+2022-09-02 12:20:30 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: Don't shadow variable
+	  While this didn't cause any problems in this context it is simply
+	  confusing.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2996>
+
+2022-09-02 12:19:26 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: Change RTX timer availability checks to assertions
+	  It's impossible to end up in the corresponding code without a timer for
+	  RTX packets because otherwise it would be an unsolicited RTX packet and
+	  we would've already returned early.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2996>
+
+2022-09-02 12:17:39 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: Only unschedule timers for late packets if they're not RTX packets and only once
+	  Timers for RTX packets are dealt with later in update_rtx_timers(), and
+	  timers for non-RTX packets would potentially also be unscheduled a
+	  second time from there so avoid that.
+	  Also don't shadow the timer variable from the outer scope but instead
+	  make use of it directly.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2996>
+
+2022-08-18 17:08:51 +0300  Raul Tambre <raul@tambre.ee>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* tests/check/elements/rtpjitterbuffer.c:
+	  rtpjitterbuffer: remove lost timer for out of order packets
+	  When receiving old packets remove the running lost timer if present.
+	  This fixes incorrect reporting of a lost packet even if it arrived in time.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2995>
+
+2022-08-26 18:42:44 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpvp8depay.c:
+	  rtpvp8depay: If configured to wait for keyframes after packet loss, also do that if incomplete frames are detected
+	  This can happen if the data inside the packets is incomplete without the
+	  seqnums being discontinuous because of ULPFEC being used.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2988>
+
+2022-08-24 17:30:34 +0800  Jianhui Dai <jianhui.j.dai@intel.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: Fix invalid imported dmabuf fd
+	  Fix a typo that set userptr to dmabuf fd. It leads to failure of
+	  dmabuf-import io-mode.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2940>
+
+2022-08-23 10:28:30 +0000  zhiyuan.liu <zhiyuan.liu@seraphic-corp.com>
+
+	* gst/isomp4/gstisoff.c:
+	  isoff: Fix earliest pts field parse issue
+	  earliest pts will be covered by first_offset field on version 0 case.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2934>
+
+2022-08-17 09:11:52 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/multifile/gstsplitmuxsrc.c:
+	  splitmuxsrc: Stop pad task before cleanup
+	  When stopping the element, make sure the pad task
+	  is stopped before destroying the part readers.
+	  Closes a race where the pad task might access
+	  a freed pointer.
+	  Also add a guard against this sort of thing
+	  by holding a ref to the reader in the pad loop.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2902>
+
+2022-08-12 20:20:43 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Avoid crash on reconfiguring.
+	  When reconfiguring a stream that never created
+	  an output pad, don't access a NULL GstPad pointer.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2900>
+
+2022-08-15 14:30:50 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Fix debug trace
+	  The tracing of the buffer pointer was done on the secondary pointer, which
+	  does not match with other traces of the same buffer. This made the trace
+	  confusing and less useful.
+	  Fixes #1379
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2898>
+
+2022-08-12 13:20:01 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Consider the actual control base URI also in case the connection URI contains a query string
+	  That is, get rid of unnecessary and wrong special-casing.
+	  This could always use gst_rtsp_url_get_request_uri_with_control() but as
+	  we only have the control base URI as string it is easier to just call
+	  gst_uri_join_strings().
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2877>
+
+2022-08-12 02:20:40 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/rtpmanager/gstrtpst2022-1-fecenc.c:
+	  rtpst2022-1-fecenc: Drain column packets on EOS
+	  Otherwise we won't send the protection packets for the last few
+	  packets when a stream ends.
+	  Also send EOS on the FEC src row pad immediately, and on the FEC src
+	  column pad after draining is complete. This makes it so that the FEC
+	  src pads on rtpbin behave the same way as the RTCP src pads on rtpbin
+	  when EOS is received on the send_rtp_sink pad.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2874>
+
+2022-08-11 08:48:08 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Don't use invalid values from failed trex parsing
+	  If parsing the fragment default values (`trex` atom) failed, don't try to
+	  compute a bogus sample_description_id value.
+	  Fixes #1369
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2862>
+
+2022-08-04 18:09:52 +0800  Haihua Hu <jared.hu@nxp.com>
+
+	* gst/alpha/gstalpha.c:
+	  alpha: fix stride issue when out buffer has padding on right
+	  if outbuf has padding on right, need jump to next line use stride,
+	  otherwise downstream element will show a wrong picture when use the
+	  same stride
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2854>
+
+2022-05-25 18:40:30 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtsp+rtmp: Forward warning added to tls-validation-flags to our users
+	  With the 2.72 release, glib-networking developers have decided that
+	  TLS certificate validation cannot be implemented correctly by them, so
+	  they've deprecated it.
+	  In a nutshell: a cert can have several validation errors, but there
+	  are no guarantees that the TLS backend will return all those errors,
+	  and things are made even more complicated by the fact that the list of
+	  errors might refer to certs that are added for backwards-compat and
+	  won't actually be used by the TLS library.
+	  Our best option is to ignore the deprecation and pass the warning onto
+	  users so they can make an appropriate security decision regarding
+	  this.
+	  We can't deprecate the tls-validation-flags property because it is
+	  very useful when connecting to RTSP cameras that will never get
+	  updates to fix certificate errors.
+	  Relevant upstream merge requests / issues:
+	  https://gitlab.gnome.org/GNOME/glib/-/merge_requests/2214
+	  https://gitlab.gnome.org/GNOME/glib-networking/-/issues/179
+	  https://gitlab.gnome.org/GNOME/glib-networking/-/merge_requests/193
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2818>
+
+2022-07-27 15:44:09 +0200  Adrian Fiergolski <adrian.fiergolski@fastree3d.com>
+
+	* gst/videofilter/gstvideoflip.c:
+	  videoflip: Fix caps negotiation when method is selected
+	  The caps negotiation should respect the selected method to the test pipeline below works properly.
+	  gst-launch-1.0 videotestsrc ! video/x-raw,width=320,height=600 ! videoflip method=clockwise ! video/x-raw,width=600,height=320 ! fakesink
+	  Signed-off-by: Adrian Fiergolski <adrian.fiergolski@fastree3d.com>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2815>
+
+2022-07-24 23:44:10 -0400  fduncanh <fduncanh@gmail.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object.c: add support for Apple's full-range bt709 colorspace variant
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2806>
+
+2022-07-08 18:22:58 +0800  Elliot Chen <elliot.chen@nxp.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2: fix the critical log when unreference the buffer with no data
+	  In the trick mode, driver may queue a valid buffer follow by an
+	  empty buffer which has no valid data to indicate EOS.For the empty
+	  buffer whose memory is multi-plane, need to resize it before
+	  unreference it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2794>
+
+2022-07-15 13:22:14 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/qt/qtglrenderer.cc:
+	  qt: Fix another instance of Qt/GStreamer both defining `GLsync` differently
+	  In file included from ../gstreamer1.0-plugins-good/1.20.3-r0/recipe-sysroot/usr/include/gstreamer-1.0/gst/gl/gstglfuncs.h:87,
+	  from ../gst-plugins-good-1.20.3/ext/qt/qtglrenderer.cc:14:
+	  ../gstreamer1.0-plugins-good/1.20.3-r0/recipe-sysroot/usr/include/gstreamer-1.0/gst/gl/glprototypes/gstgl_compat.h:40:18: error: conflicting declaration 'typedef void* GLsync'
+	  40 | typedef gpointer GLsync;
+	  |                  ^~~~~~
+	  In file included from ../gstreamer1.0-plugins-good/1.20.3-r0/recipe-sysroot/usr/include/QtGui/qopengl.h:127,
+	  from ../gstreamer1.0-plugins-good/1.20.3-r0/recipe-sysroot/usr/include/QtQuick/qsggeometry.h:44,
+	  from ../gstreamer1.0-plugins-good/1.20.3-r0/recipe-sysroot/usr/include/QtQuick/qsgnode.h:43,
+	  from ../gstreamer1.0-plugins-good/1.20.3-r0/recipe-sysroot/usr/include/QtQuick/qsgrendererinterface.h:43,
+	  from ../gstreamer1.0-plugins-good/1.20.3-r0/recipe-sysroot/usr/include/QtQuick/qquickwindow.h:44,
+	  from ../gstreamer1.0-plugins-good/1.20.3-r0/recipe-sysroot/usr/include/QtQuick/QQuickWindow:1,
+	  from ../gst-plugins-good-1.20.3/ext/qt/qtglrenderer.cc:6:
+	  ../gstreamer1.0-plugins-good/1.20.3-r0/recipe-sysroot/usr/include/QtGui/qopengles2ext.h:24:26: note: previous declaration as 'typedef struct __GLsync* GLsync'
+	  24 | typedef struct __GLsync *GLsync;
+	  |                          ^~~~~~
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2771>
+
+2022-07-15 06:40:05 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* sys/osxaudio/gstosxaudiodeviceprovider.c:
+	* sys/osxaudio/gstosxcoreaudiohal.c:
+	  osxaudio: Fix deprecation in macOS 12.0
+	  kAudioObjectPropertyElementMaster has been renamed to
+	  kAudioObjectPropertyElementMain
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2764>
+
+2022-07-12 21:19:35 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/multifile/gstsplitmuxsink.c:
+	  splitmuxsink: Fix memory leak
+	  Fix a leak of the buffer info struct when reaching
+	  EOS without data on the reference input.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2753>
+
+2022-04-14 01:19:51 +0900  Seungha Yang <seungha@centricular.com>
+
+	* gst/multifile/gstsplitmuxsink.c:
+	* tests/check/elements/splitmuxsink.c:
+	  splitmuxsink: Don't crash on EOS without buffer
+	  Fix a case where upstream pushed EOS without buffers.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2753>
+
+2022-05-28 15:04:10 -0400  fduncanh <fduncanh@gmail.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: replace multiple decoder bug warnings with single one
+	  Achieve this by dropping frames after a drain if the driver failed to so.
+	  This works around RaspberryPi driver issue [1].
+	  [1] https://github.com/raspberrypi/linux/issues/5059#issuecomment-
+	  Fixes #1103
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2710>
+
+2022-06-29 10:55:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  coding style: allow declarations after statement
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1243/
+	  and https://gitlab.freedesktop.org/gstreamer/gstreamer-project/-/issues/78
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2702>
+
+2022-06-25 19:50:10 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/meson.build:
+	  tests: skip unit tests for dependency-less elements that have been disabled
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1136
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2672>
+
+2022-06-28 01:29:06 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/dv/meson.build:
+	  dv, opusparse: fix duplicate symbols in static build
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1262
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2673>
+
+2022-06-24 12:10:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/examples/jack/meson.build:
+	  examples: don't try and build jack examples if jack was disabled
+	  Fixes meson build ERROR: Unknown variable "libjack_dep".
+	  Fixes #1301
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2658>
+
+2022-02-07 17:51:39 -0500  Tristan Matthews <tmatth@videolan.org>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: allow width+height caps changes for VP8/9
+	  For VP8 and VP9, width+height changes are signalled inband.
+	  Refs https://github.com/Kurento/bugtracker/issues/535 and
+	  https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/merge_requests/1047/diffs?commit
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2640>
+
+2022-02-07 16:41:40 -0500  Tristan Matthews <tmatth@videolan.org>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: allow width + height changes for avc3|hev1
+	  For avc3 and hev1, the intent was to allow more flexibility for caps changes
+	  (see https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/merge_requests/1047/diffs?commit_id=9bd8d608d5bae27ec5ff09e733f76ca32b17420c)
+	  however width and resolution were previously omitted.
+	  avc3 and hev1 specifically support changing stream-parameters on the fly, whereas avc1/hvc1 disallow in-band SPS.
+	  This commit allows for changes to width and height for these which is in line with matroskamux's behaviour prior to 1.14.0.
+	  Practically speaking, one use case where this is commonly seen is when capturing a WebRTC stream, as the browser will adapt the resolution live.
+	  Suggested-by: Mathieu Duponchelle "<mathieu@centricular.com>"
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2640>
+
+2022-06-16 00:59:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2619>
+
 === release 1.20.3 ===
 
 2022-06-15 23:36:18 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* docs/gst_plugins_cache.json:

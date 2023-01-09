@@ -1,3 +1,13 @@
+gst-plugins-good1.0 (1.20.5-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Add debian/upstream/signing-key.asc and update debian/watch to use it
+  * Update debian/upstream/metadata
+  * Update standards version to 4.6.1, no changes needed
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Thu, 05 Jan 2023 14:03:18 -0500
+
 gst-plugins-good1.0 (1.20.3-1ubuntu1) kinetic; urgency=medium
 
   * Merge from Debian unstable. Remaining changes:

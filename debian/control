@@ -53,7 +53,7 @@ Build-Depends: debhelper,
                libv4l-dev [linux-any],
                libgudev-1.0-dev (>= 147) [linux-any],
                nasm (>= 2.13) [any-amd64]
-Standards-Version: 4.6.0
+Standards-Version: 4.6.1
 Vcs-Git: git://git.launchpad.net/~ubuntu-desktop/ubuntu/+source/gst-plugins-good1.0
 Vcs-Browser: https://code.launchpad.net/~ubuntu-desktop/ubuntu/+source/gst-plugins-good1.0/+git/gst-plugins-good1.0
 XS-Debian-Vcs-Git: https://salsa.debian.org/gstreamer-team/gst-plugins-good1.0.git
