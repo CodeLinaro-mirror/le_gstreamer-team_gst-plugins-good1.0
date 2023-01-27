@@ -1,12 +1,23 @@
-gst-plugins-good1.0 (1.22.0-0.1) experimental; urgency=medium
+gst-plugins-good1.0 (1.22.0-1ubuntu1) lunar; urgency=medium
 
-  * Non-maintainer upload
-  * Temporarily disable qt6 plugin to unblock builds of the 1.22
-    series while waiting for NEW processing
+  * Merge from Debian experimental (NEW). Remaining changes:
+    + Import plugins from -bad that are needed for main applications.
+      - jpegformat
+      - camerabin (+ basecamerabinsrc + photography)
+    + Add a library package containing the shared library and a -dev package for
+      compiling against it. Add Breaks and Replaces against the plugins packages
+      which formerly contained files shipped here.
+    + Add 'pluginsdir' variable to our added pcfile for compatibility with
+      some external software
+    + debian/control{,.in}: Update Vcs-* for Ubuntu
+    + Don't require libqt5waylandclient5-dev Build-Depends on i386
   * debian/control: Bump minimum gstreamer, glib, and meson
   * debian/rules: Fix configure flags for non-Linux
+  * Build-Depend on libgirepository1.0-dev
+  * Update camerabin patch for the 1.22 series
+  * Don't build the Qt6 plugin on i386 since Qt6 isn't built there on Ubuntu yet
 
- -- Jeremy Bicha <jbicha@ubuntu.com>  Fri, 27 Jan 2023 13:33:24 -0500
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Fri, 27 Jan 2023 14:45:15 -0500
 
 gst-plugins-good1.0 (1.22.0-1) experimental; urgency=medium
 
