@@ -31,9 +31,9 @@ Forwarded: not-needed
  gst/camerabin2/gstplugin.c                         |   45 +
  gst/camerabin2/gstviewfinderbin.c                  |  365 +++
  gst/camerabin2/gstviewfinderbin.h                  |   60 +
- gst/camerabin2/gstwrappercamerabinsrc.c            | 1173 ++++++++++
+ gst/camerabin2/gstwrappercamerabinsrc.c            | 1169 ++++++++++
  gst/camerabin2/gstwrappercamerabinsrc.h            |  131 ++
- gst/camerabin2/meson.build                         |   20 +
+ gst/camerabin2/meson.build                         |   19 +
  gst/meson.build                                    |    2 +-
  meson.build                                        |   43 +-
  meson_options.txt                                  |    1 +
@@ -45,7 +45,7 @@ Forwarded: not-needed
  tests/examples/camerabin2/gst-camerabin2-test.c    | 1324 +++++++++++
  tests/examples/camerabin2/meson.build              |   24 +
  tests/examples/meson.build                         |    1 +
- 39 files changed, 12137 insertions(+), 4 deletions(-)
+ 39 files changed, 12132 insertions(+), 4 deletions(-)
  create mode 100644 gst-libs/gst/basecamerabinsrc/basecamerabinsrc-prelude.h
  create mode 100644 gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c
  create mode 100644 gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h
@@ -3204,7 +3204,7 @@ index 0000000..716d959
 +
 diff --git a/gst/camerabin2/camerabingeneral.c b/gst/camerabin2/camerabingeneral.c
 new file mode 100644
-index 0000000..9a60d35
+index 0000000..8453613
 --- /dev/null
 +++ b/gst/camerabin2/camerabingeneral.c
 @@ -0,0 +1,260 @@
@@ -3245,7 +3245,7 @@ index 0000000..9a60d35
 +
 +#include <glib.h>
 +#include <gst/basecamerabinsrc/gstbasecamerasrc.h>
-+#include <gst/gst-i18n-plugin.h>
++#include <glib/gi18n-lib.h>
 +
 +#include "camerabingeneral.h"
 +
@@ -3513,7 +3513,7 @@ index 0000000..b0cd05c
 +#endif /* #ifndef __CAMERABIN_GENERAL_H_ */
 diff --git a/gst/camerabin2/gstcamerabin2.c b/gst/camerabin2/gstcamerabin2.c
 new file mode 100644
-index 0000000..6ac5ce4
+index 0000000..3824a4b
 --- /dev/null
 +++ b/gst/camerabin2/gstcamerabin2.c
 @@ -0,0 +1,2397 @@
@@ -3665,7 +3665,7 @@ index 0000000..6ac5ce4
 +
 +#include <gst/basecamerabinsrc/gstbasecamerasrc.h>
 +#include "gstcamerabin2.h"
-+#include <gst/gst-i18n-plugin.h>
++#include <glib/gi18n-lib.h>
 +#include <gst/pbutils/pbutils.h>
 +#include <gst/glib-compat-private.h>
 +
@@ -6090,7 +6090,7 @@ index 0000000..f478daa
 +#endif
 diff --git a/gst/camerabin2/gstdigitalzoom.c b/gst/camerabin2/gstdigitalzoom.c
 new file mode 100644
-index 0000000..c7de9a6
+index 0000000..041bffc
 --- /dev/null
 +++ b/gst/camerabin2/gstdigitalzoom.c
 @@ -0,0 +1,386 @@
@@ -6136,7 +6136,7 @@ index 0000000..c7de9a6
 +#  include <config.h>
 +#endif
 +
-+#include <gst/gst-i18n-plugin.h>
++#include <glib/gi18n-lib.h>
 +#include "gstdigitalzoom.h"
 +
 +enum
@@ -6618,7 +6618,7 @@ index 0000000..bc0c816
 +    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 diff --git a/gst/camerabin2/gstviewfinderbin.c b/gst/camerabin2/gstviewfinderbin.c
 new file mode 100644
-index 0000000..1c37cef
+index 0000000..1ff7046
 --- /dev/null
 +++ b/gst/camerabin2/gstviewfinderbin.c
 @@ -0,0 +1,365 @@
@@ -6662,7 +6662,7 @@ index 0000000..1c37cef
 +#include "camerabingeneral.h"
 +#include <gst/pbutils/pbutils.h>
 +
-+#include <gst/gst-i18n-plugin.h>
++#include <glib/gi18n-lib.h>
 +
 +GST_DEBUG_CATEGORY_STATIC (gst_viewfinder_bin_debug);
 +#define GST_CAT_DEFAULT gst_viewfinder_bin_debug
@@ -7055,10 +7055,10 @@ index 0000000..28845db
 +#endif
 diff --git a/gst/camerabin2/gstwrappercamerabinsrc.c b/gst/camerabin2/gstwrappercamerabinsrc.c
 new file mode 100644
-index 0000000..fd595cb
+index 0000000..cf21f43
 --- /dev/null
 +++ b/gst/camerabin2/gstwrappercamerabinsrc.c
-@@ -0,0 +1,1173 @@
+@@ -0,0 +1,1169 @@
 +/*
 + * GStreamer
 + * Copyright (C) 2010 Texas Instruments, Inc
@@ -7094,7 +7094,7 @@ index 0000000..fd595cb
 +#endif
 +
 +#include <gst/interfaces/photography.h>
-+#include <gst/gst-i18n-plugin.h>
++#include <glib/gi18n-lib.h>
 +
 +#include "gstwrappercamerabinsrc.h"
 +#include "gstdigitalzoom.h"
@@ -7298,10 +7298,6 @@ index 0000000..fd595cb
 +gst_wrapper_camera_bin_src_set_output (GstWrapperCameraBinSrc * self,
 +    GstPad * old_pad, GstPad * output_pad)
 +{
-+  GstQuery *drain = gst_query_new_drain ();
-+  gst_pad_peer_query (self->src_pad, drain);
-+  gst_query_unref (drain);
-+
 +  if (old_pad)
 +    gst_ghost_pad_set_target (GST_GHOST_PAD (old_pad), NULL);
 +  if (output_pad)
@@ -8371,10 +8367,10 @@ index 0000000..66a6723
 +#endif /* __GST_WRAPPER_CAMERA_BIN_SRC_H__ */
 diff --git a/gst/camerabin2/meson.build b/gst/camerabin2/meson.build
 new file mode 100644
-index 0000000..72008d2
+index 0000000..7730df3
 --- /dev/null
 +++ b/gst/camerabin2/meson.build
-@@ -0,0 +1,20 @@
+@@ -0,0 +1,19 @@
 +camerabin_sources = [
 +  'gstdigitalzoom.c',
 +  'gstviewfinderbin.c',
@@ -8393,10 +8389,9 @@ index 0000000..72008d2
 +  install : true,
 +  install_dir : plugins_install_dir,
 +)
-+pkgconfig.generate(gstcamerabin, install_dir : plugins_pkgconfig_install_dir)
 +plugins += [gstcamerabin]
 diff --git a/gst/meson.build b/gst/meson.build
-index cbc28ca..05b0b06 100644
+index 4dfe3b7..18d033f 100644
 --- a/gst/meson.build
 +++ b/gst/meson.build
 @@ -1,5 +1,5 @@
@@ -8407,10 +8402,10 @@ index cbc28ca..05b0b06 100644
                    'goom2k1', 'icydemux', 'id3demux', 'imagefreeze',
                    'interleave', 'isomp4', 'law', 'level', 'matroska',
 diff --git a/meson.build b/meson.build
-index a68126b..b1aacd9 100644
+index c21a5ad..644d398 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -29,6 +29,12 @@ else
+@@ -32,6 +32,12 @@ else
  endif
  
  api_version = '1.0'
@@ -8423,8 +8418,8 @@ index a68126b..b1aacd9 100644
  
  plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
  plugins = []
-@@ -69,11 +75,25 @@ if cc.has_link_argument('-Wl,-Bsymbolic-functions')
-   add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
+@@ -100,11 +106,25 @@ if have_cxx and cxx.has_link_argument('-Wl,-z,nodelete')
+   add_project_link_arguments('-Wl,-z,nodelete', language: 'cpp')
  endif
  
 +cdata = configuration_data()
@@ -8450,16 +8445,16 @@ index a68126b..b1aacd9 100644
  # Disable strict aliasing
  if cc.has_argument('-fno-strict-aliasing')
    add_project_arguments('-fno-strict-aliasing', language: 'c')
-@@ -103,7 +123,7 @@ if glib_checks.disabled() or (glib_checks.auto() and not gst_version_is_dev)
+@@ -134,7 +154,7 @@ if glib_checks.disabled() or (glib_checks.auto() and not gst_version_is_dev)
    add_project_arguments('-DG_DISABLE_CHECKS', language: 'c')
  endif
  
 -cdata = configuration_data()
 +#cdata = configuration_data()
+ cdata.set('ENABLE_NLS', 1)
  
  check_headers = [
-   ['HAVE_DLFCN_H', 'dlfcn.h'],
-@@ -250,6 +270,11 @@ endif
+@@ -278,6 +298,11 @@ endif
  cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
  cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
  
@@ -8471,7 +8466,7 @@ index a68126b..b1aacd9 100644
  # Mandatory GST deps
  gst_dep = dependency('gstreamer-1.0', version : gst_req,
    fallback : ['gstreamer', 'gst_dep'])
-@@ -432,6 +457,10 @@ else
+@@ -459,6 +484,10 @@ else
    message('GStreamer debug system is enabled')
  endif
  
@@ -8482,7 +8477,7 @@ index a68126b..b1aacd9 100644
  presetdir = join_paths(get_option('datadir'), 'gstreamer-' + api_version, 'presets')
  
  python3 = import('python').find_installation()
-@@ -442,6 +471,16 @@ if get_option('default_library') == 'shared'
+@@ -469,6 +498,16 @@ if get_option('default_library') == 'shared'
    plugins_pkgconfig_install_dir = disabler()
  endif
  
@@ -8500,7 +8495,7 @@ index a68126b..b1aacd9 100644
  subdir('sys')
  subdir('ext')
 diff --git a/meson_options.txt b/meson_options.txt
-index 3dafe1f..ab3e04b 100644
+index 3e472bd..88dd6da 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
 @@ -6,6 +6,7 @@ option('audioparsers', type : 'feature', value : 'auto')
@@ -10520,7 +10515,7 @@ index 0000000..664e710
 +
 +GST_CHECK_MAIN (camerabin);
 diff --git a/tests/check/meson.build b/tests/check/meson.build
-index 5776067..62f9387 100644
+index 4118c1a..5fd30aa 100644
 --- a/tests/check/meson.build
 +++ b/tests/check/meson.build
 @@ -30,6 +30,7 @@ good_tests = [
@@ -10531,14 +10526,14 @@ index 5776067..62f9387 100644
    [ 'elements/capssetter', get_option('debugutils').disabled()],
    [ 'elements/aacparse', get_option('audioparsers').disabled(), [libparser_dep] ],
    [ 'elements/ac3parse', get_option('audioparsers').disabled(), [libparser_dep] ],
-@@ -198,7 +199,7 @@ state_ignore_elements = '''aasink autoaudiosrc autoaudiosink autovideosrc
+@@ -194,7 +195,7 @@ state_ignore_elements = '''aasink autoaudiosrc autoaudiosink autovideosrc
   pulsesink pulsesrc pulsemixer v4l2src'''
  
  # FIXME: check, also + PTHREAD_CFLAGS
 -test_deps = [gst_dep, gstbase_dep, gstnet_dep, gstcheck_dep, gstaudio_dep,
 +test_deps = [gst_dep, gstbase_dep, gstbasecamerabin_dep, gstphotography_dep, gstnet_dep, gstcheck_dep, gstaudio_dep,
    gstvideo_dep, gstpbutils_dep, gstrtp_dep, gstrtsp_dep, gsttag_dep,
-   gstapp_dep, gio_dep, valgrind_dep] + glib_deps
+   gstapp_dep, gio_dep, valgrind_dep]
  
 diff --git a/tests/examples/camerabin2/gst-camera2.c b/tests/examples/camerabin2/gst-camera2.c
 new file mode 100644
@@ -11155,7 +11150,7 @@ index 0000000..52bcfc6
 +</interface>
 diff --git a/tests/examples/camerabin2/gst-camerabin2-test.c b/tests/examples/camerabin2/gst-camerabin2-test.c
 new file mode 100644
-index 0000000..1c61957
+index 0000000..dce043d
 --- /dev/null
 +++ b/tests/examples/camerabin2/gst-camerabin2-test.c
 @@ -0,0 +1,1324 @@
@@ -11970,7 +11965,7 @@ index 0000000..1c61957
 +    change_mode_after = gst_util_get_timestamp ();
 +  }
 +
-+  return TRUE;
++  return res;
 +error:
 +  cleanup_pipeline ();
 +  return FALSE;
@@ -12514,7 +12509,7 @@ index 0000000..3db3db1
 +    install: false)
 +endif
 diff --git a/tests/examples/meson.build b/tests/examples/meson.build
-index d5fa127..398560e 100644
+index 0af2aa6..e319dca 100644
 --- a/tests/examples/meson.build
 +++ b/tests/examples/meson.build
 @@ -1,5 +1,6 @@
@@ -12523,4 +12518,4 @@ index d5fa127..398560e 100644
 +subdir('camerabin2')
  subdir('level')
  subdir('qt')
- 
+ subdir('qt6')
