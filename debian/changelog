@@ -1,3 +1,32 @@
+gst-plugins-good1.0 (1.22.0-0.1) experimental; urgency=medium
+
+  * Non-maintainer upload
+  * Temporarily disable qt6 plugin to unblock builds of the 1.22
+    series while waiting for NEW processing
+  * debian/control: Bump minimum gstreamer, glib, and meson
+  * debian/rules: Fix configure flags for non-Linux
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Fri, 27 Jan 2023 13:33:24 -0500
+
+gst-plugins-good1.0 (1.22.0-1) experimental; urgency=medium
+
+  * Team upload
+  * New upstream release
+  * Build-Depend on libxml2-dev
+  * debian/control: Bump minimum gstreamer, glib, and meson
+  * debian/gstreamer1.0-plugins-good.install: Add new plugins
+  * Add Qt6 plugin package
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Tue, 24 Jan 2023 19:26:03 -0500
+
+gst-plugins-good1.0 (1.20.5-2) unstable; urgency=medium
+
+  * Fix alternate dependency on libsoup3 (Closes: #1023215)
+  * debian/rules: Set -Dauto_features=enabled
+  * Update standards version to 4.6.2, no changes needed
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Tue, 24 Jan 2023 18:58:12 -0500
+
 gst-plugins-good1.0 (1.20.5-1ubuntu1) lunar; urgency=medium
 
   * Merge from Debian unstable. Remaining changes:
