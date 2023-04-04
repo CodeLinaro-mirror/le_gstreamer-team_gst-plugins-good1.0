@@ -1,3 +1,18 @@
+gst-plugins-good1.0 (1.22.1-1) experimental; urgency=medium
+
+  * Team upload
+  * New upstream bugfix release
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Mon, 03 Apr 2023 16:35:02 -0400
+
+gst-plugins-good1.0 (1.22.0-5) unstable; urgency=medium
+
+  * Team upload
+  * Disable the qt5/qt6 elements on architectures where Qt5/Qt6 are not
+    building
+
+ -- Laurent Bigonville <bigon@debian.org>  Mon, 27 Feb 2023 20:01:19 +0100
+
 gst-plugins-good1.0 (1.22.0-4ubuntu1) lunar; urgency=medium
 
   * Merge from Debian. Remaining changes:
