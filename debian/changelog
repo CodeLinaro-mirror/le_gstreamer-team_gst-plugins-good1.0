@@ -1,3 +1,21 @@
+gst-plugins-good1.0 (1.22.1-1ubuntu1) lunar; urgency=medium
+
+  * Merge from Debian (LP: #2015129. Remaining changes:
+    + Import plugins from -bad that are needed for main applications.
+      - jpegformat
+      - camerabin (+ basecamerabinsrc + photography)
+    + Add a library package containing the shared library and a -dev package for
+      compiling against it. Add Breaks and Replaces against the plugins packages
+      which formerly contained files shipped here.
+    + Add 'pluginsdir' variable to our added pcfile for compatibility with
+      some external software
+    + debian/control{,.in}: Update Vcs-* for Ubuntu
+    + Don't require libqt5waylandclient5-dev Build-Depends on i386
+    + Don't build the Qt6 plugin on i386 since Qt6 isn't built there
+      on Ubuntu yet
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Tue, 04 Apr 2023 08:53:41 -0400
+
 gst-plugins-good1.0 (1.22.1-1) experimental; urgency=medium
 
   * Team upload
