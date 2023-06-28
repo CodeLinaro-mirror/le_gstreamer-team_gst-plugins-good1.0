@@ -1,3 +1,9 @@
+gst-plugins-good1.0 (1.22.4-1ubuntu2) mantic; urgency=medium
+
+  * Disable qt-wayland on i386
+
+ -- Jeremy Bícha <jbicha@ubuntu.com>  Wed, 28 Jun 2023 18:30:37 -0400
+
 gst-plugins-good1.0 (1.22.4-1ubuntu1) mantic; urgency=medium
 
   * Merge from Debian. Remaining changes:
