@@ -1,3 +1,4 @@
 import-camerabin
 import-jpegformat
 add-pkgconfig-file
+qt-Unbreak-build-with-qt-egl-enabled-but-viv_fb-missing.patch
