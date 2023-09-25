@@ -1,3 +1,12 @@
+gst-plugins-good1.0 (1.22.6-1) unstable; urgency=medium
+
+  * Team upload
+  * New upstream bugfix release
+  * Drop Qt patch: applied in new release
+  * Build-Depend on qttools5-dev
+
+ -- Jeremy Bícha <jbicha@ubuntu.com>  Mon, 25 Sep 2023 15:04:32 -0400
+
 gst-plugins-good1.0 (1.22.5-1ubuntu1) mantic; urgency=medium
 
   * Merge from Debian. Remaining changes:
