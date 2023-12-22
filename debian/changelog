@@ -1,3 +1,18 @@
+gst-plugins-good1.0 (1.22.8-3ubuntu1) noble; urgency=medium
+
+  * Merge from Debian. Remaining changes:
+    + Import plugins from -bad that are needed for main applications.
+      - jpegformat
+      - camerabin (+ basecamerabinsrc + photography)
+    + Add a library package containing the shared library and a -dev package for
+      compiling against it. Add Breaks and Replaces against the plugins packages
+      which formerly contained files shipped here.
+    + Add 'pluginsdir' variable to our added pcfile for compatibility with
+      some external software
+    + debian/gbp.conf: Update Vcs-* for Ubuntu
+
+ -- Jeremy Bícha <jbicha@ubuntu.com>  Fri, 22 Dec 2023 09:06:42 -0500
+
 gst-plugins-good1.0 (1.22.8-3) unstable; urgency=medium
 
   * Team upload
