@@ -32,7 +32,6 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/video/video.h>
 #include "gstrtpelements.h"
-#include "dboolhuff.h"
 #include "gstrtpvp8pay.h"
 #include "gstrtputils.h"
 
@@ -45,6 +44,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_vp8_pay_debug);
 enum
 {
   PROP_0,
+  PROP_PICTURE_ID,
   PROP_PICTURE_ID_MODE,
   PROP_PICTURE_ID_OFFSET
 };
@@ -98,7 +98,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-vp8"));
 
 static gint
-picture_id_field_len (PictureIDMode mode)
+picture_id_field_len (GstVP8RtpPayPictureIDMode mode)
 {
   if (VP8_PAY_NO_PICTURE_ID == mode)
     return 0;
@@ -108,30 +108,41 @@ picture_id_field_len (PictureIDMode mode)
 }
 
 static void
-gst_rtp_vp8_pay_picture_id_reset (GstRtpVP8Pay * obj)
+gst_rtp_vp8_pay_picture_id_reset (GstRtpVP8Pay * self)
 {
   gint nbits;
+  gint old_picture_id = self->picture_id;
+  gint picture_id = 0;
 
-  if (obj->picture_id_offset == -1)
-    obj->picture_id = g_random_int ();
-  else
-    obj->picture_id = obj->picture_id_offset;
+  if (self->picture_id_mode != VP8_PAY_NO_PICTURE_ID) {
+    if (self->picture_id_offset == -1) {
+      picture_id = g_random_int ();
+    } else {
+      picture_id = self->picture_id_offset;
+    }
+    nbits = picture_id_field_len (self->picture_id_mode);
+    picture_id &= (1 << nbits) - 1;
+  }
+  g_atomic_int_set (&self->picture_id, picture_id);
 
-  nbits = picture_id_field_len (obj->picture_id_mode);
-  obj->picture_id &= (1 << nbits) - 1;
+  GST_LOG_OBJECT (self, "picture-id reset %d -> %d",
+      old_picture_id, picture_id);
 }
 
 static void
-gst_rtp_vp8_pay_picture_id_increment (GstRtpVP8Pay * obj)
+gst_rtp_vp8_pay_picture_id_increment (GstRtpVP8Pay * self)
 {
   gint nbits;
 
-  if (obj->picture_id_mode == VP8_PAY_NO_PICTURE_ID)
+  if (self->picture_id_mode == VP8_PAY_NO_PICTURE_ID)
     return;
 
-  nbits = picture_id_field_len (obj->picture_id_mode);
-  obj->picture_id++;
-  obj->picture_id &= (1 << nbits) - 1;
+  /* Atomically increment and wrap the picture id if it overflows */
+  nbits = picture_id_field_len (self->picture_id_mode);
+  gint picture_id = g_atomic_int_get (&self->picture_id);
+  picture_id++;
+  picture_id &= (1 << nbits) - 1;
+  g_atomic_int_set (&self->picture_id, picture_id);
 }
 
 static void
@@ -163,11 +174,24 @@ gst_rtp_vp8_pay_class_init (GstRtpVP8PayClass * gst_rtp_vp8_pay_class)
   gobject_class->set_property = gst_rtp_vp8_pay_set_property;
   gobject_class->get_property = gst_rtp_vp8_pay_get_property;
 
+  /**
+   * rtpvp8pay:picture-id:
+   *
+   * Currently used picture-id
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_PICTURE_ID,
+      g_param_spec_int ("picture-id", "Picture ID",
+          "Currently used picture-id for payloading", 0, 0x7FFF, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_PICTURE_ID_MODE,
       g_param_spec_enum ("picture-id-mode", "Picture ID Mode",
           "The picture ID mode for payloading",
           GST_TYPE_RTP_VP8_PAY_PICTURE_ID_MODE, DEFAULT_PICTURE_ID_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * rtpvp8pay:picture-id-offset:
    *
@@ -228,6 +252,9 @@ gst_rtp_vp8_pay_get_property (GObject * object,
   GstRtpVP8Pay *rtpvp8pay = GST_RTP_VP8_PAY (object);
 
   switch (prop_id) {
+    case PROP_PICTURE_ID:
+      g_value_set_int (value, g_atomic_int_get (&rtpvp8pay->picture_id));
+      break;
     case PROP_PICTURE_ID_MODE:
       g_value_set_enum (value, rtpvp8pay->picture_id_mode);
       break;
@@ -255,7 +282,6 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer,
   guint8 tmp8 = 0;
   guint8 partitions;
   guint offset;
-  BOOL_DECODER bc;
   guint8 *pdata;
 
   if (G_UNLIKELY (buffer_size < 3))
@@ -304,35 +330,57 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer,
   }
 
   offset = keyframe ? 10 : 3;
-  vp8dx_start_decode (&bc, data + offset, size - offset);
+
+  /* Everything below is actually using some form of arithmetic coding, but as
+   * all the bits we're interested in are encoded with 50:50 probability
+   * they're written out as they are and we can just continue using the bit
+   * reader here */
 
   if (keyframe) {
     /* color space (1 bit) and clamping type (1 bit) */
-    vp8dx_decode_bool (&bc, 0x80);
-    vp8dx_decode_bool (&bc, 0x80);
+    if (!gst_bit_reader_skip (&reader, 2))
+      goto error;
   }
 
   /* segmentation_enabled */
-  if (vp8dx_decode_bool (&bc, 0x80)) {
-    guint8 update_mb_segmentation_map = vp8dx_decode_bool (&bc, 0x80);
-    guint8 update_segment_feature_data = vp8dx_decode_bool (&bc, 0x80);
+  if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+    goto error;
+
+  if (tmp8) {
+    guint8 update_mb_segmentation_map;
+    guint8 update_segment_feature_data;
+
+    if (!gst_bit_reader_get_bits_uint8 (&reader, &update_mb_segmentation_map,
+            1))
+      goto error;
+
+    if (!gst_bit_reader_get_bits_uint8 (&reader, &update_segment_feature_data,
+            1))
+      goto error;
 
     if (update_segment_feature_data) {
       /* skip segment feature mode */
-      vp8dx_decode_bool (&bc, 0x80);
+      if (!gst_bit_reader_skip (&reader, 1))
+        goto error;
 
       /* quantizer update */
       for (i = 0; i < 4; i++) {
         /* skip flagged quantizer value (7 bits) and sign (1 bit) */
-        if (vp8dx_decode_bool (&bc, 0x80))
-          vp8_decode_value (&bc, 8);
+        if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+          goto error;
+        if (tmp8)
+          if (!gst_bit_reader_skip (&reader, 8))
+            goto error;
       }
 
       /* loop filter update */
       for (i = 0; i < 4; i++) {
         /* skip flagged lf update value (6 bits) and sign (1 bit) */
-        if (vp8dx_decode_bool (&bc, 0x80))
-          vp8_decode_value (&bc, 7);
+        if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+          goto error;
+        if (tmp8)
+          if (!gst_bit_reader_skip (&reader, 7))
+            goto error;
       }
     }
 
@@ -340,37 +388,43 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer,
       /* segment prob update */
       for (i = 0; i < 3; i++) {
         /* skip flagged segment prob */
-        if (vp8dx_decode_bool (&bc, 0x80))
-          vp8_decode_value (&bc, 8);
+        if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+          goto error;
+        if (!gst_bit_reader_skip (&reader, 8))
+          goto error;
       }
     }
   }
 
   /* skip filter type (1 bit), loop filter level (6 bits) and
    * sharpness level (3 bits) */
-  vp8_decode_value (&bc, 1);
-  vp8_decode_value (&bc, 6);
-  vp8_decode_value (&bc, 3);
+  if (!gst_bit_reader_skip (&reader, 1 + 6 + 3))
+    goto error;
 
   /* loop_filter_adj_enabled */
-  if (vp8dx_decode_bool (&bc, 0x80)) {
+  if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+    goto error;
+  if (tmp8) {
 
     /* delta update */
-    if (vp8dx_decode_bool (&bc, 0x80)) {
+    if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+      goto error;
+    if (tmp8) {
 
       for (i = 0; i < 8; i++) {
         /* 8 updates, 1 bit indicate whether there is one and if follow by a
          * 7 bit update */
-        if (vp8dx_decode_bool (&bc, 0x80))
-          vp8_decode_value (&bc, 7);
+        if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+          goto error;
+        if (tmp8)
+          if (!gst_bit_reader_skip (&reader, 7))
+            goto error;
       }
     }
   }
 
-  if (vp8dx_bool_error (&bc))
+  if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 2))
     goto error;
-
-  tmp8 = vp8_decode_value (&bc, 2);
 
   partitions = 1 << tmp8;
 
@@ -528,13 +582,12 @@ gst_rtp_vp8_create_header_buffer (GstRtpVP8Pay * self, guint8 partid,
       gboolean use_temporal_scaling = FALSE;
 
       if (meta) {
-        GstStructure *s = gst_custom_meta_get_structure (meta);
-        gst_structure_get_boolean (s, "use-temporal-scaling",
+        gst_structure_get_boolean (meta->structure, "use-temporal-scaling",
             &use_temporal_scaling);
 
         if (use_temporal_scaling)
-          gst_structure_get (s, "layer-id", G_TYPE_UINT, &temporal_layer,
-              "layer-sync", G_TYPE_BOOLEAN, &layer_sync, NULL);
+          gst_structure_get (meta->structure, "layer-id", G_TYPE_UINT,
+              &temporal_layer, "layer-sync", G_TYPE_BOOLEAN, &layer_sync, NULL);
       }
 
       /* FIXME: Support a prediction structure where higher layers don't
@@ -583,7 +636,7 @@ gst_rtp_vp8_drop_vp8_meta (gpointer element, GstBuffer * buf)
 static guint
 gst_rtp_vp8_payload_next (GstRtpVP8Pay * self, GstBufferList * list,
     guint offset, GstBuffer * buffer, gsize buffer_size, gsize max_payload_len,
-    GstCustomMeta * meta)
+    GstCustomMeta * meta, gboolean delta_unit)
 {
   guint partition;
   GstBuffer *header;
@@ -599,7 +652,7 @@ gst_rtp_vp8_payload_next (GstRtpVP8Pay * self, GstBufferList * list,
   if (available > remaining)
     available = remaining;
 
-  if (meta) {
+  if (self->temporal_scalability_fields_present && meta) {
     /* If meta is present, then we have no partition offset information,
      * so always emit PID 0 and set the start bit for the first packet
      * of a frame only (c.f. RFC7741 $4.4)
@@ -623,6 +676,9 @@ gst_rtp_vp8_payload_next (GstRtpVP8Pay * self, GstBufferList * list,
 
   out = gst_buffer_append (header, sub);
 
+  if (delta_unit)
+    GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DELTA_UNIT);
+
   gst_buffer_list_insert (list, -1, out);
 
   return available;
@@ -638,9 +694,12 @@ gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   GstCustomMeta *meta;
   gsize size, max_paylen;
   guint offset, mtu, vp8_hdr_len;
+  gboolean delta_unit;
 
   size = gst_buffer_get_size (buffer);
   meta = gst_buffer_get_custom_meta (buffer, "GstVP8Meta");
+  delta_unit = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
   if (G_UNLIKELY (!gst_rtp_vp8_pay_parse_frame (self, buffer, size))) {
     GST_ELEMENT_ERROR (self, STREAM, ENCODE, (NULL),
         ("Failed to parse VP8 frame"));
@@ -648,13 +707,12 @@ gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   }
 
   if (meta) {
-    GstStructure *s = gst_custom_meta_get_structure (meta);
     gboolean use_temporal_scaling;
     /* For interop it's most likely better to keep the temporal scalability
      * fields present if the stream previously had them present. Alternating
      * whether these fields are present or not may confuse the receiver. */
 
-    gst_structure_get_boolean (s, "use-temporal-scaling",
+    gst_structure_get_boolean (meta->structure, "use-temporal-scaling",
         &use_temporal_scaling);
     if (use_temporal_scaling)
       self->temporal_scalability_fields_present = TRUE;
@@ -671,7 +729,11 @@ gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   while (offset < size) {
     offset +=
         gst_rtp_vp8_payload_next (self, list, offset, buffer, size,
-        max_paylen, meta);
+        max_paylen, meta, delta_unit);
+
+    /* only the first outgoing packet should not have the DELTA_UNIT flag */
+    if (!delta_unit)
+      delta_unit = TRUE;
   }
 
   ret = gst_rtp_base_payload_push_list (payload, list);
@@ -687,9 +749,13 @@ static gboolean
 gst_rtp_vp8_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 {
   GstRtpVP8Pay *self = GST_RTP_VP8_PAY (payload);
+  GstEventType event_type = GST_EVENT_TYPE (event);
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_START) {
-    gst_rtp_vp8_pay_reset (self);
+  if (event_type == GST_EVENT_GAP || event_type == GST_EVENT_FLUSH_START) {
+    gint picture_id = self->picture_id;
+    gst_rtp_vp8_pay_picture_id_increment (self);
+    GST_DEBUG_OBJECT (payload, "Incrementing picture ID on %s event %d -> %d",
+        GST_EVENT_TYPE_NAME (event), picture_id, self->picture_id);
   }
 
   return GST_RTP_BASE_PAYLOAD_CLASS (gst_rtp_vp8_pay_parent_class)->sink_event

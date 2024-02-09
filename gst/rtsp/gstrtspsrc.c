@@ -117,6 +117,8 @@
 #include "gstrtspelements.h"
 #include "gstrtspsrc.h"
 
+#include <gst/glib-compat-private.h>
+
 GST_DEBUG_CATEGORY_STATIC (rtspsrc_debug);
 #define GST_CAT_DEFAULT (rtspsrc_debug)
 
@@ -299,7 +301,7 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_TLS_INTERACTION     NULL
 #define DEFAULT_DO_RETRANSMISSION        TRUE
 #define DEFAULT_NTP_TIME_SOURCE  NTP_TIME_SOURCE_NTP
-#define DEFAULT_USER_AGENT       "GStreamer/" PACKAGE_VERSION
+#define DEFAULT_USER_AGENT       "GStreamer/{VERSION}"
 #define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
 #define DEFAULT_RFC7273_SYNC         FALSE
 #define DEFAULT_ADD_REFERENCE_TIMESTAMP_META FALSE
@@ -361,7 +363,8 @@ enum
   PROP_ONVIF_MODE,
   PROP_ONVIF_RATE_CONTROL,
   PROP_IS_LIVE,
-  PROP_IGNORE_X_SERVER_REPLY
+  PROP_IGNORE_X_SERVER_REPLY,
+  PROP_EXTRA_HTTP_REQUEST_HEADERS,
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -895,6 +898,9 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    *
    * The string to set in the User-Agent header.
    *
+   * If the string contains `{VERSION}` that will be replaced with the
+   * GStreamer version at runtime (since GStreamer 1.24).
+   *
    * Since: 1.6
    */
   g_object_class_install_property (gobject_class, PROP_USER_AGENT,
@@ -1093,6 +1099,22 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           DEFAULT_IGNORE_X_SERVER_REPLY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+   /**
+   * GstRTSPSrc:extra-http-request-headers
+   *
+   * When in tunneled mode append provided headers to any HTTP requests
+   * made by rtspsrc.
+   *
+   * Only applicable for RTSP over HTTP.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_EXTRA_HTTP_REQUEST_HEADERS,
+      g_param_spec_boxed ("extra-http-request-headers", "Extra Headers",
+          "Extra headers to append to HTTP requests when in tunneled mode",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
@@ -1234,7 +1256,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    * @sample: RTP sample to send back
    *
    * Deprecated: 1.22: Use action signal GstRTSPSrc::push-backchannel-sample instead.
-   * IMPORTANT: Please note that this signal decrements the reference count 
+   * IMPORTANT: Please note that this signal decrements the reference count
    *            of sample internally! So it cannot be used from other
    *            language bindings in general.
    *
@@ -1522,6 +1544,8 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->is_live = DEFAULT_IS_LIVE;
   src->seek_seqnum = GST_SEQNUM_INVALID;
   src->group_id = GST_GROUP_ID_INVALID;
+  src->prop_extra_http_request_headers =
+      gst_structure_new_empty ("extra-http-request-headers");
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1596,6 +1620,11 @@ gst_rtspsrc_finalize (GObject * object)
 
   if (rtspsrc->initial_seek)
     gst_event_unref (rtspsrc->initial_seek);
+
+  if (rtspsrc->prop_extra_http_request_headers) {
+    gst_structure_free (rtspsrc->prop_extra_http_request_headers);
+    rtspsrc->prop_extra_http_request_headers = NULL;
+  }
 
   /* free locks */
   g_rec_mutex_clear (&rtspsrc->stream_rec_lock);
@@ -1867,6 +1896,16 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_IGNORE_X_SERVER_REPLY:
       rtspsrc->ignore_x_server_reply = g_value_get_boolean (value);
       break;
+    case PROP_EXTRA_HTTP_REQUEST_HEADERS:{
+      const GstStructure *s = gst_value_get_structure (value);
+      if (rtspsrc->prop_extra_http_request_headers) {
+        gst_structure_free (rtspsrc->prop_extra_http_request_headers);
+      }
+      rtspsrc->prop_extra_http_request_headers =
+          s ? gst_structure_copy (s) :
+          gst_structure_new_empty ("extra-http-request-headers");
+    }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2039,6 +2078,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_IGNORE_X_SERVER_REPLY:
       g_value_set_boolean (value, rtspsrc->ignore_x_server_reply);
+      break;
+    case PROP_EXTRA_HTTP_REQUEST_HEADERS:
+      gst_value_set_structure (value, rtspsrc->prop_extra_http_request_headers);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2977,7 +3019,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
 
   /* If an accurate seek was requested, we want to clip the segment we
    * output in ONVIF mode to the requested bounds */
-  src->clip_out_segment = ! !(flags & GST_SEEK_FLAG_ACCURATE);
+  src->clip_out_segment = !!(flags & GST_SEEK_FLAG_ACCURATE);
   src->seek_seqnum = gst_event_get_seqnum (event);
 
   /* prepare for streaming again */
@@ -5290,6 +5332,18 @@ accept_certificate_cb (GTlsConnection * conn, GTlsCertificate * peer_cert,
   return accept;
 }
 
+static gboolean
+_add_header_to_conn (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  const gchar *key_str = g_quark_to_string (field_id);
+  const gchar *value_str = g_value_get_string (value);
+
+  GstRTSPConnection *conn = (GstRTSPConnection *) user_data;
+  gst_rtsp_connection_add_extra_http_request_header (conn, key_str, value_str);
+
+  return TRUE;
+}
+
 static GstRTSPResult
 gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
     gboolean async)
@@ -5297,6 +5351,8 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
   GstRTSPResult res;
   GstRTSPMessage response;
   gboolean retry = FALSE;
+  GstRTSPUrl *url;
+  gchar *new_url;
   memset (&response, 0, sizeof (response));
   gst_rtsp_message_init (&response);
   do {
@@ -5348,6 +5404,11 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
         gst_rtsp_connection_set_proxy (info->connection, src->proxy_host,
             src->proxy_port);
       }
+
+      if (src->prop_extra_http_request_headers != NULL) {
+        gst_structure_foreach (src->prop_extra_http_request_headers,
+            _add_header_to_conn, info->connection);
+      }
     }
 
     if (!info->connected) {
@@ -5372,7 +5433,19 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
 
       if (res == GST_RTSP_OK)
         info->connected = TRUE;
-      else if (!retry)
+      else if (res == GST_RTSP_OK_REDIRECT) {
+        url = gst_rtsp_connection_get_url (info->connection);
+
+        if (url == NULL || info->url_str == NULL)
+          goto could_not_connect;
+
+        new_url = gst_rtsp_url_get_request_uri (url);
+        GST_DEBUG_OBJECT (src, "redirected from %s to %s", info->url_str,
+            new_url);
+        g_free (info->url_str);
+        info->url_str = new_url;
+        info->connected = TRUE;
+      } else if (!retry)
         goto could_not_connect;
     }
   } while (!info->connected && retry);
@@ -5473,8 +5546,13 @@ gst_rtspsrc_init_request (GstRTSPSrc * src, GstRTSPMessage * msg,
     return res;
 
   /* set user-agent */
-  if (src->user_agent)
-    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_USER_AGENT, src->user_agent);
+  if (src->user_agent) {
+    GString *user_agent = g_string_new (src->user_agent);
+
+    g_string_replace (user_agent, "{VERSION}", PACKAGE_VERSION, 0);
+    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_USER_AGENT, user_agent->str);
+    g_string_free (user_agent, TRUE);
+  }
 
   return res;
 }

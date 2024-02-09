@@ -771,11 +771,8 @@ gst_matroska_demux_parse_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml,
         if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
           break;
 
-        if (num == 0) {
-          GST_ERROR_OBJECT (demux, "Invalid TrackUID 0");
-          ret = GST_FLOW_ERROR;
-          break;
-        }
+        if (num == 0)
+          GST_WARNING_OBJECT (demux, "Invalid TrackUID 0");
 
         GST_DEBUG_OBJECT (demux, "TrackUID: %" G_GUINT64_FORMAT, num);
         context->uid = num;
@@ -2811,12 +2808,12 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
 
   GST_DEBUG_OBJECT (demux, "configuring seek");
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
-  keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
-  after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
-  before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
-  accurate = ! !(flags & GST_SEEK_FLAG_ACCURATE);
-  instant_rate_change = ! !(flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  keyunit = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  after = !!(flags & GST_SEEK_FLAG_SNAP_AFTER);
+  before = !!(flags & GST_SEEK_FLAG_SNAP_BEFORE);
+  accurate = !!(flags & GST_SEEK_FLAG_ACCURATE);
+  instant_rate_change = !!(flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE);
 
   /* Directly send the instant-rate-change event here before taking the
    * stream-lock so that it can be applied as soon as possible */
@@ -6504,11 +6501,23 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       case GST_MAKE_FOURCC ('Y', '8', ' ', ' '):
         format = GST_VIDEO_FORMAT_GRAY8;
         break;
+      case GST_MAKE_FOURCC ('Y', '1', 0, 10):
+        format = GST_VIDEO_FORMAT_GRAY10_LE32;
+        break;
+      case GST_MAKE_FOURCC ('Y', '1', 0, 16):
+        format = GST_VIDEO_FORMAT_GRAY16_LE;
+        break;
       case GST_MAKE_FOURCC ('R', 'G', 'B', 24):
         format = GST_VIDEO_FORMAT_RGB;
         break;
       case GST_MAKE_FOURCC ('B', 'G', 'R', 24):
         format = GST_VIDEO_FORMAT_BGR;
+        break;
+      case GST_MAKE_FOURCC ('R', 'B', 'A', 64):
+        format = GST_VIDEO_FORMAT_RGBA64_LE;
+        break;
+      case GST_MAKE_FOURCC ('B', 'R', 'A', 64):
+        format = GST_VIDEO_FORMAT_BGRA64_LE;
         break;
       default:
         GST_DEBUG ("Unknown fourcc %" GST_FOURCC_FORMAT,
