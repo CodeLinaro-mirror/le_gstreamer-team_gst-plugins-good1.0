@@ -1,3 +1,115 @@
+=== release 1.23.2 ===
+
+2024-02-15 15:37:17 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.23.2
+
+2024-02-14 15:49:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/dboolhuff.LICENSE:
+	* gst/rtp/dboolhuff.c:
+	* gst/rtp/dboolhuff.h:
+	* gst/rtp/gstrtpvp8pay.c:
+	* gst/rtp/meson.build:
+	  Revert "rtpvp8pay: Use GstBitReader instead of dboolhuff implementation from libvpx"
+	  This reverts commit b730e7a1b28ce4bcea90fbff7c5293fa2c0a76b2.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3300
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6116>
+
+2024-02-13 18:57:05 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  webrtcbin, rtpbin: check before setting properties on jitterbuffer
+	  In rtpbin we already systematically check for all property names
+	  except latency, correct that.
+	  In webrtcbin we need to check before trying to use the do-retransmission
+	  property.
+	  This is useful for the case where an element like identity gets passed
+	  to rtpbin's request-jitterbuffer property, when the application wants
+	  to use webrtcbin in an SFU situation, with no reordering and no added
+	  latency
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6112>
+
+2024-02-13 17:43:15 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtpmanager/gstrtpfunnel.c:
+	  rtpfunnel: Handle NTP-64 RTP header extension in caps similar to TWCC
+	  This is another header extension that is handled by rtpsession and needs
+	  to be preserved in the caps that are created by rtpfunnel.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6109>
+
+2024-02-14 00:37:38 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/lv.po:
+	* po/ro.po:
+	* po/tr.po:
+	  gst-plugins-good: update translations
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6113>
+
+2024-02-13 18:07:52 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtpmanager/gstrtpfunnel.c:
+	  rtpfunnel: Also write TWCC RTP header extension into buffer list buffers
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6110>
+
+2024-02-03 11:54:41 +0000  Philippe Normand <philn@igalia.com>
+
+	* ext/adaptivedemux2/dash/gstdashdemux.c:
+	  dashdemux2: Basic support for container-specific-track-id tag
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6041>
+
+2024-02-03 11:53:36 +0000  Philippe Normand <philn@igalia.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroska-demux: Basic support for container-specific-track-id tag
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6041>
+
+2024-02-03 11:52:42 +0000  Philippe Normand <philn@igalia.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Basic support for container-specific-track-id tag
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6041>
+
+2024-02-09 11:13:16 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/qt6/meson.build:
+	  meson: Don't use fs.copyfile() for qt6 resources
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3285
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6077>
+
+2023-12-01 14:49:37 +0100  Ignazio Pillai <ignazp@amazon.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/cutter/gstcutter.c:
+	* gst/cutter/gstcutter.h:
+	  cutter: add audio-level-meta
+	  Set GstAudioLevelMeta on buffers
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5771>
+
+2024-02-05 23:04:45 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/qt6/meson.build:
+	  meson: Fix several warnings in the build
+	  Deprecations, incorrect options, etc.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6058>
+
+2024-02-05 22:39:29 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* tests/check/meson.build:
+	  good/tests: Don't enable soup tests if soup is disabled
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3268
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6058>
+
+2024-02-06 18:09:02 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6066>
+
 === release 1.23.1 ===
 
 2024-02-06 16:37:19 +0000  Tim-Philipp Müller <tim@centricular.com>
