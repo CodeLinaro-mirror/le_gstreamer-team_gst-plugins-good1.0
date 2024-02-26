@@ -1,3 +1,245 @@
+=== release 1.23.90 ===
+
+2024-02-23 18:20:11 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.23.90
+
+2024-02-23 11:45:50 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/soup/meson.build:
+	* meson_options.txt:
+	  soup: Re-add soup-lookup-dep option
+	  It's still useful on Linux since it ensures that the tests are going
+	  to be built, since they use the same dep lookup as the plugin now.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6197>
+
+2024-02-21 19:13:45 +1100  Matthew Waters <matthew@centricular.com>
+
+	* tests/examples/qt/qmlsink-multisink/main.cpp:
+	  examples/qmlsinnk-multisink: allow running with leaks tracer
+	  Include a gst_deinit() after the qml engine has been destroyed.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6160>
+
+2024-02-21 19:11:59 +1100  Matthew Waters <matthew@centricular.com>
+
+	* tests/examples/qt/qmlsink-multisink/videoitem/videoitem.cpp:
+	  examples/qml: fix some leaks in the multisink example
+	  A GstPad was being leaked and possibly the qmlglsink element depending
+	  on if Qt runs the scenegraph thread again when destroying the example
+	  video item.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6160>
+
+2024-02-21 19:09:20 +1100  Matthew Waters <matthew@centricular.com>
+
+	* ext/qt/qtitem.cc:
+	* ext/qt6/qt6glitem.cc:
+	  qml, qml6: Fix leak of QSGMaterial/Geometry (and therefore a possible GstBuffer)
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6160>
+
+2024-02-07 15:04:53 +1100  Matthew Waters <matthew@centricular.com>
+
+	* ext/qt6/gstqsg6material.cc:
+	  qml6: fix a leak of the wrapped QSGTextures
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6160>
+
+2024-02-21 19:21:57 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtpmanager/gstrtphdrext-clientaudiolevel.c:
+	  rtphdrext-clientaudiolevel: Fix typo in documentation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6175>
+
+2024-02-21 13:45:47 +0100  Arnaud Vrac <avrac@freebox.fr>
+
+	* ext/adaptivedemux2/meson.build:
+	  adaptivedemux2: fix build with recent meson
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6168>
+
+2024-02-20 11:55:25 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/rtp/gstrtppassthroughpay.c:
+	  rtppassthroughpay: fix critical in gst-inspect
+	  gst_segment_to_running_time() will fail noisily
+	  if the segment has not been initialised yet.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6151>
+
+2024-02-21 02:30:11 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/adaptivedemux2/gstadaptivedemuxelement.c:
+	* ext/adaptivedemux2/meson.build:
+	* ext/soup/gstsoupelement.c:
+	* ext/soup/gstsouphttpsrc.c:
+	* ext/soup/gstsouploader.c:
+	* ext/soup/gstsouploader.h:
+	* ext/soup/gstsouputils.h:
+	* ext/soup/meson.build:
+	* meson_options.txt:
+	* tests/check/meson.build:
+	  soup: Link to libsoup in all cases on non-Linux
+	  We have unsolvable issues on macOS because of this, and the feature
+	  was added specifically for issues that occur on Linux distros since
+	  they ship both libsoup 2.4 and 3.0.
+	  Everyone else should just pick one and use it, since you cannot mix
+	  the two in a single process anyway.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1171
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6156>
+
+2024-02-17 23:33:26 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Reset combined flows after a seek before restarting
+	  After a flushing seek, rtspsrc doesn't reset the last_ret value for
+	  streams, so might immediately shut down again when it resumes pushing
+	  buffers to pads due to a cached `GST_FLOW_FLUSHING` result
+	  Prevent a stored flushing value from immediately stopping
+	  playback again by resetting pad flows before (re)starting
+	  playback.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6137>
+
+2023-11-29 17:43:30 +0200  Maksym Khomenko <maksym.khomenko@skelia.partners>
+
+	* sys/osxaudio/gstosxcoreaudiocommon.c:
+	  osxaudio: add mapping for top/left/right surround channels
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5731>
+
+2023-11-29 17:40:52 +0200  Maksym Khomenko <maksym.khomenko@skelia.partners>
+
+	* sys/osxaudio/gstosxcoreaudiocommon.c:
+	  osxaudio: correct mapping for left/right surround
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5731>
+
+2024-02-12 09:55:24 +0100  Marc Leeman <m.leeman@televic.com>
+
+	* ext/qt6/meson.build:
+	  qt6: search in /usr/lib/qt6/bin/ for qsb
+	  In Debian and possibly other distributions, qsb (qt6-shader-baker) is
+	  not in the default path, but in a QT6 specific path. Search there too
+	  Applied changes from Nirbheek
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6095>
+
+2023-09-17 18:48:13 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/isomp4/gstrtpxqtdepay.c:
+	  rtpxqtdepay: Enabled header extension aggregation
+	  Because this depayloader may build several output buffers within one
+	  process run we push them all into a GstBufferList and push them out at
+	  once to make sure that each buffer gets notified about each header
+	  extension.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2023-09-10 19:06:35 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/rtp/gstrtpmp4gdepay.c:
+	* gst/rtp/gstrtpmp4gdepay.h:
+	  rtpmp4gdepay: Enabled header extension aggregation
+	  Because this depayloader may build several output buffers within one
+	  process run we push them all into a GstBufferList and push them out at
+	  once to make sure that each buffer gets notified about each header
+	  extension.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2023-09-10 19:06:10 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/rtp/gstrtpsbcdepay.c:
+	  rtpsbcdepay: Enabled header extension aggregation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2023-09-10 19:05:11 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/rtp/gstrtpvorbisdepay.c:
+	  rtpvorbisdepay: Enabled header extension aggregation
+	  Because this depayloader may build several output buffers within one
+	  process run we push them all into a GstBufferList and push them out at
+	  once to make sure that each buffer gets notified about each header
+	  extension.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2023-09-10 19:04:00 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/rtp/gstrtpmp4vdepay.c:
+	  rtpmp4vdepay: Enabled header extension aggregation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2023-09-04 17:33:52 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/rtp/gstrtptheoradepay.c:
+	  rtptheoradepay: Enabled header extension aggregation
+	  Because this depayloader may build several output buffers within one
+	  process run we push them all into a GstBufferList and push them out at
+	  once to make sure that each buffer gets notified about each header
+	  extension.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2023-09-04 17:33:34 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/rtp/gstrtpsv3vdepay.c:
+	  rtpsv3vdepay: Enabled header extension aggregation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2023-09-04 17:31:57 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/rtp/gstrtpmp4adepay.c:
+	  rtpmp4adepay: Enabled header extension aggregation
+	  Because this depayloader may build several output buffers within one process
+	  run we push them all into a GstBufferList and push them out at once to
+	  make sure that each buffer gets notified about each header extension.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2023-09-04 17:31:41 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/rtp/gstrtpklvdepay.c:
+	  rtpklvdepay: Enabled header extension aggregation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2023-09-04 17:31:20 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/rtp/gstrtpjpegdepay.c:
+	  rtpjpegdepay: Enabled header extension aggregation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2023-09-04 17:30:48 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/rtp/gstrtpj2kdepay.c:
+	  rtpj2kdepay: Enabled header extension aggregation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2023-09-04 17:30:31 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/rtp/gstrtph263pdepay.c:
+	  rtph263pdepay: Enabled header extension aggregation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2023-09-04 17:29:32 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/rtp/gstrtph263depay.c:
+	  rtph263depay: Enabled header extensions aggregation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2023-09-04 17:28:46 +0200  Jochen Henneberg <jh@henneberg-systemdesign.com>
+
+	* gst/rtp/gstrtph261depay.c:
+	  rtph261depay: Enabled header extension aggregation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5378>
+
+2014-06-18 14:27:22 +0200  Priit Laes <plaes@plaes.org>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libcaca/gstcacasink.c:
+	* ext/libcaca/gstcacasink.h:
+	  cacasink: add driver selection support from the pipeline
+	  https://bugzilla.gnome.org/show_bug.cgi?id=599018
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5491>
+
+2024-02-15 16:38:53 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6126>
+
 === release 1.23.2 ===
 
 2024-02-15 15:37:17 +0000  Tim-Philipp Müller <tim@centricular.com>
