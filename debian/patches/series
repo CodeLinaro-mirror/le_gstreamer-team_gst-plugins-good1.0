@@ -1,3 +1,4 @@
 import-camerabin
 import-jpegformat
 add-pkgconfig-file
+0000_remove-flv-test.patch
