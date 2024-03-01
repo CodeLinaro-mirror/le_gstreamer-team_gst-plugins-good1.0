@@ -1,3 +1,9 @@
+gst-plugins-good1.0 (1.23.90-1ubuntu2) noble; urgency=medium
+
+  * No-change rebuild against libdv4t64
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Fri, 01 Mar 2024 22:04:26 +0000
+
 gst-plugins-good1.0 (1.23.90-1ubuntu1) noble; urgency=medium
 
   * Merge from Debian. Remaining changes:
