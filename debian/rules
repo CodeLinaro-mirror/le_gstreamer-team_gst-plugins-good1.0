@@ -32,6 +32,8 @@ endif
 
 conf_flags = -Dpackage-name=$(GST_PACKAGE_NAME) -Dpackage-origin=$(GST_PACKAGE_ORIGIN)
 conf_flags += -Dauto_features=enabled -Ddoc=disabled -Drpicamsrc=disabled
+# opencore-amr is in 'universe' in Ubuntu, so we disable these for now
+conf_flags += -Damrnb=disabled -Damrwbdec=disabled
 
 ifeq ($(DEB_HOST_ARCH_OS),hurd)
 conf_flags += -Doss4=disabled
