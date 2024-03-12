@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.23.90\n"
+"Project-Id-Version: gst-plugins-good-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-23 18:21+0000\n"
+"POT-Creation-Date: 2024-03-04 23:52+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,12 +23,12 @@ msgstr ""
 
 #: ext/jpeg/gstjpegdec.c:983 ext/jpeg/gstjpegdec.c:1255
 #: ext/jpeg/gstjpegdec.c:1264 ext/jpeg/gstjpegdec.c:1274
-#: ext/jpeg/gstjpegdec.c:1283 ext/jpeg/gstjpegdec.c:1567
-#: ext/jpeg/gstjpegdec.c:1595
+#: ext/jpeg/gstjpegdec.c:1283 ext/jpeg/gstjpegdec.c:1568
+#: ext/jpeg/gstjpegdec.c:1596
 msgid "Failed to decode JPEG image"
 msgstr ""
 
-#: ext/jpeg/gstjpegdec.c:1555
+#: ext/jpeg/gstjpegdec.c:1556
 msgid "Failed to read memory"
 msgstr ""
 
