@@ -1,3 +1,9 @@
+gst-plugins-good1.0 (1.24.0-1ubuntu2) noble; urgency=medium
+
+  * No-change rebuild against libqt5core5t64
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Fri, 15 Mar 2024 04:32:37 +0000
+
 gst-plugins-good1.0 (1.24.0-1ubuntu1) noble; urgency=medium
 
   * Merge from Debian. Remaining changes:
