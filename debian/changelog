@@ -1,3 +1,9 @@
+gst-plugins-good1.0 (1.24.0-1ubuntu5) noble; urgency=medium
+
+  * Change libsoup2.4-1 dependency to 64-bit time_t libsoup-2.4-1 one.
+
+ -- Julian Andres Klode <juliank@ubuntu.com>  Sun, 24 Mar 2024 11:31:42 +0100
+
 gst-plugins-good1.0 (1.24.0-1ubuntu4) noble; urgency=medium
 
   * No-change rebuild against libvpx9.
