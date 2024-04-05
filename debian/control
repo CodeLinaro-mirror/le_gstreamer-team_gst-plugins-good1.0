@@ -44,6 +44,8 @@ Build-Depends: debhelper,
                libmp3lame-dev,
                libmpg123-dev (>= 1.13),
                libtwolame-dev (>= 0.3.10),
+               libopencore-amrnb-dev,
+               libopencore-amrwb-dev,
                qtbase5-dev [amd64 arm64 armel armhf i386 mips64el ppc64el riscv64 s390x hurd-i386 powerpc ppc64 sparc64],
                qtbase5-private-dev [amd64 arm64 armel armhf i386 mips64el ppc64el riscv64 s390x hurd-i386 powerpc ppc64 sparc64],
                qtdeclarative5-dev [amd64 arm64 armel armhf i386 mips64el ppc64el riscv64 s390x hurd-i386 powerpc ppc64 sparc64],
@@ -165,14 +167,16 @@ Depends: ${misc:Depends},
          gstreamer1.0-audiosink,
          gstreamer1.0-plugins-base (>= 1.24.0),
          libgstreamer-plugins-good1.0-0 (= ${binary:Version}),
-         libsoup-2.4-1 (>= 2.48) | libsoup-3.0-0
+         libsoup-3.0-0
 Recommends: gstreamer1.0-x
 Replaces: gstreamer1.0-plugins-bad (<< 1.15.1),
           gstreamer1.0-plugins-ugly (<< 1.24),
           gstreamer1.0-pulseaudio (<< 1.18.0)
 Breaks: gstreamer1.0-plugins-bad (<< 1.15.1),
         gstreamer1.0-plugins-ugly (<< 1.24),
-        gstreamer1.0-pulseaudio (<< 1.18.0)
+        gstreamer1.0-pulseaudio (<< 1.18.0),
+        libv4l-0 (<< 1.26.1-4~),
+        libv4lconvert0 (<< 1.26.1-4~)
 XB-GStreamer-Version: ${gstreamer:Version}
 XB-GStreamer-Elements: ${gstreamer:Elements}
 XB-GStreamer-URI-Sources: ${gstreamer:URISources}
