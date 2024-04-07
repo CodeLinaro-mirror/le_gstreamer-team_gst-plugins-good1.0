@@ -1,4 +1,4 @@
-gst-plugins-good1.0 (1.24.1-2ubuntu1) UNRELEASED; urgency=medium
+gst-plugins-good1.0 (1.24.1-2ubuntu1) noble; urgency=medium
 
   * Merge from Debian. Remaining changes:
     + Import plugins from -bad that are needed for main applications.
