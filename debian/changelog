@@ -1,3 +1,9 @@
+gst-plugins-good1.0 (1.24.2-1) unstable; urgency=medium
+
+  * New upstream version 1.24.2
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Wed, 10 Apr 2024 09:30:53 +0200
+
 gst-plugins-good1.0 (1.24.1-2ubuntu1) noble; urgency=medium
 
   * Merge from Debian. Remaining changes:
