@@ -1,3 +1,9 @@
+gst-plugins-good1.0 (1.24.8-1ubuntu2) plucky; urgency=medium
+
+  * No-change rebuild against Qt 6.7.2 private-abi.
+
+ -- Rik Mills <rikmills@kde.org>  Thu, 17 Oct 2024 17:52:10 +0100
+
 gst-plugins-good1.0 (1.24.8-1ubuntu1) oracular; urgency=medium
 
   * Merge from Debian (LP: #2082087). Remaining changes:
