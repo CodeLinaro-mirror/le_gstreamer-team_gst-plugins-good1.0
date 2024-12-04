@@ -2041,7 +2041,7 @@ index 0000000..4fd78c0
 +pkgconfig.generate(gstjpegformat, install_dir : plugins_pkgconfig_install_dir)
 +plugins += [gstjpegformat]
 diff --git a/gst/meson.build b/gst/meson.build
-index 05b0b06..271e303 100644
+index 18d033f..6ec3dcc 100644
 --- a/gst/meson.build
 +++ b/gst/meson.build
 @@ -2,7 +2,7 @@ foreach plugin : ['alpha', 'apetag', 'audiofx', 'audioparsers', 'auparse',
@@ -2054,7 +2054,7 @@ index 05b0b06..271e303 100644
                    'rtpmanager', 'rtsp', 'shapewipe', 'smpte', 'spectrum',
                    'udp', 'videobox', 'videocrop', 'videofilter', 'videomixer',
 diff --git a/meson_options.txt b/meson_options.txt
-index ab3e04b..f871e13 100644
+index 4acce2a..64c0ef6 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
 @@ -22,6 +22,7 @@ option('id3demux', type : 'feature', value : 'auto')
@@ -2065,7 +2065,7 @@ index ab3e04b..f871e13 100644
  option('law', type : 'feature', value : 'auto')
  option('level', type : 'feature', value : 'auto')
  option('matroska', type : 'feature', value : 'auto')
-@@ -95,6 +96,7 @@ option('v4l2-gudev', type : 'feature', value : 'auto', description : 'Use libgud
+@@ -118,6 +119,7 @@ option('v4l2-gudev', type : 'feature', value : 'auto', description : 'Use libgud
  # Common feature options
  option('examples', type : 'feature', value : 'auto', yield : true)
  option('tests', type : 'feature', value : 'auto', yield : true)

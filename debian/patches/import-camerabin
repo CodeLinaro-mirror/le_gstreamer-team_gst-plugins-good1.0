@@ -8402,7 +8402,7 @@ index 4dfe3b7..18d033f 100644
                    'goom2k1', 'icydemux', 'id3demux', 'imagefreeze',
                    'interleave', 'isomp4', 'law', 'level', 'matroska',
 diff --git a/meson.build b/meson.build
-index c21a5ad..644d398 100644
+index cafe09a..343e4eb 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -32,6 +32,12 @@ else
@@ -8418,7 +8418,7 @@ index c21a5ad..644d398 100644
  
  plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
  plugins = []
-@@ -100,11 +106,25 @@ if have_cxx and cxx.has_link_argument('-Wl,-z,nodelete')
+@@ -98,11 +104,25 @@ if have_cxx and cxx.has_link_argument('-Wl,-z,nodelete')
    add_project_link_arguments('-Wl,-z,nodelete', language: 'cpp')
  endif
  
@@ -8445,7 +8445,7 @@ index c21a5ad..644d398 100644
  # Disable strict aliasing
  if cc.has_argument('-fno-strict-aliasing')
    add_project_arguments('-fno-strict-aliasing', language: 'c')
-@@ -134,7 +154,7 @@ if glib_checks.disabled() or (glib_checks.auto() and not gst_version_is_dev)
+@@ -132,7 +152,7 @@ if glib_checks.disabled() or (glib_checks.auto() and not gst_version_is_dev)
    add_project_arguments('-DG_DISABLE_CHECKS', language: 'c')
  endif
  
@@ -8454,7 +8454,7 @@ index c21a5ad..644d398 100644
  cdata.set('ENABLE_NLS', 1)
  
  check_headers = [
-@@ -278,6 +298,11 @@ endif
+@@ -277,6 +297,11 @@ endif
  cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
  cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
  
@@ -8466,7 +8466,7 @@ index c21a5ad..644d398 100644
  # Mandatory GST deps
  gst_dep = dependency('gstreamer-1.0', version : gst_req,
    fallback : ['gstreamer', 'gst_dep'])
-@@ -459,6 +484,10 @@ else
+@@ -481,6 +506,10 @@ else
    message('GStreamer debug system is enabled')
  endif
  
@@ -8477,7 +8477,7 @@ index c21a5ad..644d398 100644
  presetdir = join_paths(get_option('datadir'), 'gstreamer-' + api_version, 'presets')
  
  python3 = import('python').find_installation()
-@@ -469,6 +498,16 @@ if get_option('default_library') == 'shared'
+@@ -491,6 +520,16 @@ if get_option('default_library') == 'shared'
    plugins_pkgconfig_install_dir = disabler()
  endif
  
@@ -8495,7 +8495,7 @@ index c21a5ad..644d398 100644
  subdir('sys')
  subdir('ext')
 diff --git a/meson_options.txt b/meson_options.txt
-index 3e472bd..88dd6da 100644
+index f57883d..4acce2a 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
 @@ -6,6 +6,7 @@ option('audioparsers', type : 'feature', value : 'auto')
@@ -10515,7 +10515,7 @@ index 0000000..664e710
 +
 +GST_CHECK_MAIN (camerabin);
 diff --git a/tests/check/meson.build b/tests/check/meson.build
-index 4118c1a..5fd30aa 100644
+index 2fe0b00..0508ba2 100644
 --- a/tests/check/meson.build
 +++ b/tests/check/meson.build
 @@ -30,6 +30,7 @@ good_tests = [
@@ -10526,7 +10526,7 @@ index 4118c1a..5fd30aa 100644
    [ 'elements/capssetter', get_option('debugutils').disabled()],
    [ 'elements/aacparse', get_option('audioparsers').disabled(), [libparser_dep] ],
    [ 'elements/ac3parse', get_option('audioparsers').disabled(), [libparser_dep] ],
-@@ -194,7 +195,7 @@ state_ignore_elements = '''aasink autoaudiosrc autoaudiosink autovideosrc
+@@ -197,7 +198,7 @@ state_ignore_elements = '''aasink autoaudiosrc autoaudiosink autovideosrc
   pulsesink pulsesrc pulsemixer v4l2src'''
  
  # FIXME: check, also + PTHREAD_CFLAGS
