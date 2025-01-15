@@ -1,3 +1,10 @@
+gst-plugins-good1.0 (1.25.1-1) experimental; urgency=medium
+
+  * d/gbp.conf: adjust for experimental
+  * New upstream version 1.25.1
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Wed, 15 Jan 2025 12:36:30 +0100
+
 gst-plugins-good1.0 (1.24.11-2) unstable; urgency=medium
 
   * d/rules: disable adaptivedemux2 on hurd
