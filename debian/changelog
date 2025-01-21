@@ -1,3 +1,11 @@
+gst-plugins-good1.0 (1.25.1-2) experimental; urgency=medium
+
+  * d/control: bump GStreamer version dependency
+  * d/rules: soup only when not hurd
+  * d: build fixes for hurd-amd64 (Closes: #1072337)
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Tue, 21 Jan 2025 12:23:12 +0100
+
 gst-plugins-good1.0 (1.25.1-1) experimental; urgency=medium
 
   * d/gbp.conf: adjust for experimental
