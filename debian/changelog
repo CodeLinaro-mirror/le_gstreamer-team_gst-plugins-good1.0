@@ -1,3 +1,9 @@
+gst-plugins-good1.0 (1.25.1-3) experimental; urgency=medium
+
+  * d/install: libgstsoup.so is not system version.
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Fri, 07 Feb 2025 16:30:04 +0100
+
 gst-plugins-good1.0 (1.25.1-2) experimental; urgency=medium
 
   * d/control: bump GStreamer version dependency
