@@ -492,6 +492,29 @@ _is_core_audio_layout_positioned (AudioChannelLayout * layout)
   return FALSE;
 }
 
+static gboolean
+_core_audio_has_invalid_channel_labels (AudioChannelLayout * layout)
+{
+  guint i;
+
+  g_assert (layout->mChannelLayoutTag ==
+      kAudioChannelLayoutTag_UseChannelDescriptions);
+
+  for (i = 0; i < layout->mNumberChannelDescriptions; ++i) {
+    /* Let's use our mapping to judge whether the value is valid.
+     * It doesn't support all of the defined positions, but the missing ones
+     * aren't useful to us anyway. */
+    GstAudioChannelPosition p =
+        gst_core_audio_channel_label_to_gst
+        (layout->mChannelDescriptions[i].mChannelLabel, i, FALSE);
+
+    if (p == GST_AUDIO_CHANNEL_POSITION_INVALID)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 static void
 _core_audio_parse_channel_descriptions (AudioChannelLayout * layout,
     guint * channels, guint64 * channel_mask, GstAudioChannelPosition * pos)
@@ -501,6 +524,24 @@ _core_audio_parse_channel_descriptions (AudioChannelLayout * layout,
 
   g_assert (layout->mChannelLayoutTag ==
       kAudioChannelLayoutTag_UseChannelDescriptions);
+
+  /* For >16ch devices, CoreAudio can give out completely incorrect
+   * channel positions by default - instead of using kAudioChannelLabel_Discrete_X,
+   * it just returns incrementing values starting from 0, some of which are not
+   * valid if you check against the CoreAudioBaseTypes.h header.
+   * If such case is detected, let's just swap all positions to Discrete,
+   * which map to GST_AUDIO_CHANNEL_POSITION_NONE. */
+  if (_core_audio_has_invalid_channel_labels (layout)) {
+    GST_DEBUG
+        ("Invalid channel positions given by CoreAudio, setting all to unpositioned");
+    if (pos) {
+      for (i = 0; i < layout->mNumberChannelDescriptions; ++i)
+        pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+    }
+    *channels = layout->mNumberChannelDescriptions;
+    *channel_mask = 0;
+    return;
+  }
 
   positioned = _is_core_audio_layout_positioned (layout);
   *channel_mask = 0;
@@ -825,7 +866,7 @@ gst_core_audio_get_channel_layout (GstCoreAudio * core_audio, gboolean outer)
 GstCaps *
 gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
 {
-  guint i, channels;
+  guint i, channels, channels_max = 0;
   gboolean spdif_allowed;
   AudioChannelLayout *layout;
   AudioStreamBasicDescription outer_asbd;
@@ -855,6 +896,17 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
             NULL)) {
       GST_WARNING_OBJECT (core_audio, "Failed to parse channel layout");
       channel_mask = 0;
+    }
+
+    if (channel_mask != 0 && channels > 2 &&
+        layout->mChannelLayoutTag ==
+        kAudioChannelLayoutTag_UseChannelDescriptions) {
+      /* CoreAudio gave us a positioned layout, which might mean we're ignoring some unpositioned channels.
+       * For example, with a 64ch output, macOS only allows assigning positions to 16 channels at most.
+       * Let's make sure we also expose the actual maximum amount of channels in our caps,
+       * without any positions assigned. */
+      channels_max =
+          MIN (layout->mNumberChannelDescriptions, GST_OSX_AUDIO_MAX_CHANNEL);
     }
 
     /* If available, start with the preferred caps. */
@@ -941,7 +993,17 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
         gst_caps_append_structure (caps, out_s);
         gst_caps_append_structure (caps, mono);
       } else {
-        /* Otherwise just add the caps */
+        /* Otherwise, if needed, add an unpositioned max-channels variant ... */
+        if (channels_max > 0) {
+          GstStructure *unpos_s = gst_structure_copy (in_s);
+          gst_structure_set (unpos_s, "channels", G_TYPE_INT, channels_max,
+              NULL);
+          gst_structure_set (unpos_s, "channel-mask", GST_TYPE_BITMASK, 0,
+              NULL);
+          gst_caps_append_structure (caps, unpos_s);
+        }
+
+        /* ... and just add the caps */
         gst_caps_append_structure (caps, out_s);
       }
     }
