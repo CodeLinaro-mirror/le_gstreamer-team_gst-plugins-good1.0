@@ -1,3 +1,264 @@
+=== release 1.25.50 ===
+
+2025-02-09 17:35:17 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.25.50
+
+2025-02-04 00:01:01 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/adaptivedemux2/meson.build:
+	* ext/meson.build:
+	* ext/soup/meson.build:
+	  soup: Ensure that libsoup RPATHs are added with Homebrew too
+	  With the old method of adding build RPATHs, only the libsoup as
+	  a subproject was supported. However, it's possible to use Homebrew for
+	  libsoup too by adding libsoup as a dependency to the target (even
+	  though we don't link to it).
+	  Apple ld will not add a LC_LOAD_DYLIB entry for a library unless there
+	  are symbols that need it because meson passes `-dead_strip_dylibs`, so
+	  we can do this without issue.
+	  As a bonus, this ensures the correct build RPATHs in all cases.
+	  Additionally, we still need to explicitly add an LC_RPATH for the
+	  installed case.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4027
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8403>
+
+2024-11-26 11:17:17 -0700  dukesook <devonsookhoo14@gmail.com>
+
+	* gst/isomp4/fourcc.h:
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux.h:
+	  qtdemux: Demux Uncompressed MP4
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/7985>
+
+2025-02-06 17:13:16 +0000  Philippe Normand <philn@igalia.com>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpsession: Fix heap-use-after-free of twcc_packets structure
+	  This is a regression introduced by 90d99c7b52d9dc82a220cca1355f1dca3d57a838.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8427>
+
+2025-01-29 20:42:55 +1100  Jan Schmidt <jan@centricular.com>
+
+	* tests/examples/rtsp/test-onvif.c:
+	  test-onvif example: Add support for AAC backchannel
+	  Detect upstream backchannel codec and support AAC in MPEG4-GENERIC
+	  encapsulation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8378>
+
+2025-02-03 14:00:23 +0100  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* docs/gst_plugins_cache.json:
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: object: Use libgstvideo DMA DRM mapping
+	  Complete the mapping by pulling GST/DRM mapping from libgstvideo. This removes
+	  the duplication.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8404>
+
+2025-01-25 04:29:54 +0100  Robert Mader <robert.mader@collabora.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Implement rotation tag support
+	  Similar to qtdemux.
+	  Tested against other Gst elements and MPV. Note that the later
+	  apparently does not show correct results for flipped values.
+	  In particular the Yaw value seems to get ignored by many clients.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8319>
+
+2025-01-20 00:37:58 +0100  Robert Mader <robert.mader@collabora.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: Implement rotation tag support
+	  Similar to qtmux, but for mkv and webm containers.
+	  Tested against other Gst elements and MPV. Note that the later
+	  apparently does not show correct results for flipped values.
+	  In particular the Yaw value seems to get ignored by many clients.
+	  Can be tested with:
+	  ```
+	  gst-launch-1.0 \
+	  videotestsrc num-buffers=90 ! \
+	  taginject tags="image-orientation=rotate-270" ! \
+	  capsfilter caps=video/x-raw,width=640,height=480,max-framerate=30/1 ! \
+	  videoconvert ! \
+	  queue ! \
+	  vp8enc ! \
+	  queue ! \
+	  webmmux ! \
+	  filesink location=./test.webm
+	  ```
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8319>
+
+2025-01-20 00:35:03 +0100  Robert Mader <robert.mader@collabora.com>
+
+	* gst/matroska/matroska-ids.h:
+	  matroska: Add projection IDs
+	  These will allow us to support rotate methods with matroska v4 and
+	  the corresponding webm.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8319>
+
+2025-02-02 16:09:06 +0100  Tomas Granath <tomas.granath@outlook.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Mark streams as EOS when outside the requested segment
+	  Ensure that streams with no (more) data are marked as EOS when
+	  advancing past the requested segment. Without this change the
+	  EOS would be postponed to the end of the file in that case.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8395>
+
+2024-06-11 17:46:11 +0200  Ruben Gonzalez <rgonzalez@fluendo.com>
+
+	* meson.build:
+	  meson: use nls option to ENABLE_NLS
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/7017>
+
+2023-09-29 18:10:09 +0200  Tim-Philipp Müller <tim@centricular.com>
+
+	* scripts/update-orc-dist-files.py:
+	  scripts: update update-orc-dist-files.py scripts for new gst-indent
+	  And fix python indentation with autopep8
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5192>
+
+2025-01-30 15:48:03 +1100  Jan Schmidt <jan@centricular.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2vidoedec: Fix caps negotiation in non-DRM case
+	  Append acquired_caps to the filter_caps being built,
+	  instead of a 2nd copy of acquired_drm_caps.
+	  Fix a regression introduced in
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/7633
+	  when downstream doesn't support DRM output.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8385>
+
+2025-01-27 16:38:38 +0100  Piotr Brzeziński <piotr@centricular.com>
+
+	* sys/osxaudio/gstosxcoreaudio.c:
+	  osxaudio: Always expose max amount of channels with no positions
+	  For outputs with a high number of channels, macOS has a bug where
+	  initially CoreAudio will report incorrect positions for all channels,
+	  but after you run Audio MIDI Setup and configure the speaker layout
+	  there, macOS will always report those few as positioned, with no option
+	  to revert that (other than deleting some internal files).
+	  In such scenario our code would just ignore all the unpositioned
+	  channels. Since you can only position max. 16 channels in macOS, if you
+	  had more on your output device, those would be unusable.
+	  This commit makes sure that in addition to the usual positioned layout
+	  (if there is one), we will expose caps for a no-positions layout that
+	  always has the maximum amount of channels available.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8311>
+
+2025-01-16 17:27:50 +0100  Piotr Brzeziński <piotr@centricular.com>
+
+	* sys/osxaudio/gstosxcoreaudio.c:
+	  osxaudio: Work around invalid channel positions from CoreAudio
+	  By default, for devices with larger amounts of outputs, CoreAudio can
+	  provide invalid channel labels/positions, simply by starting at 0 and
+	  incrementing forward. For example, values 19 through 32 are not valid
+	  according to the CoreAudioBaseTypes.h header, but if your device has >19
+	  output channels, you will find CoreAudio using those values.
+	  This is most likely a bug in CoreAudio, since in that case it should use
+	  unpositioned labels (e.g. _Discrete_X) instead.
+	  This commit aims to work around this by overriding all channels to be
+	  unpositioned if the case above is detected.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8311>
+
+2025-01-19 18:49:57 +0100  Robert Mader <robert.mader@collabora.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: Implement rotation tag support
+	  Mirroring the demux element and isomp4mux from gst-plugins-rs.
+	  Tested against other Gst elements and MPV. Note that the later
+	  apparently does not show correct results for flipped values.
+	  Can be tested with:
+	  ```
+	  gst-launch-1.0 \
+	  videotestsrc num-buffers=90 ! \
+	  taginject tags="image-orientation=rotate-90" ! \
+	  capsfilter caps=video/x-raw,width=640,height=480,max-framerate=30/1 ! \
+	  videoconvert ! \
+	  queue ! \
+	  openh264enc ! \
+	  queue ! \
+	  h264parse ! \
+	  mp4mux ! \
+	  filesink location=./test.mp4
+	  ```
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8371>
+
+2025-01-28 15:08:03 +0100  Alexander Slobodeniuk <aslobodeniuk@fluendo.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: fix critical warnings on negotiation error
+	  This pipeline fails to negotiate on my PC:
+	  gst-launch-1.0 v4l2src ! h264parse ! qtmux ! filesink location=t.mp4
+	  When it happens some critical glib warnings are emitted:
+	  -------------------------------
+	  GStreamer-CRITICAL **: 15:09:03.485: gst_mini_object_copy: assertion 'mini_object != NULL' failed
+	  GStreamer-CRITICAL **: 15:09:03.485: gst_mini_object_unref: assertion 'mini_object != NULL' failed
+	  GStreamer-CRITICAL **: 15:09:03.485: gst_caps_get_structure: assertion 'GST_IS_CAPS (caps)' failed
+	  GStreamer-CRITICAL **: 15:09:03.485: gst_structure_set_value: assertion 'structure != NULL' failed
+	  GStreamer-CRITICAL **: 15:09:03.485: gst_mini_object_unref: assertion 'mini_object != NULL' failed
+	  --------------------------------
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8374>
+
+2025-01-26 13:16:51 +1100  Brad Hards <bradh@frogmouth.net>
+
+	* gst/debugutils/gsttaginject.c:
+	  taginject: typo fix in usage example
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8362>
+
+2025-01-21 18:29:47 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-demux.h:
+	  matroskademux: Add support to seek with stop in push mode
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8340>
+
+2025-01-15 17:36:00 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/meson.build:
+	  docs: generate hotdoc configs for libraries with our helper script
+	  With this patch, configure time is identical no matter whether doc is
+	  enabled or not.
+	  The configuration files also now contain explicitly-listed sources with
+	  no wildcards.
+	  For the four libraries where hotdoc needs to use clang to generate the
+	  documentation (as opposed to the rest of the libraries where hotdoc uses
+	  the gir), the script will call pkg-config to determine the appropriate
+	  C flags.
+	  This means a side effect of this patch is that pkg-config files are now
+	  generated for the gstadaptivedemux and gstopencv libraries.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8312>
+
+2025-01-17 16:51:22 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* meson.build:
+	  meson: bump minimum version to 1.4 in every subprojects
+	  36c01d05797ad9c7778939c54870f979bdcbba1f bumped to 1.4 for gst-devtools
+	  and the root project, but we usually keep those in sync everywhere.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8312>
+
+2025-01-14 16:29:28 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/audiofx/gstscaletempo.c:
+	* gst/audiofx/gstscaletempo.h:
+	  scaletempo: expose alternative mode, fit-down
+	  In fit-down mode only 1.0 rates are supported, and the element will fit
+	  audio data in buffers to their advertised duration.
+	  This is useful in speech synthesis cases, where elements such as
+	  awspolly will generate audio data from text, and assign the duration of the
+	  input text buffers to their output buffers
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8149>
+
+2025-01-14 15:00:43 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.25.1
+
 === release 1.25.1 ===
 
 2025-01-14 14:52:48 +0000  Tim-Philipp Müller <tim@centricular.com>
