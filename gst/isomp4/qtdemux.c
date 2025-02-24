@@ -9135,6 +9135,9 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_dvhe:
       case FOURCC_mjp2:
       case FOURCC_encv:
+      case FOURCC_H266:
+      case FOURCC_vvc1:
+      case FOURCC_vvi1:
       {
         guint32 version;
         guint32 str_len;
@@ -12128,35 +12131,36 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     UncompressedFrameConfigBox * uncC, ComponentDefinitionBox * cmpd)
 {
   guint32 num_components = uncC->component_count;
+  guint16 component_types[4];
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+
   stream->alignment = 4;
+
+  if (num_components > 4) {
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported number of components for uncC: %u", num_components);
+    goto unsupported_feature;
+  }
 
   if (uncC->version == 1) {
     // Determine format with profile
+    // The only permitted profiles for version 1 are `rgb3`, `rgba`, and `abgr`
     switch (uncC->profile) {
       case GST_MAKE_FOURCC ('r', 'g', 'b', '3'):       // RGB 24 bits packed
         format = GST_VIDEO_FORMAT_RGB;
         stream->stride = entry->width * num_components;
         break;
 
-      case GST_MAKE_FOURCC ('2', 'v', 'u', 'y'):       // 8 bits  YUV  422 packed Cb Y0 Cr Y1
-      case GST_MAKE_FOURCC ('y', 'u', 'v', '2'):       // 8 bits  YUV  422 packed Y0 Cb Y1 Cr
-      case GST_MAKE_FOURCC ('y', 'v', 'y', 'u'):       // 8 bits  YUV  422 packed Y0 Cr Y1 Cb
-      case GST_MAKE_FOURCC ('v', 'y', 'u', 'y'):       // 8 bits  YUV  422 packed Cr Y0 Cb Y1
-      case GST_MAKE_FOURCC ('y', 'u', 'v', '1'):       // 8 bits  YUV  411 packed Y0 Y1 Cb Y2 Y3 Cr
-      case GST_MAKE_FOURCC ('v', '3', '0', '8'):       // 8 bits  YUV  444 packed Cr Y Cb
-      case GST_MAKE_FOURCC ('v', '4', '0', '8'):       // 8 bits  YUVA 444 packed Cb Y Cr A
-      case GST_MAKE_FOURCC ('y', '2', '1', '0'):       // 10 bits YUV  422 packed LE Y0 Cb Y1 Cr
-      case GST_MAKE_FOURCC ('v', '4', '1', '0'):       // 10 bits YUV  444 packed CbYCr, 2 unused bits
-      case GST_MAKE_FOURCC ('v', '2', '1', '0'):       // 10 bits YUV  422 packed CbYCr
-      case GST_MAKE_FOURCC ('i', '4', '2', '0'):       // 8 bits  YUV  420 planar YCbCr
-      case GST_MAKE_FOURCC ('n', 'v', '1', '2'):       // 8 bits  YUV  420 semiplanar YCbCr
-      case GST_MAKE_FOURCC ('n', 'v', '2', '1'):       // 8 bits  YUV  420 semiplanar YCrCb
-      case GST_MAKE_FOURCC ('r', 'g', 'b', 'a'):       // 32 bits RGBA packed
-      case GST_MAKE_FOURCC ('a', 'b', 'g', 'r'):       // 32 bits RGBA packed
-      case GST_MAKE_FOURCC ('y', 'u', '2', '2'):       // 8 bits  YUV  422 planar YCbCr
-      case GST_MAKE_FOURCC ('y', 'v', '2', '2'):       // 8 bits  YUV  422 planar YCrCb
-      case GST_MAKE_FOURCC ('y', 'v', '2', '0'):       // 8 bits  YUV  420 planar YCrCb
+      case GST_MAKE_FOURCC ('r', 'g', 'b', 'a'):       // RGBA 32 bits packed
+        format = GST_VIDEO_FORMAT_RGBA;
+        stream->stride = entry->width * num_components;
+        break;
+
+      case GST_MAKE_FOURCC ('a', 'b', 'g', 'r'):       // RGBA 32 bits packed
+        format = GST_VIDEO_FORMAT_ABGR;
+        stream->stride = entry->width * num_components;
+        break;
+
       default:
         goto unsupported_feature;
     }
@@ -12177,10 +12181,16 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     // For now, assert that each component has the same bit depth
     UncompressedFrameConfigComponent *comp = &uncC->components[i];
     if (comp->bit_depth != first_comp->bit_depth) {
+      GST_WARNING_OBJECT (qtdemux,
+          "Unsupported bit_depth combination for uncompressed track: %u != %u",
+          comp->bit_depth, first_comp->bit_depth);
       goto unsupported_feature;
     }
     // For now, assert that each component has the same align size
     if (comp->align_size != first_comp->align_size) {
+      GST_WARNING_OBJECT (qtdemux,
+          "Unsupported component_align_size for uncompressed track: %u != %u",
+          comp->align_size, first_comp->align_size);
       goto unsupported_feature;
     }
   }
@@ -12193,89 +12203,118 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     case 2:                    // YCbCr 4:2:0 subsampling
     case 3:                    // YCbCr 4:1:1 subsampling
     default:
+      GST_WARNING_OBJECT (qtdemux,
+          "Unsupported sampling_type for uncompressed track: %u",
+          uncC->sampling_type);
       goto unsupported_feature;
   }
 
 
   switch (uncC->interleave_type) {
-    case 1:                    // Pixel Interleaved
-      // Default Format
-      break;
     case 0:                    // Component Interleaving (Planar)
+    case 1:                    // Pixel Interleaved
+      break;
     case 2:                    // Mixed Interleaved
     case 3:                    // Row Interleaved
     case 4:                    // Tile Interleaved
     case 5:                    // Multi-Y Pixel Interleaved
     default:
+      GST_WARNING_OBJECT (qtdemux,
+          "Unsupported interleave_type for uncompressed track: %u",
+          uncC->interleave_type);
       goto unsupported_feature;
   }
-
 
   /* Padding */
   // TODO: Handle various padding configurations
   if (align_size) {
     // If component_align_size is 0, the component value
-    // is coded on component_bit_depth bits exactly.
+    // is coded on component_bit_depth bits exactly
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported align_size for uncompressed track: %u", align_size);
     goto unsupported_feature;
   } else if (uncC->block_size) {
     // Component values can be stored either directly in the
     // sample data or inside fixed-size blocks. The block
     // size in bytes is specified by the block_size field.
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported block_size for uncompressed track: %u", uncC->block_size);
     goto unsupported_feature;
   } else if (uncC->pixel_size != 0 && uncC->pixel_size != num_components) {
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported pixel_size for uncompressed track: %u", uncC->pixel_size);
     // If pixel_size is 0, no additional padding is present after each pixel.
     goto unsupported_feature;
   } else if (uncC->row_align_size) {
     // row_align_size indicates the padding between rows
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported row_align_size for uncompressed track: %u",
+        uncC->row_align_size);
     goto unsupported_feature;
   } else if (uncC->tile_align_size) {
     // tile_align_size indicates the padding between tiles
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported tile_align_size for uncompressed track: %u",
+        uncC->tile_align_size);
     goto unsupported_feature;
+  }
+
+  for (guint32 i = 0; i < num_components; i++) {
+    guint16 component_index = uncC->components[i].index;
+    component_types[i] = cmpd->types[component_index];
   }
 
   /* Determine Format */
   switch (num_components) {
     case 1:
-      if (cmpd->types[0] == COMPONENT_MONOCHROME) {
+      if (component_types[0] == COMPONENT_MONOCHROME) {
+        // Single channel, we can handle this in any interleave
         format = GST_VIDEO_FORMAT_GRAY8;
       }
       break;
     case 3:
-      if (cmpd->types[0] == COMPONENT_RED &&
-          cmpd->types[1] == COMPONENT_GREEN &&
-          cmpd->types[2] == COMPONENT_BLUE) {
+      if (component_types[0] == COMPONENT_RED &&
+          component_types[1] == COMPONENT_GREEN &&
+          component_types[2] == COMPONENT_BLUE && uncC->interleave_type == 1) {
         format = GST_VIDEO_FORMAT_RGB;
       }
-      if (cmpd->types[0] == COMPONENT_BLUE &&
-          cmpd->types[1] == COMPONENT_GREEN &&
-          cmpd->types[2] == COMPONENT_RED) {
+      if (component_types[0] == COMPONENT_BLUE &&
+          component_types[1] == COMPONENT_GREEN &&
+          component_types[2] == COMPONENT_RED && uncC->interleave_type == 1) {
         format = GST_VIDEO_FORMAT_BGR;
       }
       break;
     case 4:
-      if (cmpd->types[0] == COMPONENT_RED &&
-          cmpd->types[1] == COMPONENT_GREEN &&
-          cmpd->types[2] == COMPONENT_BLUE &&
-          cmpd->types[3] == COMPONENT_ALPHA) {
+      if (component_types[0] == COMPONENT_RED &&
+          component_types[1] == COMPONENT_GREEN &&
+          component_types[2] == COMPONENT_BLUE &&
+          component_types[3] == COMPONENT_ALPHA && uncC->interleave_type == 1) {
         format = GST_VIDEO_FORMAT_RGBA;
       }
-      if (cmpd->types[0] == COMPONENT_RED &&
-          cmpd->types[1] == COMPONENT_GREEN &&
-          cmpd->types[2] == COMPONENT_BLUE &&
-          cmpd->types[3] == COMPONENT_PADDING) {
+      if (component_types[0] == COMPONENT_RED &&
+          component_types[1] == COMPONENT_GREEN &&
+          component_types[2] == COMPONENT_BLUE &&
+          component_types[3] == COMPONENT_PADDING
+          && uncC->interleave_type == 1) {
         format = GST_VIDEO_FORMAT_RGBx;
       }
       break;
     default:
+      GST_WARNING_OBJECT (qtdemux,
+          "Unsupported number of components for uncompressed track: %u",
+          num_components);
       goto unsupported_feature;
   }
 
   /* Calculate Stride */
   if (first_comp->bit_depth != 8) {
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported high bit depth for uncompressed track: %u",
+        first_comp->bit_depth);
     goto unsupported_feature;   // TODO - account for higher bit depths
   } else if (uncC->sampling_type != 0) {
     goto unsupported_feature;   // TODO - account for subsampling
-  } else if (uncC->interleave_type != 1) {
+  } else if (uncC->interleave_type != 0 && uncC->interleave_type != 1) {
     goto unsupported_feature;   // TODO - account for various interleave types
   }
   stream->stride = entry->width * num_components;       // TODO - account for non-zero row alignment
@@ -13504,6 +13543,62 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
               }
               len -= size;
               hevc_data += size;
+            }
+            break;
+          }
+          case FOURCC_H266:
+          case FOURCC_vvc1:
+          case FOURCC_vvi1:
+          {
+            guint len = QT_UINT32 (stsd_entry_data);
+            len = len <= 0x56 ? 0 : len - 0x56;
+            const guint8 *vvc_data = stsd_entry_data + 0x56;
+
+            /* find vvcC, which is a FullBox. */
+            while (len >= 12) {
+              guint size = QT_UINT32 (vvc_data);
+
+              if (size < 12 || size > len)
+                break;
+
+              switch (QT_FOURCC (vvc_data + 4)) {
+                case FOURCC_vvcC:
+                {
+                  /* parse, if found */
+                  GstBuffer *buf;
+                  guint8 version;
+
+                  if (size < 12 + 1)
+                    break;
+
+                  GST_DEBUG_OBJECT (qtdemux, "found vvcC codec_data in stsd");
+
+                  /* First 4 bytes are the length of the atom, the next 4 bytes
+                   * are the fourcc, the next 1 byte is the version, the next 3 bytes are flags and the
+                   * subsequent bytes are the decoder configuration record. */
+                  version = vvc_data[8];
+                  if (version != 0) {
+                    GST_ERROR_OBJECT (qtdemux,
+                        "Unsupported vvcC version %u. Only version 0 is supported",
+                        version);
+                    break;
+                  }
+
+                  gst_codec_utils_h266_caps_set_level_tier_and_profile
+                      (entry->caps, vvc_data + 12, size - 12);
+
+                  buf = gst_buffer_new_and_alloc (size - 12);
+                  gst_buffer_fill (buf, 0, vvc_data + 12, size - 12);
+                  gst_caps_set_simple (entry->caps,
+                      "codec_data", GST_TYPE_BUFFER, buf, NULL);
+                  gst_buffer_unref (buf);
+                  break;
+                }
+                default:
+                  break;
+              }
+              len -= size;
+              vvc_data += size;
             }
             break;
           }
@@ -16882,6 +16977,19 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "stream-format", G_TYPE_STRING, "hev1",
           "alignment", G_TYPE_STRING, "au", NULL);
       break;
+    case FOURCC_H266:
+    case FOURCC_vvc1:
+      _codec ("H.266 / VVC");
+      caps = gst_caps_new_simple ("video/x-h266",
+          "stream-format", G_TYPE_STRING, "vvc1",
+          "alignment", G_TYPE_STRING, "au", NULL);
+      break;
+    case FOURCC_vvi1:
+      _codec ("H.266 / VVC");
+      caps = gst_caps_new_simple ("video/x-h266",
+          "stream-format", G_TYPE_STRING, "vvi1",
+          "alignment", G_TYPE_STRING, "au", NULL);
+      break;
     case FOURCC_rle_:
       _codec ("Run-length encoding");
       caps = gst_caps_new_simple ("video/x-rle",
@@ -17059,6 +17167,46 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("Lagarith lossless video codec");
       caps = gst_caps_new_empty_simple ("video/x-lagarith");
       break;
+    case FOURCC_Hap1:
+    case FOURCC_Hap5:
+    case FOURCC_HapY:
+    case FOURCC_HapM:
+    case FOURCC_HapA:
+    case FOURCC_Hap7:
+    case FOURCC_HapH:{
+      gchar *variant =
+          g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+      caps = gst_caps_new_simple ("video/x-hap",
+          "variant", G_TYPE_STRING, variant, NULL);
+      g_free (variant);
+
+      // https://github.com/Vidvox/hap/blob/master/documentation/HapVideoDRAFT.md
+      switch (fourcc) {
+        case FOURCC_Hap5:
+          _codec ("Hap Alpha");
+          break;
+        case FOURCC_HapY:
+          _codec ("Hap Q");
+          break;
+        case FOURCC_HapM:
+          _codec ("Hap Q Alpha");
+          break;
+        case FOURCC_HapA:
+          _codec ("Hap Alpha-Only");
+          break;
+        case FOURCC_Hap7:
+          _codec ("Hap R");
+          break;
+        case FOURCC_HapH:
+          _codec ("Hap HDR");
+          break;
+        case FOURCC_Hap1:
+        default:
+          _codec ("Hap");
+          break;
+      }
+      break;
+    }
     case FOURCC_uncv:
     {
       const guint8 ENTRY_MINIMUM_SIZE = 86;     // video sample description minimum size in bytes
