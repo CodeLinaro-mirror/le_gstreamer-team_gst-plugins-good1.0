@@ -54,6 +54,7 @@ G_BEGIN_DECLS
 #define FOURCC_FMP4     GST_MAKE_FOURCC('F','M','P','4')
 #define FOURCC_H264     GST_MAKE_FOURCC('H','2','6','4')
 #define FOURCC_H265     GST_MAKE_FOURCC('H','2','6','5')
+#define FOURCC_H266     GST_MAKE_FOURCC('H','2','6','6')
 #define FOURCC_LAGS     GST_MAKE_FOURCC('L','A','G','S')
 #define FOURCC_MAC3     GST_MAKE_FOURCC('M','A','C','3')
 #define FOURCC_MAC6     GST_MAKE_FOURCC('M','A','C','6')
@@ -296,6 +297,9 @@ G_BEGIN_DECLS
 #define FOURCC_vttc     GST_MAKE_FOURCC('v','t','t','c')
 #define FOURCC_vttC     GST_MAKE_FOURCC('v','t','t','C')
 #define FOURCC_vtte     GST_MAKE_FOURCC('v','t','t','e')
+#define FOURCC_vvc1     GST_MAKE_FOURCC('v','v','c','1')
+#define FOURCC_vvcC     GST_MAKE_FOURCC('v','v','c','C')
+#define FOURCC_vvi1     GST_MAKE_FOURCC('v','v','i','1')
 #define FOURCC_xvid     GST_MAKE_FOURCC('x','v','i','d')
 #define FOURCC_wave     GST_MAKE_FOURCC('w','a','v','e')
 #define FOURCC_wide     GST_MAKE_FOURCC('w','i','d','e')
@@ -455,6 +459,15 @@ G_BEGIN_DECLS
 
 /* ONVIF Export File Format */
 #define FOURCC_cstb     GST_MAKE_FOURCC('c','s','t','b')
+
+/* Hap video codec */
+#define FOURCC_Hap1     GST_MAKE_FOURCC('H','a','p','1')
+#define FOURCC_Hap5     GST_MAKE_FOURCC('H','a','p','5')
+#define FOURCC_HapY     GST_MAKE_FOURCC('H','a','p','Y')
+#define FOURCC_HapM     GST_MAKE_FOURCC('H','a','p','M')
+#define FOURCC_HapA     GST_MAKE_FOURCC('H','a','p','A')
+#define FOURCC_Hap7     GST_MAKE_FOURCC('H','a','p','7')
+#define FOURCC_HapH     GST_MAKE_FOURCC('H','a','p','H')
 
 G_END_DECLS
 
