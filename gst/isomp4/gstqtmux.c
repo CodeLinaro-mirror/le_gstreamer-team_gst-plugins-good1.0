@@ -1817,6 +1817,62 @@ gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list,
   return;
 }
 
+static void
+gst_qt_mux_set_matrix_from_tags (guint32 * matrix, const GstTagList * tags)
+{
+  gchar *orientation;
+
+  if (!tags ||
+      !gst_tag_list_get_string (tags, "image-orientation", &orientation))
+    return;
+
+  if (!g_strcmp0 ("rotate-0", orientation)) {
+    matrix[0] = 1 << 16;
+    matrix[1] = 0;
+    matrix[3] = 0;
+    matrix[4] = 1 << 16;
+  } else if (!g_strcmp0 ("rotate-90", orientation)) {
+    matrix[0] = 0;
+    matrix[1] = 1 << 16;
+    matrix[3] = G_MAXUINT16 << 16;
+    matrix[4] = 0;
+  } else if (!g_strcmp0 ("rotate-180", orientation)) {
+    matrix[0] = G_MAXUINT16 << 16;
+    matrix[1] = 0;
+    matrix[3] = 0;
+    matrix[4] = G_MAXUINT16 << 16;
+  } else if (!g_strcmp0 ("rotate-270", orientation)) {
+    matrix[0] = 0;
+    matrix[1] = G_MAXUINT16 << 16;
+    matrix[3] = 1 << 16;
+    matrix[4] = 0;
+  } else if (!g_strcmp0 ("flip-rotate-0", orientation)) {
+    matrix[0] = G_MAXUINT16 << 16;
+    matrix[1] = 0;
+    matrix[3] = 0;
+    matrix[4] = 1 << 16;
+  } else if (!g_strcmp0 ("flip-rotate-90", orientation)) {
+    matrix[0] = 0;
+    matrix[1] = G_MAXUINT16 << 16;
+    matrix[3] = G_MAXUINT16 << 16;
+    matrix[4] = 0;
+  } else if (!g_strcmp0 ("flip-rotate-180", orientation)) {
+    matrix[0] = 1 << 16;
+    matrix[1] = 0;
+    matrix[3] = 0;
+    matrix[4] = G_MAXUINT16 << 16;
+  } else if (!g_strcmp0 ("flip-rotate-270", orientation)) {
+    matrix[0] = 0;
+    matrix[1] = 1 << 16;
+    matrix[3] = 1 << 16;
+    matrix[4] = 0;
+  } else {
+    GST_WARNING ("Unsupported orientation %s", orientation);
+  }
+
+  g_free (orientation);
+}
+
 /*
  * Gets the tagsetter iface taglist and puts the known tags
  * into the output stream
@@ -1825,6 +1881,7 @@ static void
 gst_qt_mux_setup_metadata (GstQTMux * qtmux)
 {
   const GstTagList *tags = NULL;
+  guint32 transform_matrix[9] = { 0 };
   GList *l;
 
   GST_OBJECT_LOCK (qtmux);
@@ -1852,6 +1909,12 @@ gst_qt_mux_setup_metadata (GstQTMux * qtmux)
     GST_DEBUG_OBJECT (qtmux, "No new tags received");
   }
 
+  /* Initialize to identity */
+  transform_matrix[0] = 1 << 16;
+  transform_matrix[4] = 1 << 16;
+  transform_matrix[8] = 1 << 30;
+  gst_qt_mux_set_matrix_from_tags (transform_matrix, tags);
+
   GST_OBJECT_LOCK (qtmux);
   for (l = GST_ELEMENT (qtmux)->sinkpads; l; l = l->next) {
     GstQTMuxPad *qpad = GST_QT_MUX_PAD (l->data);
@@ -1860,6 +1923,12 @@ gst_qt_mux_setup_metadata (GstQTMux * qtmux)
       GST_DEBUG_OBJECT (qpad, "Adding tags");
       gst_tag_list_remove_tag (qpad->tags, GST_TAG_CONTAINER_FORMAT);
       gst_qt_mux_add_metadata_tags (qtmux, qpad->tags, &qpad->trak->udta);
+
+      /* Use the matrix from the stream tags if available, otherwise fall back
+       * to global tags or identity. */
+      memcpy (qpad->trak->tkhd.matrix, transform_matrix, sizeof (guint32) * 9);
+      gst_qt_mux_set_matrix_from_tags (qpad->trak->tkhd.matrix, qpad->tags);
+
       qpad->tags_changed = FALSE;
       GST_DEBUG_OBJECT (qpad, "Tags added");
     } else {
@@ -2200,6 +2269,9 @@ gst_qt_mux_set_header_on_caps (GstQTMux * mux, GstBuffer * buf)
   GstCaps *caps, *tcaps;
 
   tcaps = gst_pad_get_current_caps (GST_AGGREGATOR_SRC_PAD (mux));
+  if (G_UNLIKELY (tcaps == NULL))
+    return;
+
   caps = gst_caps_copy (tcaps);
   gst_caps_unref (tcaps);
 
@@ -4501,7 +4573,7 @@ init:
         G_GINT64_FORMAT " (%" GST_TIME_FORMAT ") of %" G_GINT64_FORMAT " (%"
         GST_STIME_FORMAT ")", first_qt_dts, GST_TIME_ARGS (first_dts), dts,
         GST_TIME_ARGS (current_dts), dts - first_qt_dts,
-        GST_STIME_ARGS (current_dts - first_dts));
+        GST_STIME_ARGS ((GstClockTimeDiff) (current_dts - first_dts)));
     atom_traf_set_base_decode_time (pad->traf, dts - first_qt_dts);
   }
 
@@ -5714,20 +5786,19 @@ gst_qt_mux_aggregate (GstAggregator * agg, gboolean timeout)
 }
 
 static gboolean
-field_is_in (GQuark field_id, const gchar * fieldname, ...)
+field_is_in (const GstIdStr * fieldname, const gchar * name, ...)
 {
   va_list varargs;
-  gchar *name = (gchar *) fieldname;
 
-  va_start (varargs, fieldname);
+  va_start (varargs, name);
   while (name) {
-    if (field_id == g_quark_from_static_string (name)) {
+    if (gst_id_str_is_equal_to_str (fieldname, name)) {
       va_end (varargs);
 
       return TRUE;
     }
 
-    name = va_arg (varargs, char *);
+    name = va_arg (varargs, const char *);
   }
   va_end (varargs);
 
@@ -5735,15 +5806,16 @@ field_is_in (GQuark field_id, const gchar * fieldname, ...)
 }
 
 static gboolean
-check_field (GQuark field_id, const GValue * value, gpointer user_data)
+check_field (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
 {
   GstStructure *structure = (GstStructure *) user_data;
-  const GValue *other = gst_structure_id_get_value (structure, field_id);
+  const GValue *other = gst_structure_id_str_get_value (structure, fieldname);
   const gchar *name = gst_structure_get_name (structure);
 
   if (g_str_has_prefix (name, "video/")) {
     /* ignore framerate with video caps */
-    if (g_strcmp0 (g_quark_to_string (field_id), "framerate") == 0)
+    if (gst_id_str_is_equal_to_str (fieldname, "framerate"))
       return TRUE;
   }
 
@@ -5753,7 +5825,7 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
      * will contain updated tier / level / profiles, which means we do
      * not need to fail renegotiation when those change.
      */
-    if (field_is_in (field_id,
+    if (field_is_in (fieldname,
             "codec_data", "tier", "level", "profile",
             "chroma-site", "chroma-format", "bit-depth-luma", "colorimetry",
             /* TODO: this may require a separate track but gst, vlc, ffmpeg and
@@ -5765,7 +5837,7 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
   }
 
   if (other == NULL) {
-    if (field_is_in (field_id, "interlace-mode", NULL) &&
+    if (field_is_in (fieldname, "interlace-mode", NULL) &&
         !g_strcmp0 (g_value_get_string (value), "progressive")) {
       return TRUE;
     }
@@ -5785,7 +5857,7 @@ gst_qtmux_caps_is_subset_full (GstQTMux * qtmux, GstCaps * subset,
   if (!gst_structure_has_name (sup_s, gst_structure_get_name (sub_s)))
     return FALSE;
 
-  return gst_structure_foreach (sub_s, check_field, sup_s);
+  return gst_structure_foreach_id_str (sub_s, check_field, sup_s);
 }
 
 /* will unref @qtmux */

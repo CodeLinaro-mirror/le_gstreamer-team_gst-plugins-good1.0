@@ -1892,9 +1892,11 @@ _create_stream (GstQTDemux * demux, guint32 track_id)
   stream->duration_moof = 0;
   stream->duration_last_moof = 0;
   stream->alignment = 1;
+  stream->stride = 0;
   stream->stream_tags = gst_tag_list_new_empty ();
   gst_tag_list_set_scope (stream->stream_tags, GST_TAG_SCOPE_STREAM);
   g_queue_init (&stream->protection_scheme_event_queue);
+  gst_video_info_init (&stream->info);
   stream->ref_count = 1;
   /* consistent default for push based mode */
   gst_segment_init (&stream->segment, GST_FORMAT_TIME);
@@ -6111,6 +6113,36 @@ clipped:
 }
 
 static GstBuffer *
+gst_qtdemux_reorder_audio_channels (GstQTDemux * demux,
+    QtDemuxStream * stream, GstBuffer * buffer)
+{
+  buffer = gst_buffer_make_writable (buffer);
+
+  GstMapInfo map;
+
+  if (!gst_buffer_map (buffer, &map, GST_MAP_READWRITE))
+    return buffer;
+
+  if (map.size % (CUR_STREAM (stream)->bytes_per_sample *
+          CUR_STREAM (stream)->n_channels) != 0) {
+    GST_WARNING_OBJECT (demux,
+        "Odd number of frames in raw audio buffer of length %" G_GSIZE_FORMAT
+        " with %u bps and %u channels", map.size,
+        CUR_STREAM (stream)->bytes_per_sample, CUR_STREAM (stream)->n_channels);
+    goto out;
+  }
+
+  gst_audio_reorder_channels_with_reorder_map (map.data, map.size,
+      CUR_STREAM (stream)->bytes_per_sample, CUR_STREAM (stream)->n_channels,
+      CUR_STREAM (stream)->reorder_map);
+
+out:
+  gst_buffer_unmap (buffer, &map);
+
+  return buffer;
+}
+
+static GstBuffer *
 gst_qtdemux_align_buffer (GstQTDemux * demux,
     GstBuffer * buffer, gsize alignment)
 {
@@ -6146,6 +6178,54 @@ gst_qtdemux_align_buffer (GstQTDemux * demux,
 
   gst_buffer_unmap (buffer, &map);
   return buffer;
+}
+
+static GstBuffer *
+gst_qtdemux_row_align_buffer (GstQTDemux * demux,
+    QtDemuxStream * stream, GstBuffer * buffer)
+{
+  gsize old_stride = stream->stride;
+  gsize size = gst_buffer_get_size (buffer);
+  gsize height = size / old_stride;
+
+  // Assert stride is initialized
+  gsize aligned_stride = stream->info.stride[0];
+  if (aligned_stride == 0) {
+    return buffer;
+  }
+
+  GstMapInfo map;
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  if (old_stride == aligned_stride) {
+    gst_buffer_unmap (buffer, &map);
+    return buffer;              // Buffer is already row aligned
+  }
+
+  GstMapInfo new_map;
+  gsize new_buffer_size = height * aligned_stride;
+  GstBuffer *new_buffer = gst_buffer_new_allocate (NULL, new_buffer_size, NULL);
+  if (new_buffer == NULL) {
+    gst_buffer_unmap (buffer, &map);
+    gst_buffer_unref (buffer);
+    return NULL;
+  }
+  gst_buffer_map (new_buffer, &new_map, GST_MAP_WRITE);
+
+  // Align Data
+  gsize min_stride = MIN (old_stride, aligned_stride);
+  for (guint32 row = 0; row < height; row++) {
+    gsize row_offset = row * aligned_stride;
+    gconstpointer src = map.data + row * old_stride;
+    gpointer dest = new_map.data + row_offset;
+    memcpy (dest, src, min_stride);
+  }
+
+  gst_buffer_copy_into (new_buffer, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+
+  gst_buffer_unmap (new_buffer, &new_map);
+  gst_buffer_unmap (buffer, &map);
+  gst_buffer_unref (buffer);
+  return new_buffer;
 }
 
 static guint8 *
@@ -6603,6 +6683,17 @@ gst_qtdemux_push_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   if (stream->alignment > 1)
     buf = gst_qtdemux_align_buffer (qtdemux, buf, stream->alignment);
 
+  if (stream->stride > 0) {
+    buf = gst_qtdemux_row_align_buffer (qtdemux, stream, buf);
+    if (buf == NULL) {
+      ret = GST_FLOW_ERROR;
+      goto exit;
+    }
+  }
+
+  if (CUR_STREAM (stream)->needs_reorder)
+    buf = gst_qtdemux_reorder_audio_channels (qtdemux, stream, buf);
+
   pts = GST_BUFFER_PTS (buf);
   duration = GST_BUFFER_DURATION (buf);
 
@@ -6802,6 +6893,9 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
 
     if (stream->alignment > 1)
       buffer = gst_qtdemux_align_buffer (qtdemux, buffer, stream->alignment);
+    if (CUR_STREAM (stream)->needs_reorder)
+      buffer = gst_qtdemux_reorder_audio_channels (qtdemux, stream, buffer);
+
     gst_pad_push (stream->pad, buffer);
 
     stream->buffers = g_slist_delete_link (stream->buffers, stream->buffers);
@@ -7402,6 +7496,21 @@ pause:
         if (qtdemux->segment.rate >= 0) {
           GstMessage *message;
           GstEvent *event;
+
+          /* segment.position will still be at the last timestamp and won't always
+           * include the duration of the last packet. Expand that to the segment
+           * duration so that segment.base is increased correctly to include the
+           * length of the last packet when doing segment seeks. We need to do
+           * this before the segment-done event goes out so everything's ready
+           * for the next seek request coming in. */
+          if (GST_CLOCK_TIME_IS_VALID (stop)) {
+            GST_DEBUG_OBJECT (qtdemux,
+                "End of segment, updating segment.position from %"
+                GST_TIME_FORMAT " to stop %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (qtdemux->segment.position),
+                GST_TIME_ARGS (stop));
+            qtdemux->segment.position = stop;
+          }
 
           GST_LOG_OBJECT (qtdemux, "Sending segment done, at end of segment");
           message = gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
@@ -8493,6 +8602,13 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             gst_adapter_flush (demux->adapter, demux->neededbytes);
 
             ret = GST_FLOW_EOS;
+          } else if ((demux->segment.flags &
+                  GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) != 0 &&
+              stream->subtype == FOURCC_vide && !keyframe) {
+            GST_LOG_OBJECT (demux, "Skipping non-keyframe on track-id %u",
+                stream->track_id);
+            gst_adapter_flush (demux->adapter, demux->neededbytes);
+            ret = GST_FLOW_OK;
           } else {
             GstBuffer *outbuf;
 
@@ -9140,6 +9256,20 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       }
       case FOURCC_enca:
       {
+        qtdemux_parse_container (qtdemux, node, buffer + 36, end);
+        break;
+      }
+      case FOURCC_ipcm:
+      case FOURCC_fpcm:
+      {
+        if (length < 36) {
+          GST_LOG_OBJECT (qtdemux, "skipping small %" GST_FOURCC_FORMAT " box",
+              GST_FOURCC_ARGS (fourcc));
+          break;
+        }
+
+        GST_MEMDUMP_OBJECT (qtdemux, fourcc == FOURCC_ipcm ? "ipcm" : "fpcm",
+            buffer, end - buffer);
         qtdemux_parse_container (qtdemux, node, buffer + 36, end);
         break;
       }
@@ -11409,18 +11539,75 @@ qtdemux_parse_transformation_matrix (GstQTDemux * qtdemux,
   matrix[7] = gst_byte_reader_get_uint32_be_unchecked (reader);
   matrix[8] = gst_byte_reader_get_uint32_be_unchecked (reader);
 
+  /* The 2.30 value conversion does not work for negative values */
   GST_DEBUG_OBJECT (qtdemux, "Transformation matrix from atom %s", atom);
-  GST_DEBUG_OBJECT (qtdemux, "%u.%u %u.%u %u.%u", matrix[0] >> 16,
-      matrix[0] & 0xFFFF, matrix[1] >> 16, matrix[1] & 0xFF, matrix[2] >> 16,
-      matrix[2] & 0xFF);
-  GST_DEBUG_OBJECT (qtdemux, "%u.%u %u.%u %u.%u", matrix[3] >> 16,
-      matrix[3] & 0xFFFF, matrix[4] >> 16, matrix[4] & 0xFF, matrix[5] >> 16,
-      matrix[5] & 0xFF);
-  GST_DEBUG_OBJECT (qtdemux, "%u.%u %u.%u %u.%u", matrix[6] >> 16,
-      matrix[6] & 0xFFFF, matrix[7] >> 16, matrix[7] & 0xFF, matrix[8] >> 16,
-      matrix[8] & 0xFF);
+  GST_DEBUG_OBJECT (qtdemux, "%i.%u %i.%u %u.%u", (gint16) (matrix[0] >> 16),
+      matrix[0] & 0xFFFF, (gint16) (matrix[1] >> 16), matrix[1] & 0xFFFF,
+      matrix[2] >> 30, matrix[2] & 0x3FFFFFFF);
+  GST_DEBUG_OBJECT (qtdemux, "%i.%u %i.%u %u.%u", (gint16) (matrix[3] >> 16),
+      matrix[3] & 0xFFFF, (gint16) (matrix[4] >> 16), matrix[4] & 0xFFFF,
+      matrix[5] >> 30, matrix[5] & 0x3FFFFFFF);
+  GST_DEBUG_OBJECT (qtdemux, "%i.%u %i.%u %u.%u", (gint16) (matrix[6] >> 16),
+      matrix[6] & 0xFFFF, (gint16) (matrix[7] >> 16), matrix[7] & 0xFFFF,
+      matrix[8] >> 30, matrix[8] & 0x3FFFFFFF);
 
   return TRUE;
+}
+
+/* Check if all matrix elements are either 0, 1 or -1 */
+static gboolean
+qtdemux_transformation_matrix_is_simple (guint32 * m)
+{
+  int i;
+
+  for (i = 0; i < 9; i++) {
+    switch (i) {
+      case 2:
+      case 5:
+      case 8:
+        /* 2.30 */
+        if (m[i] != 0U && m[i] != (1U << 30) && m[i] != (3U << 30))
+          return FALSE;
+        break;
+      default:
+        /* 16.16 */
+        if (m[i] != 0U && m[i] != (1U << 16) && m[i] != (G_MAXUINT16 << 16))
+          return FALSE;
+        break;
+    }
+  }
+
+  return TRUE;
+}
+
+static void
+qtdemux_mul_transformation_matrix (GstQTDemux * qtdemux,
+    guint32 * a, guint32 * b, guint32 * c)
+{
+#define QTMUL_MATRIX(_a,_b) (((_a) == 0 || (_b) == 0) ? 0 : \
+      ((_a) == (_b) ? 1 : -1))
+#define QTADD_MATRIX(_a,_b) ((_a) + (_b) > 0 ? (1U << 16) : \
+      ((_a) + (_b) < 0) ? (G_MAXUINT16 << 16) : 0u)
+
+  if (!qtdemux_transformation_matrix_is_simple (a) ||
+      !qtdemux_transformation_matrix_is_simple (b)) {
+    GST_WARNING_OBJECT (qtdemux,
+        "Cannot handle transform matrix with element values other than 0, 1 or -1");
+    /* Pretend to have an identity matrix in this case */
+    c[1] = c[2] = c[3] = c[5] = c[6] = c[7] = 0;
+    c[0] = c[4] = (1U << 16);
+    c[8] = (1 << 30);
+  } else {
+    c[2] = c[5] = c[6] = c[7] = 0;
+    c[0] = QTADD_MATRIX (QTMUL_MATRIX (a[0], b[0]), QTMUL_MATRIX (a[1], b[3]));
+    c[1] = QTADD_MATRIX (QTMUL_MATRIX (a[0], b[1]), QTMUL_MATRIX (a[1], b[4]));
+    c[3] = QTADD_MATRIX (QTMUL_MATRIX (a[3], b[0]), QTMUL_MATRIX (a[4], b[3]));
+    c[4] = QTADD_MATRIX (QTMUL_MATRIX (a[3], b[1]), QTMUL_MATRIX (a[4], b[4]));
+    c[8] = a[8];
+  }
+
+#undef QTMUL_MATRIX
+#undef QTADD_MATRIX
 }
 
 static void
@@ -11432,7 +11619,7 @@ qtdemux_inspect_transformation_matrix (GstQTDemux * qtdemux,
  * [d e f]
  * [g h i]
  *
- * This macro will only compare value abdegh, it expects cfi to have already
+ * This macro will only compare value abde, it expects cfi to have already
  * been checked
  */
 #define QTCHECK_MATRIX(m,a,b,d,e) ((m)[0] == (a << 16) && (m)[1] == (b << 16) && \
@@ -11447,11 +11634,18 @@ qtdemux_inspect_transformation_matrix (GstQTDemux * qtdemux,
       /* NOP */
     } else if (QTCHECK_MATRIX (matrix, 0, 1, G_MAXUINT16, 0)) {
       rotation_tag = "rotate-90";
-    } else if (QTCHECK_MATRIX (matrix, G_MAXUINT16, 0, 0, G_MAXUINT16) ||
-        QTCHECK_MATRIX (matrix, G_MAXUINT16, 0, 0, 1)) {
+    } else if (QTCHECK_MATRIX (matrix, G_MAXUINT16, 0, 0, G_MAXUINT16)) {
       rotation_tag = "rotate-180";
     } else if (QTCHECK_MATRIX (matrix, 0, G_MAXUINT16, 1, 0)) {
       rotation_tag = "rotate-270";
+    } else if (QTCHECK_MATRIX (matrix, G_MAXUINT16, 0, 0, 1)) {
+      rotation_tag = "flip-rotate-0";
+    } else if (QTCHECK_MATRIX (matrix, 0, G_MAXUINT16, G_MAXUINT16, 0)) {
+      rotation_tag = "flip-rotate-90";
+    } else if (QTCHECK_MATRIX (matrix, 1, 0, 0, G_MAXUINT16)) {
+      rotation_tag = "flip-rotate-180";
+    } else if (QTCHECK_MATRIX (matrix, 0, 1, 1, 0)) {
+      rotation_tag = "flip-rotate-270";
     } else {
       GST_FIXME_OBJECT (qtdemux, "Unhandled transformation matrix values");
     }
@@ -11732,13 +11926,902 @@ qtdemux_parse_stereo_svmi_atom (GstQTDemux * qtdemux, QtDemuxStream * stream,
   return TRUE;
 }
 
+typedef enum
+{
+  // ISO/IEC 23001-17 Table 1 - Component Types
+  COMPONENT_MONOCHROME = 0,
+  COMPONENT_LUMA_Y = 1,         // Y
+  COMPONENT_CHROMA_U = 2,       // Cb or U
+  COMPONENT_CHROMA_V = 3,       // Cr or V
+  COMPONENT_RED = 4,            // R
+  COMPONENT_GREEN = 5,          // G
+  COMPONENT_BLUE = 6,           // B
+  COMPONENT_ALPHA = 7,          // A
+  COMPONENT_DEPTH = 8,
+  COMPONENT_DISPARITY = 9,
+  COMPONENT_PALETTE = 10,       // The component_format value for this component shall be 0.
+  COMPONENT_FILTER_ARRAY = 11,  // Bayer, RGBW, etc.
+  COMPONENT_PADDING = 12,       // unused bit/bytes
+  COMPONENT_CYAN = 13,
+  COMPONENT_MAGENTA = 14,
+  COMPONENT_YELLOW = 15,
+  COMPONENT_KEY = 16,           // Black
+} ComponentType;
+
+typedef struct ComponentDefinitionBox
+{
+  // ComponentDefinitionBox
+  guint32 component_count;      // Should match the uncC component_count
+  ComponentType *types;         // The type of component (R,G,B,A,Y,U,V, etc.)
+  const gchar **type_uris;      // Describes a user-defined component type
+} ComponentDefinitionBox;
+
+typedef struct UncompressedFrameConfigComponent
+{
+  guint16 index;                // Index associated with the cmpd box
+  guint8 bit_depth;             // May vary between components
+  guint8 format;                // 0: int, 1: float, 2: complex
+  guint8 align_size;            // The component byte-alignment size
+} UncompressedFrameConfigComponent;
+
+typedef struct UncompressedFrameConfigBox
+{
+  guint8 version;
+  guint32 flags;
+  guint32 profile;              // indicates a predefined configuration
+  guint32 component_count;      // Should match the cmpd component_count
+  UncompressedFrameConfigComponent *components; // Array of Components
+  guint8 sampling_type;         // 0=4:4:4, 1=4:2:2, 2=4:2:0, 3=4:1:1
+  guint8 interleave_type;       // Planar, interleaved, etc. 
+  guint8 block_size;            // Stores data in fixed-sized blocks
+  gboolean components_little_endian;    // indicates that components are stored as little endian
+  gboolean block_pad_lsb;       // Padding bits location
+  gboolean block_little_endian; // Block Endianness
+  gboolean block_reversed;      // Indicates if component order is reversed within the block
+  gboolean pad_unknown;         // the value of padded bits is unknown
+  guint32 pixel_size;           // number of bytes used to store all components for a single pixel
+  guint32 row_align_size;       // Padding between rows
+  guint32 tile_align_size;      // Padding between tiles
+  guint32 num_tile_cols;        // Number of horizontal tiles
+  guint32 num_tile_rows;        // Number of vertical tiles
+} UncompressedFrameConfigBox;
+
+static void
+qtdemux_clear_uncC (UncompressedFrameConfigBox * uncC)
+{
+  if (!uncC)
+    return;
+
+  g_free (uncC->components);
+}
+
+static void
+qtdemux_clear_cmpd (ComponentDefinitionBox * cmpd)
+{
+  if (!cmpd)
+    return;
+
+  g_free (cmpd->types);
+  g_free (cmpd->type_uris);
+}
+
+static gboolean
+qtdemux_parse_cmpd (GstQTDemux * qtdemux, GstByteReader * reader,
+    ComponentDefinitionBox * cmpd, guint32 size)
+{
+  /* There should be enough to parse the component_count (4) */
+  if (gst_byte_reader_get_remaining (reader) < 4) {
+    GST_ERROR_OBJECT (qtdemux, "cmpd is too short");
+    goto error;
+  }
+
+  cmpd->component_count = gst_byte_reader_get_uint32_be_unchecked (reader);
+
+  guint32 minimum_size = cmpd->component_count * 2 + 4; // assuming type_uris are not used
+  if (size < minimum_size) {
+    GST_ERROR_OBJECT (qtdemux, "cmpd size is too short");
+    goto error;
+  }
+
+  cmpd->types = g_new0 (ComponentType, cmpd->component_count);
+  cmpd->type_uris = g_new0 (const gchar *, cmpd->component_count);
+
+  guint16 type = 0;
+  for (guint32 i = 0; i < cmpd->component_count; i++) {
+    if (!gst_byte_reader_get_uint16_be (reader, &type)) {
+      GST_ERROR_OBJECT (qtdemux, "Failed to read component type");
+      goto error;
+    }
+    if (type >= 0x8000) {
+      if (!gst_byte_reader_get_string (reader, &cmpd->type_uris[i])) {
+        GST_ERROR_OBJECT (qtdemux, "Failed to read component type URI");
+        goto error;
+      }
+    }
+    cmpd->types[i] = (ComponentType) type;
+  }
+
+  /* Success */
+  return TRUE;
+
+error:
+  return FALSE;
+}
+
+static gboolean
+qtdemux_parse_uncC (GstQTDemux * qtdemux, GstByteReader * reader,
+    UncompressedFrameConfigBox * uncC, guint32 size)
+{
+  /* There should be enough to parse the version/flags (4) & profile (4) */
+  if (gst_byte_reader_get_remaining (reader) < 8) {
+    GST_ERROR_OBJECT (qtdemux, "uncC is too short");
+    goto error;
+  }
+
+  uncC->version = gst_byte_reader_get_uint8_unchecked (reader);
+  uncC->flags = gst_byte_reader_get_uint24_be_unchecked (reader);
+
+  uncC->profile = gst_byte_reader_get_uint32_le_unchecked (reader);
+  if (uncC->version == 1) {
+    /* Use the profile for predetermined settings */
+    goto success;
+  } else if (uncC->version != 0) {
+    GST_ERROR_OBJECT (qtdemux, "Unsupported uncC version");
+    goto error;
+  }
+
+  if (!gst_byte_reader_get_uint32_be (reader, &uncC->component_count)) {
+    GST_ERROR_OBJECT (qtdemux, "Failed to read component count");
+    goto error;
+  }
+
+  guint32 expected_size = uncC->component_count * 5 + 44;
+  if (size != expected_size) {
+    GST_ERROR_OBJECT (qtdemux, "uncC size is incorrect");
+    goto error;
+  }
+
+  guint32 expected_remaining = size - 20;       // 20 = box_size(4) + uncC(4) + version/flags(4) + profile(4) + component_count(4)
+  if (gst_byte_reader_get_remaining (reader) < expected_remaining) {
+    GST_ERROR_OBJECT (qtdemux, "uncC is too short");
+    goto error;
+  }
+
+  uncC->components =
+      g_new0 (UncompressedFrameConfigComponent, uncC->component_count);
+
+  for (guint32 i = 0; i < uncC->component_count; i++) {
+    UncompressedFrameConfigComponent *component = &uncC->components[i];
+    component->index = gst_byte_reader_get_uint16_be_unchecked (reader);
+    component->bit_depth = gst_byte_reader_get_uint8_unchecked (reader) + 1;
+    component->format = gst_byte_reader_get_uint8_unchecked (reader);
+    component->align_size = gst_byte_reader_get_uint8_unchecked (reader);
+  }
+
+  uncC->sampling_type = gst_byte_reader_get_uint8_unchecked (reader);
+  uncC->interleave_type = gst_byte_reader_get_uint8_unchecked (reader);
+  uncC->block_size = gst_byte_reader_get_uint8_unchecked (reader);
+
+  guint8 block_flags = gst_byte_reader_get_uint8_unchecked (reader);
+  uncC->components_little_endian = (block_flags >> 7) & 0x01;
+  uncC->block_pad_lsb = (block_flags >> 6) & 0x01;
+  uncC->block_little_endian = (block_flags >> 5) & 0x01;
+  uncC->block_reversed = (block_flags >> 4) & 0x01;
+  uncC->pad_unknown = (block_flags >> 3) & 0x01;
+
+  uncC->pixel_size = gst_byte_reader_get_uint32_be_unchecked (reader);
+  uncC->row_align_size = gst_byte_reader_get_uint32_be_unchecked (reader);
+  uncC->tile_align_size = gst_byte_reader_get_uint32_be_unchecked (reader);
+  uncC->num_tile_cols = gst_byte_reader_get_uint32_be_unchecked (reader) + 1;
+  uncC->num_tile_rows = gst_byte_reader_get_uint32_be_unchecked (reader) + 1;
+
+success:
+  return TRUE;
+
+error:
+  return FALSE;
+}
+
+static GstVideoFormat
+qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
+    QtDemuxStreamStsdEntry * entry, QtDemuxStream * stream,
+    UncompressedFrameConfigBox * uncC, ComponentDefinitionBox * cmpd)
+{
+  guint32 num_components = uncC->component_count;
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+  stream->alignment = 4;
+
+  if (uncC->version == 1) {
+    // Determine format with profile
+    switch (uncC->profile) {
+      case GST_MAKE_FOURCC ('r', 'g', 'b', '3'):       // RGB 24 bits packed
+        format = GST_VIDEO_FORMAT_RGB;
+        stream->stride = entry->width * num_components;
+        break;
+
+      case GST_MAKE_FOURCC ('2', 'v', 'u', 'y'):       // 8 bits  YUV  422 packed Cb Y0 Cr Y1
+      case GST_MAKE_FOURCC ('y', 'u', 'v', '2'):       // 8 bits  YUV  422 packed Y0 Cb Y1 Cr
+      case GST_MAKE_FOURCC ('y', 'v', 'y', 'u'):       // 8 bits  YUV  422 packed Y0 Cr Y1 Cb
+      case GST_MAKE_FOURCC ('v', 'y', 'u', 'y'):       // 8 bits  YUV  422 packed Cr Y0 Cb Y1
+      case GST_MAKE_FOURCC ('y', 'u', 'v', '1'):       // 8 bits  YUV  411 packed Y0 Y1 Cb Y2 Y3 Cr
+      case GST_MAKE_FOURCC ('v', '3', '0', '8'):       // 8 bits  YUV  444 packed Cr Y Cb
+      case GST_MAKE_FOURCC ('v', '4', '0', '8'):       // 8 bits  YUVA 444 packed Cb Y Cr A
+      case GST_MAKE_FOURCC ('y', '2', '1', '0'):       // 10 bits YUV  422 packed LE Y0 Cb Y1 Cr
+      case GST_MAKE_FOURCC ('v', '4', '1', '0'):       // 10 bits YUV  444 packed CbYCr, 2 unused bits
+      case GST_MAKE_FOURCC ('v', '2', '1', '0'):       // 10 bits YUV  422 packed CbYCr
+      case GST_MAKE_FOURCC ('i', '4', '2', '0'):       // 8 bits  YUV  420 planar YCbCr
+      case GST_MAKE_FOURCC ('n', 'v', '1', '2'):       // 8 bits  YUV  420 semiplanar YCbCr
+      case GST_MAKE_FOURCC ('n', 'v', '2', '1'):       // 8 bits  YUV  420 semiplanar YCrCb
+      case GST_MAKE_FOURCC ('r', 'g', 'b', 'a'):       // 32 bits RGBA packed
+      case GST_MAKE_FOURCC ('a', 'b', 'g', 'r'):       // 32 bits RGBA packed
+      case GST_MAKE_FOURCC ('y', 'u', '2', '2'):       // 8 bits  YUV  422 planar YCbCr
+      case GST_MAKE_FOURCC ('y', 'v', '2', '2'):       // 8 bits  YUV  422 planar YCrCb
+      case GST_MAKE_FOURCC ('y', 'v', '2', '0'):       // 8 bits  YUV  420 planar YCrCb
+      default:
+        goto unsupported_feature;
+    }
+    return format;
+
+  } else if (uncC->version == 0) {
+    // Determine format with uncC & cmpd boxes
+  } else {
+    GST_WARNING_OBJECT (qtdemux, "Unsupported uncv version: %u", uncC->version);
+    goto unsupported_feature;
+  }
+
+
+  /* Assert that components are similar */
+  UncompressedFrameConfigComponent *first_comp = &uncC->components[0];
+  guint8 align_size = first_comp->align_size;
+  for (guint32 i = 0; i < num_components; i++) {
+    // For now, assert that each component has the same bit depth
+    UncompressedFrameConfigComponent *comp = &uncC->components[i];
+    if (comp->bit_depth != first_comp->bit_depth) {
+      goto unsupported_feature;
+    }
+    // For now, assert that each component has the same align size
+    if (comp->align_size != first_comp->align_size) {
+      goto unsupported_feature;
+    }
+  }
+
+  switch (uncC->sampling_type) {
+    case 0:                    // 4:4:4 (No subsampling)
+      // Default
+      break;
+    case 1:                    // YCbCr 4:2:2 subsampling
+    case 2:                    // YCbCr 4:2:0 subsampling
+    case 3:                    // YCbCr 4:1:1 subsampling
+    default:
+      goto unsupported_feature;
+  }
+
+
+  switch (uncC->interleave_type) {
+    case 1:                    // Pixel Interleaved
+      // Default Format
+      break;
+    case 0:                    // Component Interleaving (Planar)
+    case 2:                    // Mixed Interleaved
+    case 3:                    // Row Interleaved
+    case 4:                    // Tile Interleaved
+    case 5:                    // Multi-Y Pixel Interleaved
+    default:
+      goto unsupported_feature;
+  }
+
+
+  /* Padding */
+  // TODO: Handle various padding configurations
+  if (align_size) {
+    // If component_align_size is 0, the component value
+    // is coded on component_bit_depth bits exactly.
+    goto unsupported_feature;
+  } else if (uncC->block_size) {
+    // Component values can be stored either directly in the
+    // sample data or inside fixed-size blocks. The block
+    // size in bytes is specified by the block_size field.
+    goto unsupported_feature;
+  } else if (uncC->pixel_size != 0 && uncC->pixel_size != num_components) {
+    // If pixel_size is 0, no additional padding is present after each pixel.
+    goto unsupported_feature;
+  } else if (uncC->row_align_size) {
+    // row_align_size indicates the padding between rows
+    goto unsupported_feature;
+  } else if (uncC->tile_align_size) {
+    // tile_align_size indicates the padding between tiles
+    goto unsupported_feature;
+  }
+
+  /* Determine Format */
+  switch (num_components) {
+    case 1:
+      if (cmpd->types[0] == COMPONENT_MONOCHROME) {
+        format = GST_VIDEO_FORMAT_GRAY8;
+      }
+      break;
+    case 3:
+      if (cmpd->types[0] == COMPONENT_RED &&
+          cmpd->types[1] == COMPONENT_GREEN &&
+          cmpd->types[2] == COMPONENT_BLUE) {
+        format = GST_VIDEO_FORMAT_RGB;
+      }
+      if (cmpd->types[0] == COMPONENT_BLUE &&
+          cmpd->types[1] == COMPONENT_GREEN &&
+          cmpd->types[2] == COMPONENT_RED) {
+        format = GST_VIDEO_FORMAT_BGR;
+      }
+      break;
+    case 4:
+      if (cmpd->types[0] == COMPONENT_RED &&
+          cmpd->types[1] == COMPONENT_GREEN &&
+          cmpd->types[2] == COMPONENT_BLUE &&
+          cmpd->types[3] == COMPONENT_ALPHA) {
+        format = GST_VIDEO_FORMAT_RGBA;
+      }
+      if (cmpd->types[0] == COMPONENT_RED &&
+          cmpd->types[1] == COMPONENT_GREEN &&
+          cmpd->types[2] == COMPONENT_BLUE &&
+          cmpd->types[3] == COMPONENT_PADDING) {
+        format = GST_VIDEO_FORMAT_RGBx;
+      }
+      break;
+    default:
+      goto unsupported_feature;
+  }
+
+  /* Calculate Stride */
+  if (first_comp->bit_depth != 8) {
+    goto unsupported_feature;   // TODO - account for higher bit depths
+  } else if (uncC->sampling_type != 0) {
+    goto unsupported_feature;   // TODO - account for subsampling
+  } else if (uncC->interleave_type != 1) {
+    goto unsupported_feature;   // TODO - account for various interleave types
+  }
+  stream->stride = entry->width * num_components;       // TODO - account for non-zero row alignment
+
+  /* success */
+  return format;
+
+unsupported_feature:
+  GST_WARNING_OBJECT (qtdemux, "Unsupported uncv format");
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+/* *INDENT-OFF* */
+
+// ISO/IEC 23091-3
+static const GstAudioChannelPosition chnl_positions[] = {
+  // 0
+  GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_LFE1,
+  GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+  // 10
+  GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_WIDE_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_WIDE_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER,
+  // 20
+  GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_TOP_SIDE_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_SIDE_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_LFE2,
+  GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_CENTER,
+  // 30
+  GST_AUDIO_CHANNEL_POSITION_TOP_SURROUND_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_SURROUND_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // reserved
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // reserved
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // reserved
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // reserved
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // low frequency enhancement 3
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // left edge of screen
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // right edge of screen
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // half-way between centre of screen and
+                                      // left edge of screen
+  // 40
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // half-way between centre of screen and
+                                      // right edge of screen
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // left back surround
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // right back surround
+  // 43-125 reserved
+  // 126 explicit position
+  // 127 unknown / undefined
+};
+
+// Pre-defined channel layouts
+//
+// Each layout is terminated by INVALID to allow counting the number of
+// channels in the layout.
+static const GstAudioChannelPosition chnl_layouts[][25] = {
+ // 0
+ { GST_AUDIO_CHANNEL_POSITION_INVALID, },
+ // 1
+ { GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_INVALID, },
+ // 2
+ { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_INVALID, },
+ // 3
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 4
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 5
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 6
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_LFE1,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 7
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_LFE1,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 8
+ { GST_AUDIO_CHANNEL_POSITION_INVALID, },
+ // 9
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 10
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 11
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_LFE1,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 12
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_REAR_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_LFE1,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 13
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT, GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_REAR_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_LFE1, GST_AUDIO_CHANNEL_POSITION_LFE2,
+   GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_TOP_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_TOP_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 14
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_LFE1,
+   GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+
+};
+/* *INDENT-ON* */
+
+static void
+qtdemux_parse_chnl (GstQTDemux * qtdemux, GstByteReader * br,
+    QtDemuxStream * stream, QtDemuxStreamStsdEntry * entry)
+{
+  GstAudioChannelPosition positions[64];
+  guint n_channels = 0;
+
+  guint8 version = gst_byte_reader_get_uint8_unchecked (br);
+  guint32 flags = gst_byte_reader_get_uint24_be_unchecked (br);
+
+  if (version == 0 && flags == 0) {
+    guint8 stream_structure;
+    if (!gst_byte_reader_get_uint8 (br, &stream_structure)) {
+      GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+      goto error;
+    }
+
+    // stream carries channels
+    if (stream_structure & 1) {
+      guint8 defined_layout;
+
+      if (!gst_byte_reader_get_uint8 (br, &defined_layout)) {
+        GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+        goto error;
+      }
+
+      n_channels = entry->n_channels;
+
+      if (defined_layout == 0) {
+        for (unsigned int i = 0; i < n_channels; i++) {
+          guint8 speaker_position;
+
+          if (!gst_byte_reader_get_uint8 (br, &speaker_position)) {
+            GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+            goto error;
+          }
+
+          // explicit position
+          if (speaker_position == 126) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Explicit speaker position not supported");
+            goto error;
+          }
+
+          if (speaker_position >= G_N_ELEMENTS (chnl_positions) ||
+              chnl_positions[speaker_position] ==
+              GST_AUDIO_CHANNEL_POSITION_INVALID) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Unsupported speaker channel %u position %u", i,
+                speaker_position);
+            goto error;
+          }
+
+          positions[i] = chnl_positions[speaker_position];
+        }
+      } else {
+        guint64 omitted_channels_map;
+
+        if (!gst_byte_reader_get_uint64_be (br, &omitted_channels_map)) {
+          GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+          goto error;
+        }
+
+        if (defined_layout >= G_N_ELEMENTS (chnl_layouts) ||
+            chnl_layouts[defined_layout][0] ==
+            GST_AUDIO_CHANNEL_POSITION_INVALID) {
+          GST_WARNING_OBJECT (qtdemux, "Unsupported defined layout %u",
+              defined_layout);
+          goto error;
+        }
+
+        const GstAudioChannelPosition *layout = chnl_layouts[defined_layout];
+
+        // The omitted channel map defines which of the channels of the
+        // pre-defined layout are *not* included.
+        for (unsigned int c = 0; c < n_channels; c++) {
+          // Find c-th channel in layout that is not omitted
+          unsigned int l_c = 0;
+          for (unsigned int i = 0; i < 64; i++) {
+            // If there are not enough non-omitted channels in the layout we end
+            // up here and return
+            if (layout[i] == GST_AUDIO_CHANNEL_POSITION_INVALID) {
+              GST_WARNING_OBJECT (qtdemux,
+                  "Invalid defined layout %u with %u channels and omitted channels map %016"
+                  G_GINT64_MODIFIER "x", defined_layout, n_channels,
+                  omitted_channels_map);
+              goto error;
+            }
+
+            // The i-th channel of the layout is included
+            if (((omitted_channels_map >> i) & 1) == 0) {
+              // The channel we're looking for
+              if (l_c == c) {
+                positions[c] = layout[l_c];
+                break;
+              }
+              l_c += 1;
+            }
+          }
+
+          // If there are not enough non-omitted channels in the omitted
+          // channels map then return here
+          if (positions[c] == GST_AUDIO_CHANNEL_POSITION_INVALID) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Invalid defined layout %u with %u channels and omitted channels map %016"
+                G_GINT64_MODIFIER "x", defined_layout, n_channels,
+                omitted_channels_map);
+            goto error;
+          }
+        }
+      }
+    }
+
+    // stream carries objects
+    if (stream_structure & 2) {
+      guint8 object_count;
+
+      if (!gst_byte_reader_get_uint8 (br, &object_count)) {
+        GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+        goto error;
+      }
+
+      GST_WARNING_OBJECT (qtdemux, "Stream carries %u objects", object_count);
+      goto error;
+    }
+  } else if (version == 1 && flags == 0) {
+    guint8 b;
+
+    if (!gst_byte_reader_get_uint8 (br, &b)) {
+      GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+      goto error;
+    }
+
+    guint8 stream_structure = b >> 4;
+    // guint8 format_ordering = b & 0x0f;
+
+    guint8 base_channel_count;
+    if (!gst_byte_reader_get_uint8 (br, &base_channel_count)) {
+      GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+      goto error;
+    }
+
+    // stream carries channels
+    if (stream_structure & 1) {
+      guint8 defined_layout;
+
+      if (!gst_byte_reader_get_uint8 (br, &defined_layout)) {
+        GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+        goto error;
+      }
+
+      if (defined_layout == 0) {
+        guint8 layout_channel_count;
+
+        if (!gst_byte_reader_get_uint8 (br, &layout_channel_count)) {
+          GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+          goto error;
+        }
+
+        if (layout_channel_count == 0) {
+          // Not present so configure a default based on the sample entry
+          goto error;
+        }
+
+        n_channels = layout_channel_count;
+        for (unsigned int i = 0; i < layout_channel_count; i++) {
+          guint8 speaker_position;
+
+          if (!gst_byte_reader_get_uint8 (br, &speaker_position)) {
+            GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+            goto error;
+          }
+
+          // explicit position
+          if (speaker_position == 126) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Explicit speaker position not supported");
+            goto error;
+          }
+
+          if (speaker_position >= G_N_ELEMENTS (chnl_positions) ||
+              chnl_positions[speaker_position] ==
+              GST_AUDIO_CHANNEL_POSITION_INVALID) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Unsupported speaker channel %u position %u", i,
+                speaker_position);
+            goto error;
+          }
+
+          positions[i] = chnl_positions[speaker_position];
+        }
+      } else {
+        if (!gst_byte_reader_get_uint8 (br, &b)) {
+          GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+          goto error;
+        }
+
+        guint8 channel_order_definition = (b >> 1) & 0x07;
+        guint8 omitted_channels_present = b & 0x01;
+
+        if (channel_order_definition != 0) {
+          GST_WARNING_OBJECT (qtdemux,
+              "Channel order definition %u not supported",
+              channel_order_definition);
+          goto error;
+        }
+
+        guint64 omitted_channels_map = 0;
+        if (omitted_channels_present) {
+          if (!gst_byte_reader_get_uint64_be (br, &omitted_channels_map)) {
+            GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+            goto error;
+          }
+        }
+
+        const GstAudioChannelPosition *layout = chnl_layouts[defined_layout];
+
+        // Calculate number of channels: number of channels in the layout
+        // minus number of omitted channels
+        n_channels = 0;
+        for (unsigned int i = 0; i < G_N_ELEMENTS (chnl_layouts[0]); i++) {
+          if (layout[i] == GST_AUDIO_CHANNEL_POSITION_INVALID)
+            break;
+
+          n_channels += 1;
+        }
+        for (unsigned int i = 0; i < 64; i++) {
+          if ((omitted_channels_map >> i) == 1) {
+            n_channels -= 1;
+          }
+          // No channels present
+          if (n_channels == 0) {
+            goto error;
+          }
+        }
+
+        // The omitted channel map defines which of the channels of the
+        // pre-defined layout are *not* included.
+        for (unsigned int c = 0; c < n_channels; c++) {
+          // Find c-th channel in layout that is not omitted
+          unsigned int l_c = 0;
+          for (unsigned int i = 0; i < 64; i++) {
+            // If there are not enough non-omitted channels in the layout we end
+            // up here and return
+            if (layout[i] == GST_AUDIO_CHANNEL_POSITION_INVALID) {
+              GST_WARNING_OBJECT (qtdemux,
+                  "Invalid defined layout %u with %u channels and omitted channels map %016"
+                  G_GINT64_MODIFIER "x", defined_layout, n_channels,
+                  omitted_channels_map);
+              goto error;
+            }
+
+            // The i-th channel of the layout is included
+            if (((omitted_channels_map >> i) & 1) == 0) {
+              // The channel we're looking for
+              if (l_c == c) {
+                positions[c] = layout[l_c];
+                break;
+              }
+              l_c += 1;
+            }
+          }
+
+          // If there are not enough non-omitted channels in the omitted
+          // channels map then return here
+          if (positions[c] == GST_AUDIO_CHANNEL_POSITION_INVALID) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Invalid defined layout %u with %u channels and omitted channels map %016"
+                G_GINT64_MODIFIER "x", defined_layout, n_channels,
+                omitted_channels_map);
+            goto error;
+          }
+        }
+      }
+    }
+
+    // stream carries objects
+    if (stream_structure & 2) {
+      guint8 object_count = base_channel_count - n_channels;
+      GST_WARNING_OBJECT (qtdemux, "Stream carries %u objects", object_count);
+      goto error;
+    }
+  } else {
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported chnl version %u flags %06x", version, flags);
+
+    goto error;
+  }
+
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    gchar *s = gst_audio_channel_positions_to_string (positions, n_channels);
+
+    GST_DEBUG_OBJECT (qtdemux, "Retrieved channel positions %s", s);
+
+    g_free (s);
+  }
+#endif
+
+  guint64 channel_mask;
+  GstAudioChannelPosition valid_positions[64];
+
+  if (!gst_audio_channel_positions_to_mask (positions, n_channels, FALSE,
+          &channel_mask)) {
+    GST_WARNING_OBJECT (qtdemux, "Can't convert channel positions to mask");
+    goto error;
+  }
+
+  memcpy (valid_positions, positions, sizeof (positions[0]) * n_channels);
+  if (!gst_audio_channel_positions_to_valid_order (valid_positions, n_channels)) {
+    GST_WARNING_OBJECT (qtdemux,
+        "Can't convert channel positions to GStreamer channel order");
+    goto error;
+  }
+
+  if (n_channels > 1) {
+    if (!gst_audio_get_channel_reorder_map (n_channels, positions,
+            valid_positions, entry->reorder_map)) {
+      GST_WARNING_OBJECT (qtdemux, "Can't calculate channel reorder map");
+      goto error;
+    }
+    entry->needs_reorder =
+        memcmp (positions, valid_positions,
+        sizeof (positions[0]) * n_channels) != 0;
+  }
+
+  gst_caps_set_simple (entry->caps, "channel-mask", GST_TYPE_BITMASK,
+      channel_mask, NULL);
+
+  // Update based on the actual channel count from this box
+  entry->samples_per_frame = n_channels;
+  entry->bytes_per_frame = n_channels * entry->bytes_per_sample;
+  entry->samples_per_packet = entry->samples_per_frame;
+  entry->bytes_per_packet = entry->bytes_per_sample;
+
+  stream->min_buffer_size = 1024 * entry->bytes_per_frame;
+  stream->max_buffer_size = entry->rate * entry->bytes_per_frame;
+  GST_DEBUG ("setting min/max buffer sizes to %d/%d", stream->min_buffer_size,
+      stream->max_buffer_size);
+
+  return;
+
+error:
+  {
+    // Set a default channel mask on errors
+    guint64 default_mask =
+        gst_audio_channel_get_fallback_mask (entry->n_channels);
+
+    GST_WARNING_OBJECT (qtdemux,
+        "Configuring default channel mask for %u channels", entry->n_channels);
+
+    gst_caps_set_simple (entry->caps, "channel-mask", GST_TYPE_BITMASK,
+        default_mask, NULL);
+  }
+}
+
 /* parse the traks.
  * With each track we associate a new QtDemuxStream that contains all the info
  * about the trak.
  * traks that do not decode to something (like strm traks) will not have a pad.
  */
 static gboolean
-qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
+qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
 {
   GstByteReader tkhd;
   int offset;
@@ -11910,14 +12993,20 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   /* parse rest of tkhd */
   if (stream->subtype == FOURCC_vide) {
+    guint32 tkhd_matrix[9];
     guint32 matrix[9];
 
     /* version 1 uses some 64-bit ints */
     if (!gst_byte_reader_skip (&tkhd, 20 + value_size))
       goto corrupt_file;
 
-    if (!qtdemux_parse_transformation_matrix (qtdemux, &tkhd, matrix, "tkhd"))
+    if (!qtdemux_parse_transformation_matrix (qtdemux, &tkhd, tkhd_matrix,
+            "tkhd"))
       goto corrupt_file;
+
+    /* calculate the final matrix from the mvhd_matrix and the tkhd matrix */
+    qtdemux_mul_transformation_matrix (qtdemux, mvhd_matrix, tkhd_matrix,
+        matrix);
 
     if (!gst_byte_reader_get_uint32_be (&tkhd, &w)
         || !gst_byte_reader_get_uint32_be (&tkhd, &h))
@@ -13227,6 +14316,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         case FOURCC_sowt:
         case FOURCC_raw_:
         case FOURCC_lpcm:
+        case FOURCC_ipcm:
+        case FOURCC_fpcm:
           /* Sometimes these are set to 0 in the sound sample descriptions so
            * let's try to infer useful values from the other information we
            * have available */
@@ -13604,6 +14695,89 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
           break;
         }
+        case FOURCC_ipcm:
+        case FOURCC_fpcm:
+        {
+          GNode *fmt;
+          GNode *pcmC;
+
+          fmt = qtdemux_tree_get_child_by_type (stsd, fourcc);
+
+          pcmC = qtdemux_tree_get_child_by_type (fmt, FOURCC_pcmC);
+          if (pcmC) {
+            const guint8 *data = pcmC->data;
+            gsize len = QT_UINT32 (data);
+            if (len >= 8 + 6) {
+              GstByteReader br = GST_BYTE_READER_INIT (data, len);
+
+              gst_byte_reader_skip_unchecked (&br, 4 + 4);
+
+              guint32 version_flags =
+                  gst_byte_reader_get_uint32_be_unchecked (&br);
+              // Version 0, no flags
+              if (version_flags == 0) {
+                guint8 format_flags = gst_byte_reader_get_uint8_unchecked (&br);
+                guint8 pcm_sample_size =
+                    gst_byte_reader_get_uint8_unchecked (&br);
+                GstAudioFormat audio_format = GST_AUDIO_FORMAT_UNKNOWN;
+
+                if (fourcc == FOURCC_ipcm) {
+                  audio_format =
+                      gst_audio_format_build_integer (TRUE,
+                      (format_flags & 0x01) ? G_LITTLE_ENDIAN : G_BIG_ENDIAN,
+                      pcm_sample_size, pcm_sample_size);
+                } else {
+                  switch (pcm_sample_size) {
+                    case 32:
+                      audio_format =
+                          (format_flags & 0x01) ? GST_AUDIO_FORMAT_F32LE :
+                          GST_AUDIO_FORMAT_F32BE;
+                      break;
+                    case 64:
+                      audio_format =
+                          (format_flags & 0x01) ? GST_AUDIO_FORMAT_F64LE :
+                          GST_AUDIO_FORMAT_F64BE;
+                      break;
+                    default:
+                      GST_WARNING_OBJECT (qtdemux,
+                          "Unsupported floating point PCM sample size %u",
+                          pcm_sample_size);
+                      break;
+                  }
+                }
+                gst_caps_set_simple (entry->caps,
+                    "format", G_TYPE_STRING,
+                    audio_format !=
+                    GST_AUDIO_FORMAT_UNKNOWN ?
+                    gst_audio_format_to_string (audio_format) : "UNKNOWN",
+                    NULL);
+
+                entry->bytes_per_sample = pcm_sample_size / 8;
+                entry->samples_per_frame = entry->n_channels;
+                entry->bytes_per_frame =
+                    entry->n_channels * entry->bytes_per_sample;
+                entry->samples_per_packet = entry->samples_per_frame;
+                entry->bytes_per_packet = entry->bytes_per_sample;
+
+                stream->min_buffer_size = 1024 * entry->bytes_per_frame;
+                stream->max_buffer_size = entry->rate * entry->bytes_per_frame;
+                GST_DEBUG ("setting min/max buffer sizes to %d/%d",
+                    stream->min_buffer_size, stream->max_buffer_size);
+
+                stream->alignment = pcm_sample_size / 8;
+              } else {
+                GST_WARNING_OBJECT (qtdemux,
+                    "Unsupported pcmC version/flags %08x", version_flags);
+              }
+            }
+          } else {
+            GST_WARNING_OBJECT (qtdemux,
+                "%" GST_FOURCC_FORMAT " without pcmC box",
+                GST_FOURCC_ARGS (fourcc));
+          }
+
+          break;
+        }
         default:
           break;
       }
@@ -13887,8 +15061,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             break;
           }
           case FOURCC_sawb:
-            /* Fallthrough! */
             amrwb = TRUE;
+            /* FALLTHROUGH */
           case FOURCC_samr:
           {
             gint len = QT_UINT32 (stsd_entry_data);
@@ -13960,15 +15134,36 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             }
             break;
           }
-          case FOURCC_opus:
+          case FOURCC_opus:{
+            /* Fully handled elsewhere */
+            break;
+          }
           case FOURCC_lpcm:
+          case FOURCC_ipcm:
+          case FOURCC_fpcm:
           case FOURCC_in24:
           case FOURCC_in32:
           case FOURCC_fl32:
           case FOURCC_fl64:
-          case FOURCC_s16l:
-            /* Fully handled elsewhere */
+          case FOURCC_s16l:{
+            GNode *fmt, *chnl;
+
+            // Parse channel layout information for raw PCM
+            fmt = qtdemux_tree_get_child_by_type (stsd, fourcc);
+            chnl = qtdemux_tree_get_child_by_type (fmt, FOURCC_chnl);
+
+            if (chnl) {
+              const guint8 *data = chnl->data;
+              gsize len = QT_UINT32 (data);
+              if (len >= 8 + 4) {
+                GstByteReader br = GST_BYTE_READER_INIT (data, len);
+                // Skip over fourcc and length
+                gst_byte_reader_skip_unchecked (&br, 4 + 4);
+                qtdemux_parse_chnl (qtdemux, &br, stream, entry);
+              }
+            }
             break;
+          }
           default:
             GST_INFO_OBJECT (qtdemux,
                 "unhandled type %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
@@ -14801,11 +15996,14 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   guint64 creation_time;
   GstDateTime *datetime = NULL;
   gint version;
+  GstByteReader mvhd_reader;
+  guint32 matrix[9];
 
   /* make sure we have a usable taglist */
   qtdemux->tag_list = gst_tag_list_make_writable (qtdemux->tag_list);
 
-  mvhd = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_mvhd);
+  mvhd = qtdemux_tree_get_child_by_type_full (qtdemux->moov_node,
+      FOURCC_mvhd, &mvhd_reader);
   if (mvhd == NULL) {
     GST_LOG_OBJECT (qtdemux, "No mvhd node found, looking for redirects.");
     return qtdemux_parse_redirects (qtdemux);
@@ -14816,14 +16014,25 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
     creation_time = QT_UINT64 ((guint8 *) mvhd->data + 12);
     qtdemux->timescale = QT_UINT32 ((guint8 *) mvhd->data + 28);
     qtdemux->duration = QT_UINT64 ((guint8 *) mvhd->data + 32);
+    if (!gst_byte_reader_skip (&mvhd_reader, 4 + 8 + 8 + 4 + 8))
+      return FALSE;
   } else if (version == 0) {
     creation_time = QT_UINT32 ((guint8 *) mvhd->data + 12);
     qtdemux->timescale = QT_UINT32 ((guint8 *) mvhd->data + 20);
     qtdemux->duration = QT_UINT32 ((guint8 *) mvhd->data + 24);
+    if (!gst_byte_reader_skip (&mvhd_reader, 4 + 4 + 4 + 4 + 4))
+      return FALSE;
   } else {
     GST_WARNING_OBJECT (qtdemux, "Unhandled mvhd version %d", version);
     return FALSE;
   }
+
+  if (!gst_byte_reader_skip (&mvhd_reader, 4 + 2 + 2 + 2 * 4))
+    return FALSE;
+
+  if (!qtdemux_parse_transformation_matrix (qtdemux, &mvhd_reader, matrix,
+          "mvhd"))
+    return FALSE;
 
   /* Moving qt creation time (secs since 1904) to unix time */
   if (creation_time != 0) {
@@ -14893,7 +16102,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   /* parse all traks */
   trak = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_trak);
   while (trak) {
-    qtdemux_parse_trak (qtdemux, trak);
+    qtdemux_parse_trak (qtdemux, trak, matrix);
     /* iterate all siblings */
     trak = qtdemux_tree_get_sibling_by_type (trak, FOURCC_trak);
   }
@@ -15498,6 +16707,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
        */
     case GST_MAKE_FOURCC ('m', 'p', 'e', 'g'):
     case GST_MAKE_FOURCC ('m', 'p', 'g', '1'):
+    case GST_MAKE_FOURCC ('m', '1', 'v', ' '):
       _codec ("MPEG-1 video");
       caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
@@ -15845,6 +17055,109 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       g_free (format);
       break;
     }
+    case FOURCC_LAGS:
+      _codec ("Lagarith lossless video codec");
+      caps = gst_caps_new_empty_simple ("video/x-lagarith");
+      break;
+    case FOURCC_uncv:
+    {
+      const guint8 ENTRY_MINIMUM_SIZE = 86;     // video sample description minimum size in bytes
+      const guint8 *first_child = stsd_entry_data + ENTRY_MINIMUM_SIZE;
+      const guint32 UNCV_SIZE = QT_UINT32 (stsd_entry_data);
+      const guint32 UNCV_CHILDREN_SIZE = UNCV_SIZE - ENTRY_MINIMUM_SIZE;
+      gboolean found_cmpd = FALSE;
+      gboolean found_uncC = FALSE;
+      gboolean success = TRUE;
+      GstByteReader reader;
+      UncompressedFrameConfigBox uncC = { 0 };
+      ComponentDefinitionBox cmpd = { 0 };
+
+      if (UNCV_SIZE < ENTRY_MINIMUM_SIZE) {
+        GST_WARNING_OBJECT (qtdemux, "visual sample entry 'uncv' is too small");
+        return NULL;
+      }
+
+      gst_byte_reader_init (&reader, first_child, UNCV_CHILDREN_SIZE);
+
+      // Parse each uncv child
+      while (gst_byte_reader_get_remaining (&reader)) {
+        guint32 child_size = 0; // Includes size (4), fourcc (4), & data
+        guint32 child_data_size = 0;    // The size in bytes of the data, not including the size (4) and fourcc (4)
+        guint32 child_fourcc = 0;
+
+        if (gst_byte_reader_get_remaining (&reader) < 8) {
+          GST_WARNING_OBJECT (qtdemux, "uncv child box is too small");
+          return NULL;
+        }
+
+        // Parse Child Header
+        child_size = gst_byte_reader_get_uint32_be_unchecked (&reader);
+        child_fourcc = gst_byte_reader_get_uint32_le_unchecked (&reader);
+        child_data_size = child_size - 8;
+
+        if (child_data_size > gst_byte_reader_get_remaining (&reader)) {
+          GST_WARNING_OBJECT (qtdemux, "uncv child box is too big");
+          return NULL;
+        }
+
+        switch (child_fourcc) {
+          case FOURCC_uncC:
+          {
+            if (found_uncC) {
+              success = FALSE;
+              GST_WARNING_OBJECT (qtdemux, "Found multiple uncC boxes in uncv");
+            } else {
+              found_uncC = TRUE;
+              success =
+                  qtdemux_parse_uncC (qtdemux, &reader, &uncC, child_size);
+            }
+            break;
+          }
+          case FOURCC_cmpd:
+          {
+            if (found_cmpd) {
+              success = FALSE;
+              GST_WARNING_OBJECT (qtdemux, "Found multiple cmpd boxes in uncv");
+            } else {
+              found_cmpd = TRUE;
+              success =
+                  qtdemux_parse_cmpd (qtdemux, &reader, &cmpd, child_size);
+            }
+            break;
+          }
+          default:
+          {
+            GST_LOG_OBJECT (qtdemux,
+                "Ignoring unknown uncv child: %" GST_FOURCC_FORMAT,
+                GST_FOURCC_ARGS (child_fourcc));
+            gst_byte_reader_skip_unchecked (&reader, child_data_size);  // Skip unknown child box
+          }
+        }
+        if (!success) {
+          GST_WARNING_OBJECT (qtdemux, "Failed to parse uncv");
+          break;
+        }
+      }
+
+      /* Successfully Parsed uncv? */
+      if (!found_uncC) {
+        GST_WARNING_OBJECT (qtdemux,
+            "Expected to find uncC box when parsing uncv");
+      } else if (uncC.version == 0 && !found_cmpd) {
+        GST_WARNING_OBJECT (qtdemux,
+            "Expected to find cmpd box when uncC version is 0");
+      } else if (!success) {
+        GST_WARNING_OBJECT (qtdemux, "Error when parsing uncv box");
+      } else {
+        format = qtdemux_get_format_from_uncv (qtdemux, entry, stream,
+            &uncC, &cmpd);
+      }
+
+      /* Free Memory */
+      qtdemux_clear_uncC (&uncC);
+      qtdemux_clear_cmpd (&cmpd);
+      break;
+    }
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
     {
@@ -15854,17 +17167,16 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
   }
 
   if (format != GST_VIDEO_FORMAT_UNKNOWN) {
-    GstVideoInfo info;
+    gst_video_info_set_format (&stream->info, format, entry->width,
+        entry->height);
 
-    gst_video_info_init (&info);
-    gst_video_info_set_format (&info, format, entry->width, entry->height);
-
-    caps = gst_video_info_to_caps (&info);
+    caps = gst_video_info_to_caps (&stream->info);
     *codec_name = gst_pb_utils_get_codec_description (caps);
 
     /* enable clipping for raw video streams */
     stream->need_clip = TRUE;
     stream->alignment = 32;
+
   }
 
   return caps;
@@ -15905,9 +17217,10 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       if (depth == 8)
         format = GST_AUDIO_FORMAT_U8;
       /* otherwise it's signed and big-endian just like 'twos' */
+      /* FALLTHROUGH */
     case FOURCC_twos:
       endian = G_BIG_ENDIAN;
-      /* fall-through */
+      /* FALLTHROUGH */
     case FOURCC_sowt:
     {
       gchar *str;
@@ -16185,6 +17498,15 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
             "non-interleaved" : "interleaved", NULL);
         stream->alignment = width / 8;
       }
+      break;
+    }
+    case FOURCC_ipcm:
+    case FOURCC_fpcm:
+    {
+      _codec ("RAW PCM audio");
+      caps =
+          gst_caps_new_simple ("audio/x-raw", "layout", G_TYPE_STRING,
+          "interleaved", NULL);
       break;
     }
     case GST_MAKE_FOURCC ('a', 'c', '-', '4'):

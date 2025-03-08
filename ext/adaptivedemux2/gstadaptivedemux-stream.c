@@ -1154,6 +1154,9 @@ gst_adaptive_demux2_stream_create_parser (GstAdaptiveDemux2Stream * stream)
     }
 
     stream->parsebin = gst_element_factory_make ("parsebin", NULL);
+    if (stream->parsebin == NULL) {
+      return FALSE;
+    }
     if (tsdemux_type)
       g_signal_connect (stream->parsebin, "deep-element-added",
           (GCallback) parsebin_deep_element_added_cb, demux);
@@ -1969,6 +1972,9 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
       if (gst_adaptive_demux2_stream_download_fragment (stream) != GST_FLOW_OK) {
         GST_ERROR_OBJECT (demux,
             "Failed to begin fragment download for stream %p", stream);
+        GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
+            (_("Failed to initiate fragment download.")),
+            ("An error happened when getting fragment URL"));
         return FALSE;
       }
       break;
@@ -2076,8 +2082,8 @@ gst_adaptive_demux2_stream_next_download (GstAdaptiveDemux2Stream * stream)
 
       GST_DEBUG_OBJECT (stream,
           "stream_time after restart seek: %" GST_STIME_FORMAT
-          " position %" GST_STIME_FORMAT, GST_STIME_ARGS (stream_time),
-          GST_STIME_ARGS (stream->current_position));
+          " position %" GST_TIME_FORMAT, GST_STIME_ARGS (stream_time),
+          GST_TIME_ARGS (stream->current_position));
     }
 
     /* Trigger (re)computation of the parsebin input segment */
@@ -2709,7 +2715,7 @@ gst_adaptive_demux2_stream_update_current_bitrate (GstAdaptiveDemux2Stream *
   /* No explicit connection_speed, so choose the new variant to use as a
    * fraction of the measured download rate */
   target_download_rate =
-      CLAMP (stream->current_download_rate, 0,
+      MIN (stream->current_download_rate,
       G_MAXUINT) * (gdouble) demux->bandwidth_target_ratio;
 
   GST_DEBUG_OBJECT (stream, "Bitrate after target ratio limit (%0.2f): %u",

@@ -1,3 +1,42 @@
+gst-plugins-good1.0 (1.25.50-1) experimental; urgency=medium
+
+  * New upstream version 1.25.50
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Tue, 11 Feb 2025 12:42:14 +0100
+
+gst-plugins-good1.0 (1.25.1-3) experimental; urgency=medium
+
+  * d/install: libgstsoup.so is not system version.
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Fri, 07 Feb 2025 16:30:04 +0100
+
+gst-plugins-good1.0 (1.25.1-2) experimental; urgency=medium
+
+  * d/control: bump GStreamer version dependency
+  * d/rules: soup only when not hurd
+  * d: build fixes for hurd-amd64 (Closes: #1072337)
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Tue, 21 Jan 2025 12:23:12 +0100
+
+gst-plugins-good1.0 (1.25.1-1) experimental; urgency=medium
+
+  * d/gbp.conf: adjust for experimental
+  * New upstream version 1.25.1
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Wed, 15 Jan 2025 12:36:30 +0100
+
+gst-plugins-good1.0 (1.24.11-2) unstable; urgency=medium
+
+  * d/rules: disable adaptivedemux2 on hurd
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Thu, 09 Jan 2025 16:35:04 +0100
+
+gst-plugins-good1.0 (1.24.11-1) unstable; urgency=medium
+
+  * New upstream version 1.24.11
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Tue, 07 Jan 2025 09:14:04 +0100
+
 gst-plugins-good1.0 (1.24.10-1ubuntu1) plucky; urgency=medium
 
   * Merge from Debian. Remaining changes:
