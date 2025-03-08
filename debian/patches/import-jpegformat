@@ -23,11 +23,10 @@ Subject: This is a copy of the jpegformat plugin from gst-plugins-good. It's
  create mode 100644 gst/jpegformat/gstjpegparse.h
  create mode 100644 gst/jpegformat/meson.build
 
-diff --git a/gst/jpegformat/gstjifmux.c b/gst/jpegformat/gstjifmux.c
-new file mode 100644
-index 0000000..79241bb
---- /dev/null
-+++ b/gst/jpegformat/gstjifmux.c
+Index: gst-plugins-good1.0-1.25.50/gst/jpegformat/gstjifmux.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ gst-plugins-good1.0-1.25.50/gst/jpegformat/gstjifmux.c	2025-02-14 17:10:00.214493987 +0100
 @@ -0,0 +1,759 @@
 +/* GStreamer
 + *
@@ -788,11 +787,10 @@ index 0000000..79241bb
 +
 +  return ret;
 +}
-diff --git a/gst/jpegformat/gstjifmux.h b/gst/jpegformat/gstjifmux.h
-new file mode 100644
-index 0000000..96830bb
---- /dev/null
-+++ b/gst/jpegformat/gstjifmux.h
+Index: gst-plugins-good1.0-1.25.50/gst/jpegformat/gstjifmux.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ gst-plugins-good1.0-1.25.50/gst/jpegformat/gstjifmux.h	2025-02-14 17:10:00.214493987 +0100
 @@ -0,0 +1,68 @@
 +/* GStreamer
 + *
@@ -862,11 +860,10 @@ index 0000000..96830bb
 +G_END_DECLS
 +
 +#endif /* __GST_JFIF_MUX_H__ */
-diff --git a/gst/jpegformat/gstjpegformat.c b/gst/jpegformat/gstjpegformat.c
-new file mode 100644
-index 0000000..bc37045
---- /dev/null
-+++ b/gst/jpegformat/gstjpegformat.c
+Index: gst-plugins-good1.0-1.25.50/gst/jpegformat/gstjpegformat.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ gst-plugins-good1.0-1.25.50/gst/jpegformat/gstjpegformat.c	2025-02-14 17:10:00.215494087 +0100
 @@ -0,0 +1,45 @@
 +/* GStreamer
 + *
@@ -913,11 +910,10 @@ index 0000000..bc37045
 +    jpegformat,
 +    "JPEG interchange format plugin",
 +    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
-diff --git a/gst/jpegformat/gstjpegformat.h b/gst/jpegformat/gstjpegformat.h
-new file mode 100644
-index 0000000..be69268
---- /dev/null
-+++ b/gst/jpegformat/gstjpegformat.h
+Index: gst-plugins-good1.0-1.25.50/gst/jpegformat/gstjpegformat.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ gst-plugins-good1.0-1.25.50/gst/jpegformat/gstjpegformat.h	2025-02-14 17:10:00.215494087 +0100
 @@ -0,0 +1,92 @@
 +/* GStreamer
 + *
@@ -1011,11 +1007,10 @@ index 0000000..be69268
 +G_END_DECLS
 +
 +#endif /* __GST_JPEG_FORMAT_H__ */
-diff --git a/gst/jpegformat/gstjpegparse.c b/gst/jpegformat/gstjpegparse.c
-new file mode 100644
-index 0000000..5231879
---- /dev/null
-+++ b/gst/jpegformat/gstjpegparse.c
+Index: gst-plugins-good1.0-1.25.50/gst/jpegformat/gstjpegparse.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ gst-plugins-good1.0-1.25.50/gst/jpegformat/gstjpegparse.c	2025-02-14 17:10:00.216494188 +0100
 @@ -0,0 +1,901 @@
 +/* GStreamer
 + *
@@ -1918,11 +1913,10 @@ index 0000000..5231879
 +
 +  return TRUE;
 +}
-diff --git a/gst/jpegformat/gstjpegparse.h b/gst/jpegformat/gstjpegparse.h
-new file mode 100644
-index 0000000..e777421
---- /dev/null
-+++ b/gst/jpegformat/gstjpegparse.h
+Index: gst-plugins-good1.0-1.25.50/gst/jpegformat/gstjpegparse.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ gst-plugins-good1.0-1.25.50/gst/jpegformat/gstjpegparse.h	2025-02-14 17:10:00.216494188 +0100
 @@ -0,0 +1,94 @@
 +/* GStreamer
 + *
@@ -2018,11 +2012,10 @@ index 0000000..e777421
 +G_END_DECLS
 +
 +#endif /* __GST_JPEG_PARSE_H__ */
-diff --git a/gst/jpegformat/meson.build b/gst/jpegformat/meson.build
-new file mode 100644
-index 0000000..4fd78c0
---- /dev/null
-+++ b/gst/jpegformat/meson.build
+Index: gst-plugins-good1.0-1.25.50/gst/jpegformat/meson.build
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ gst-plugins-good1.0-1.25.50/gst/jpegformat/meson.build	2025-02-14 17:10:00.217494289 +0100
 @@ -0,0 +1,16 @@
 +jpegf_sources = [
 +  'gstjpegformat.c',
@@ -2040,11 +2033,11 @@ index 0000000..4fd78c0
 +)
 +pkgconfig.generate(gstjpegformat, install_dir : plugins_pkgconfig_install_dir)
 +plugins += [gstjpegformat]
-diff --git a/gst/meson.build b/gst/meson.build
-index 18d033f..6ec3dcc 100644
---- a/gst/meson.build
-+++ b/gst/meson.build
-@@ -2,7 +2,7 @@ foreach plugin : ['alpha', 'apetag', 'audiofx', 'audioparsers', 'auparse',
+Index: gst-plugins-good1.0-1.25.50/gst/meson.build
+===================================================================
+--- gst-plugins-good1.0-1.25.50.orig/gst/meson.build	2025-02-14 17:10:00.226495196 +0100
++++ gst-plugins-good1.0-1.25.50/gst/meson.build	2025-02-14 17:10:00.217494289 +0100
+@@ -2,7 +2,7 @@
                    'autodetect', 'avi', 'camerabin2', 'cutter', 'debugutils', 'deinterlace',
                    'dtmf', 'effectv', 'equalizer', 'flv', 'flx', 'goom',
                    'goom2k1', 'icydemux', 'id3demux', 'imagefreeze',
@@ -2053,11 +2046,11 @@ index 18d033f..6ec3dcc 100644
                    'monoscope', 'multifile', 'multipart', 'replaygain', 'rtp',
                    'rtpmanager', 'rtsp', 'shapewipe', 'smpte', 'spectrum',
                    'udp', 'videobox', 'videocrop', 'videofilter', 'videomixer',
-diff --git a/meson_options.txt b/meson_options.txt
-index 4acce2a..64c0ef6 100644
---- a/meson_options.txt
-+++ b/meson_options.txt
-@@ -22,6 +22,7 @@ option('id3demux', type : 'feature', value : 'auto')
+Index: gst-plugins-good1.0-1.25.50/meson_options.txt
+===================================================================
+--- gst-plugins-good1.0-1.25.50.orig/meson_options.txt	2025-02-14 17:10:00.226495196 +0100
++++ gst-plugins-good1.0-1.25.50/meson_options.txt	2025-02-14 17:10:00.217494289 +0100
+@@ -22,6 +22,7 @@
  option('imagefreeze', type : 'feature', value : 'auto')
  option('interleave', type : 'feature', value : 'auto')
  option('isomp4', type : 'feature', value : 'auto')
@@ -2065,11 +2058,11 @@ index 4acce2a..64c0ef6 100644
  option('law', type : 'feature', value : 'auto')
  option('level', type : 'feature', value : 'auto')
  option('matroska', type : 'feature', value : 'auto')
-@@ -118,6 +119,7 @@ option('v4l2-gudev', type : 'feature', value : 'auto', description : 'Use libgud
+@@ -118,6 +119,7 @@
  # Common feature options
  option('examples', type : 'feature', value : 'auto', yield : true)
  option('tests', type : 'feature', value : 'auto', yield : true)
 +option('introspection', type : 'feature', value : 'auto', yield : true, description : 'Generate gobject-introspection bindings')
  option('nls', type : 'feature', value : 'auto', yield: true, description : 'Enable native language support (translations)')
  option('orc', type : 'feature', value : 'auto', yield : true)
- option('gobject-cast-checks', type : 'feature', value : 'auto', yield : true,
+ option('asm', type : 'feature', value : 'auto', yield : true)

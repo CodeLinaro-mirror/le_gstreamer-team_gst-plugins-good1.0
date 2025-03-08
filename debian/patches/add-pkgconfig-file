@@ -11,11 +11,11 @@ Forwarded: not-needed
  create mode 100644 pkgconfig/gstreamer-plugins-good.pc.in
  create mode 100644 pkgconfig/meson.build
 
-diff --git a/meson.build b/meson.build
-index 343e4eb..ae72eaa 100644
---- a/meson.build
-+++ b/meson.build
-@@ -531,6 +531,7 @@ gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' +
+Index: gst-plugins-good1.0-1.25.50/meson.build
+===================================================================
+--- gst-plugins-good1.0-1.25.50.orig/meson.build	2025-02-14 14:18:00.549124134 +0100
++++ gst-plugins-good1.0-1.25.50/meson.build	2025-02-14 14:18:00.544124193 +0100
+@@ -563,6 +563,7 @@
  
  subdir('gst-libs')
  subdir('gst')
@@ -23,11 +23,10 @@ index 343e4eb..ae72eaa 100644
  subdir('sys')
  subdir('ext')
  subdir('tests')
-diff --git a/pkgconfig/gstreamer-plugins-good.pc.in b/pkgconfig/gstreamer-plugins-good.pc.in
-new file mode 100644
-index 0000000..cab8003
---- /dev/null
-+++ b/pkgconfig/gstreamer-plugins-good.pc.in
+Index: gst-plugins-good1.0-1.25.50/pkgconfig/gstreamer-plugins-good.pc.in
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ gst-plugins-good1.0-1.25.50/pkgconfig/gstreamer-plugins-good.pc.in	2025-02-14 14:18:00.544124193 +0100
 @@ -0,0 +1,12 @@
 +prefix=@prefix@
 +exec_prefix=@exec_prefix@
@@ -41,11 +40,10 @@ index 0000000..cab8003
 +Version: @VERSION@
 +Libs: -L${libdir} -lgstphotography-@GST_API_VERSION@
 +Cflags: -I${includedir}
-diff --git a/pkgconfig/meson.build b/pkgconfig/meson.build
-new file mode 100644
-index 0000000..5ef99bb
---- /dev/null
-+++ b/pkgconfig/meson.build
+Index: gst-plugins-good1.0-1.25.50/pkgconfig/meson.build
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ gst-plugins-good1.0-1.25.50/pkgconfig/meson.build	2025-02-14 14:18:00.545124181 +0100
 @@ -0,0 +1,25 @@
 +pkgconf = configuration_data()
 +
