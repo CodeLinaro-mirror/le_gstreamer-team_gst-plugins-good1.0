@@ -1,3 +1,24 @@
+gst-plugins-good1.0 (1.25.90-2ubuntu1) plucky; urgency=medium
+
+  * Resynchronize on Debian. Remaining changes:
+    + Import plugins from -bad that are needed for main applications.
+      - jpegformat
+      - camerabin (+ basecamerabinsrc + photography)
+    + Add a library package containing the shared library and a -dev package for
+      compiling against it. Add Breaks and Replaces against the plugins packages
+      which formerly contained files shipped here.
+    + Add 'pluginsdir' variable to our added pcfile for compatibility with
+      some external software
+    + debian/gbp.conf: Update Vcs-* for Ubuntu
+    + debian/rules: Disable amrnb and amrwbdec because opencore-amr is
+      currently in universe in Ubuntu, and packages in main cannot
+      depend on it
+    + debian/gstreamer1.0-plugins-good.install: Drop
+      usr/lib/*/gstreamer-1.0/libgstamrnb.so and
+      usr/lib/*/gstreamer-1.0/libgstamrwbdec.so
+
+ -- Jeremy Bícha <jbicha@ubuntu.com>  Sat, 08 Mar 2025 17:28:59 -0500
+
 gst-plugins-good1.0 (1.25.90-2) unstable; urgency=medium
 
   * Upload to unstable
