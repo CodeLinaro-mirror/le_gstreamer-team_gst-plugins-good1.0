@@ -1,3 +1,154 @@
+=== release 1.26.0 ===
+
+2025-03-11 20:14:44 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* README.md:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.26.0
+
+2025-03-05 19:03:42 +0900  Hou Qi <qi.hou@nxp.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: object: Not consider GRAY as RGB
+	  This is to fix colorimetry mismatch between v4l2object and video-info
+	  when format is GRAY.
+	  Fixes #4270
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8590>
+
+2025-03-05 14:08:50 +0000  Devon Sookhoo <devonsookhoo14@gmail.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: InterleaveType enum
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8578>
+
+2025-03-04 10:14:23 -0700  dukesook <devonsookhoo14@gmail.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: component to format lookup table
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8578>
+
+2025-02-28 15:41:23 +0100  Jakub Adam <jakub.adam@collabora.com>
+
+	* ext/adaptivedemux2/gstadaptivedemux.c:
+	  adaptivedemux2: wake waiting streams upon completed manifest downlaod
+	  Fixes race when a live stream finishes playing all segments from a
+	  dynamic manifest and waits for its update. If the manifest meanwhile
+	  changes from dynamic to static and this update is received
+	  asynchronously, periodic calls of gst_adaptive_demux_manifest_update_cb
+	  will stop. As a result the blocked stream won't get notified about the
+	  updated manifest and will remain stuck indefinitely.
+	  Also removed the wake-up code from gst_adaptive_demux_manifest_update_cb
+	  where it remained as a relic from previous implementation when manifest
+	  updates were synchronous.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8587>
+
+2025-03-04 15:01:24 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/meson.build:
+	  meson: Replace disabler dependencies with not-found dependencies
+	  If a plugin gets disabled due to a `disabler()` dependency, the plugin
+	  docs build itself will get disabled because `all_plugins_paths` will
+	  become a disabler.
+	  This was actually happening with opencv on systems that don't have
+	  opencv available, and could happen with libsoup too if the build files
+	  change in the future.
+	  Let's avoid wasting hours of debugging for people. A not-found
+	  dependency has the same effect.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8582>
+
+2025-02-26 05:46:58 +0100  Jochen Henneberg <jochen@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Ignore non-zero values for UV/XY in transformation matrix
+	  But write an info message about that. The values have been ignored
+	  before !8127 as well.
+	  Fixes #4252
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8559>
+
+2025-02-24 14:20:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/multifile/gstsplitmuxsink.c:
+	  splitmuxsink: Also increment fragment IDs when no filename is configured on the sink
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8544>
+
+2024-12-12 08:48:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/adaptivedemux2/gstadaptivedemux-private.h:
+	* ext/adaptivedemux2/gstadaptivedemux-stream.c:
+	* ext/adaptivedemux2/gstadaptivedemux.c:
+	* ext/adaptivedemux2/gstadaptivedemux.h:
+	* ext/adaptivedemux2/hls/gsthlsdemux-playlist-loader.c:
+	  adaptivedemux: Add 'backoff' logic for HTTP request
+	  So that the user can configure waits between retries
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8128>
+
+2024-12-11 22:00:56 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/adaptivedemux2/gstadaptivedemux-private.h:
+	* ext/adaptivedemux2/gstadaptivedemux-stream.c:
+	* ext/adaptivedemux2/gstadaptivedemux.c:
+	* ext/adaptivedemux2/gstadaptivedemux.h:
+	* ext/adaptivedemux2/hls/gsthlsdemux-playlist-loader.c:
+	  adaptivedemux2: Expose a `max-retries` property
+	  So the user can configure what is the maximum number of time HTTP requests can
+	  be performed
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8128>
+
+2024-12-11 17:44:20 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/soup/gstsouphttpsrc.c:
+	* ext/soup/gstsouphttpsrc.h:
+	  souphttpsrc: Add the notion of "retry-backoff"
+	  So that the user can force waits between retries
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8128>
+
+2024-12-11 07:46:09 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  souphttpsrc: Retry on SERVICE_UNAVAILABLE and INTERNAL_SERVER_ERROR
+	  Those might be temporary issue, for example s3 returns SERVICE_UNAVAILABLE high
+	  load, but afterward a few tries the request will work, and it has been observed
+	  that internal server error sometimes "fix themselves"  so it makes sense to
+	  also retry requests, in case.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8128>
+
+2024-12-10 23:54:07 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ext/adaptivedemux2/gstadaptivedemux-stream.c:
+	  adaptivedemux2: Increment retry counter to stop after MAX_ERROR_COUNT
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8128>
+
+2024-12-10 23:49:38 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ext/adaptivedemux2/dash/gstdashdemux.c:
+	  dashdemux2: Do not set empty string 'track_id'
+	  This is not needed and generates g_warning like:
+	  ```
+	  Trying to set empty string on taglist field 'container-specific-track-id'. Please file a bug.
+	  ```
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8128>
+
+2025-02-19 19:25:52 +0900  Elliot Chen <elliot.chen@nxp.com>
+
+	* gst/audiofx/gstscaletempo.c:
+	  scaletempo: scaletempo: clip the timestamp or duration of gap event if needed
+	  For some cases, maybe the timestamp of gap event is smaller than
+	  segment start value or larger than segment stop value in playback.
+	  And the timestamp plus duration may exceed segment boundary. Need
+	  check and clip the timestamp or duration before recalculating.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8517>
+
+2025-02-23 23:52:57 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.25.90
+
 === release 1.25.90 ===
 
 2025-02-23 23:44:10 +0000  Tim-Philipp Müller <tim@centricular.com>
