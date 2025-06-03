@@ -1107,8 +1107,12 @@ gst_matroska_mux_video_pad_setcaps (GstMatroskaMux * mux,
   if (interlace_mode != NULL) {
     if (strcmp (interlace_mode, "progressive") == 0)
       videocontext->interlace_mode = GST_MATROSKA_INTERLACE_MODE_PROGRESSIVE;
-    else
+    else {
       videocontext->interlace_mode = GST_MATROSKA_INTERLACE_MODE_INTERLACED;
+      if ((s = gst_structure_get_string (structure, "field-order"))) {
+        videocontext->field_order = gst_video_field_order_from_string (s);
+      }
+    }
   } else {
     videocontext->interlace_mode = GST_MATROSKA_INTERLACE_MODE_UNKNOWN;
   }
@@ -1152,6 +1156,9 @@ gst_matroska_mux_video_pad_setcaps (GstMatroskaMux * mux,
   } else {
     videocontext->display_width = 0;
     videocontext->display_height = 0;
+  }
+  if ((s = gst_structure_get_string (structure, "chroma-site"))) {
+    videocontext->chroma_site = gst_video_chroma_site_from_string (s);
   }
 
   if ((s = gst_structure_get_string (structure, "colorimetry"))) {
@@ -2683,6 +2690,9 @@ gst_matroska_mux_write_colour (GstMatroskaMux * mux,
   guint range_id = 0;
   guint transfer_id = 0;
   guint primaries_id = 0;
+  /* 0 = unknown, 1 = yes, 2 = no */
+  guint chroma_site_horz = 0;
+  guint chroma_site_vert = 0;
 
   master = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_VIDEOCOLOUR);
 
@@ -2703,6 +2713,15 @@ gst_matroska_mux_write_colour (GstMatroskaMux * mux,
   primaries_id =
       gst_video_color_primaries_to_iso (videocontext->colorimetry.primaries);
 
+  if (videocontext->chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN) {
+    chroma_site_horz = 2;
+    chroma_site_vert = 2;
+    if (videocontext->chroma_site & GST_VIDEO_CHROMA_SITE_H_COSITED)
+      chroma_site_horz = 1;
+    if (videocontext->chroma_site & GST_VIDEO_CHROMA_SITE_V_COSITED)
+      chroma_site_vert = 1;
+  }
+
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEORANGE, range_id);
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOMATRIXCOEFFICIENTS,
       matrix_id);
@@ -2715,6 +2734,12 @@ gst_matroska_mux_write_colour (GstMatroskaMux * mux,
         videocontext->content_light_level.max_content_light_level);
     gst_ebml_write_uint (ebml, GST_MATROSKA_ID_MAXFALL,
         videocontext->content_light_level.max_frame_average_light_level);
+  }
+  if (chroma_site_horz != 0 && chroma_site_vert != 0) {
+    gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOCHROMASITINGHORZ,
+        chroma_site_horz);
+    gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOCHROMASITINGVERT,
+        chroma_site_vert);
   }
 
   gst_matroska_mux_write_mastering_metadata (mux, videocontext);
@@ -2844,6 +2869,18 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux, GstMatroskaMuxPad * pad)
       switch (videocontext->interlace_mode) {
         case GST_MATROSKA_INTERLACE_MODE_INTERLACED:
           gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOFLAGINTERLACED, 1);
+          if (videocontext->field_order != GST_VIDEO_FIELD_ORDER_UNKNOWN) {
+            if (videocontext->field_order ==
+                GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST) {
+              gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOFIELDORDER, 9);
+            } else if (videocontext->field_order ==
+                GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST) {
+              gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOFIELDORDER, 14);
+            } else {
+              GST_FIXME_OBJECT (mux, "unhandled video field order %d",
+                  videocontext->field_order);
+            }
+          }
           break;
         case GST_MATROSKA_INTERLACE_MODE_PROGRESSIVE:
           gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOFLAGINTERLACED, 2);
@@ -3192,9 +3229,9 @@ gst_matroska_mux_start_file (GstMatroskaMux * mux)
 
   /* we start with a EBML header */
   doctype = mux->doctype;
-  GST_INFO_OBJECT (ebml, "DocType: %s, Version: %d",
-      doctype, mux->doctype_version);
-  gst_ebml_write_header (ebml, doctype, mux->doctype_version);
+  GST_INFO_OBJECT (ebml, "DocType: %s, Version: 4/%d", doctype,
+      mux->doctype_version);
+  gst_ebml_write_header (ebml, doctype, 4, mux->doctype_version);
 
   /* the rest of the header is cached */
   gst_ebml_write_set_cache (ebml, 0x1000);
@@ -4402,12 +4439,25 @@ gst_matroska_mux_all_pads_have_codec_id (GstMatroskaMux * mux)
   return result;
 }
 
+static gboolean
+gst_matroska_mux_write_streams_header (GstMatroskaMux * mux)
+{
+  mux->state = GST_MATROSKA_MUX_STATE_HEADER;
+  gst_ebml_start_streamheader (mux->ebml_write);
+  if (!gst_matroska_mux_start_file (mux)) {
+    GST_ERROR_OBJECT (mux, "Failed to write headers");
+    return FALSE;
+  }
+  gst_matroska_mux_stop_streamheader (mux);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
 {
   GstMatroskaMux *mux = GST_MATROSKA_MUX (agg);
   GstClockTime buffer_timestamp, end_ts = GST_CLOCK_TIME_NONE;
-  GstEbmlWrite *ebml = mux->ebml_write;
   GstMatroskaMuxPad *best = NULL;
   GstBuffer *buf;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -4421,6 +4471,15 @@ gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
   if (best == NULL) {
     if (gst_matroska_mux_all_pads_eos (mux)) {
       GST_DEBUG_OBJECT (mux, "All pads EOS. Finishing...");
+      /* write headers if not already done */
+      if (mux->state == GST_MATROSKA_MUX_STATE_START) {
+        GST_WARNING_OBJECT (mux, "All pads EOS before any buffers received. "
+            "Writing stream headers before finishing");
+        if (!gst_matroska_mux_write_streams_header (mux)) {
+          ret = GST_FLOW_ERROR;
+          goto exit;
+        }
+      }
       if (!mux->ebml_write->streamable) {
         gst_matroska_mux_finish (mux);
       } else {
@@ -4439,13 +4498,10 @@ gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
       ret = GST_AGGREGATOR_FLOW_NEED_DATA;
       goto exit;
     }
-    mux->state = GST_MATROSKA_MUX_STATE_HEADER;
-    gst_ebml_start_streamheader (ebml);
-    if (!gst_matroska_mux_start_file (mux)) {
+    if (!gst_matroska_mux_write_streams_header (mux)) {
       ret = GST_FLOW_ERROR;
       goto exit;
     }
-    gst_matroska_mux_stop_streamheader (mux);
     mux->state = GST_MATROSKA_MUX_STATE_DATA;
   }
 

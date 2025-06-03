@@ -337,6 +337,10 @@ struct _QtDemuxStreamStsdEntry
   GstMemory *rgb8_palette;
   guint interlace_mode;
   guint field_order;
+  gboolean content_light_level_set;
+  GstVideoContentLightLevel content_light_level;
+  gboolean mastering_display_info_set;
+  GstVideoMasteringDisplayInfo mastering_display_info;
 
   /* audio info */
   gdouble rate;
@@ -423,6 +427,8 @@ struct _QtDemuxStream
 
   /* video info */
   GstVideoInfo info;
+  GstVideoInfo pre_info;        /* Original file info, may be unaligned */
+  gboolean needs_row_alignment; 
 
   /* aspect ratio */
   gint display_width;
@@ -434,7 +440,6 @@ struct _QtDemuxStream
   GstAllocationParams params;
 
   gsize alignment;
-  gsize stride;
 
   /* when a discontinuity is pending */
   gboolean discont;
