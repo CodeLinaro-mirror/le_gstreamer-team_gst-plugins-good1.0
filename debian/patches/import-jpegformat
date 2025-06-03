@@ -2054,7 +2054,7 @@ index f48b98e..c541bfc 100644
                    'rtpmanager', 'rtsp', 'shapewipe', 'smpte', 'spectrum',
                    'udp', 'videobox', 'videocrop', 'videofilter', 'videomixer',
 diff --git a/meson_options.txt b/meson_options.txt
-index cdb435c..dbf285a 100644
+index cfe5d89..83e4da8 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
 @@ -22,6 +22,7 @@ option('id3demux', type : 'feature', value : 'auto')

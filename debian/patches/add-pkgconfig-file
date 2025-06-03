@@ -12,7 +12,7 @@ Forwarded: not-needed
  create mode 100644 pkgconfig/meson.build
 
 diff --git a/meson.build b/meson.build
-index 7504424..fc992c9 100644
+index db38a56..6090359 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -563,6 +563,7 @@ gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' +

@@ -8436,7 +8436,7 @@ index 1a29025..f48b98e 100644
                    'goom2k1', 'icydemux', 'id3demux', 'imagefreeze',
                    'interleave', 'isomp4', 'law', 'level', 'matroska',
 diff --git a/meson.build b/meson.build
-index c7cebf3..7504424 100644
+index c86f0cd..db38a56 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -32,6 +32,12 @@ else
@@ -8533,7 +8533,7 @@ index c7cebf3..7504424 100644
  subdir('sys')
  subdir('ext')
 diff --git a/meson_options.txt b/meson_options.txt
-index c110e30..cdb435c 100644
+index 96eb728..cfe5d89 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
 @@ -6,6 +6,7 @@ option('audioparsers', type : 'feature', value : 'auto')
