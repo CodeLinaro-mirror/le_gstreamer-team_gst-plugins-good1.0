@@ -1,4 +1,4 @@
-gst-plugins-good1.0 (1.26.2-1ubuntu1) UNRELEASED; urgency=medium
+gst-plugins-good1.0 (1.26.2-1ubuntu1) questing; urgency=medium
 
   * Resynchronize on Debian (LP: #2112009). Remaining changes:
     + Import plugins from -bad that are needed for main applications.

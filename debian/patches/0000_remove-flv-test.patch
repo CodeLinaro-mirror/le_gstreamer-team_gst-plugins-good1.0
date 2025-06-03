@@ -1,13 +1,19 @@
-Description: disable unstable test for flvmux
- This test fails during build; disable for the time being.
-Author: Marc Leeman <marc.leeman@gmail.com>
+From: Marc Leeman <marc.leeman@gmail.com>
+Date: Tue, 3 Jun 2025 13:57:42 -0400
+Subject: disable unstable test for flvmux
+
 Last-Update: 2024-03-04
 
-Index: gst-plugins-good1.0/tests/check/meson.build
-===================================================================
---- gst-plugins-good1.0.orig/tests/check/meson.build
-+++ gst-plugins-good1.0/tests/check/meson.build
-@@ -40,7 +40,7 @@ good_tests = [
+This test fails during build; disable for the time being.
+---
+ tests/check/meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/check/meson.build b/tests/check/meson.build
+index 0508ba2..dcf81f0 100644
+--- a/tests/check/meson.build
++++ b/tests/check/meson.build
+@@ -41,7 +41,7 @@ good_tests = [
    [ 'elements/deinterlace', get_option('deinterlace').disabled()],
    [ 'elements/dtmf', get_option('dtmf').disabled()],
    [ 'elements/flvdemux', get_option('flv').disabled()],
