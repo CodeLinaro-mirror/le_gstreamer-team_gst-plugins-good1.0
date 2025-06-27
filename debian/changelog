@@ -1,3 +1,9 @@
+gst-plugins-good1.0 (1.26.3-1) experimental; urgency=medium
+
+  * New upstream version 1.26.3
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Fri, 27 Jun 2025 09:16:23 +0200
+
 gst-plugins-good1.0 (1.26.2-1) unstable; urgency=medium
 
   * d/copyright: remove reference to ostal address of the Free Software Foundation (FSF).
