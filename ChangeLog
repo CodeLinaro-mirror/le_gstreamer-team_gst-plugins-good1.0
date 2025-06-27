@@ -1,3 +1,195 @@
+=== release 1.26.3 ===
+
+2025-06-26 21:25:24 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.26.3
+
+2025-06-25 00:00:57 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  gstrtspsrc: Don't emit error during close if server is EOF
+	  During a graceful close we try to notify the server that we're
+	  finished. There is no reason to consider it an error if the
+	  server has already closed the connection.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9280>
+
+2025-04-30 17:42:25 +0800  Qian Hu (胡骞) <qian.hu@mediatek.com>
+
+	* gst/imagefreeze/gstimagefreeze.c:
+	  imagefreeze: fix not negotiate error when stop
+	  when the chain is called between reset and pad deactive in base
+	  change state, a "not negotiation" error is produced.
+	  so, we add a judge for flushing and reset
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9272>
+
+2025-06-21 07:06:04 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/multifile/gstsplitmuxsink.c:
+	  splitmuxsink: Only send closed message once per open fragment
+	  We send a closed message on EOS. It's possible to receive multiple EOS
+	  messages before opening the next fragment (from an element change state
+	  for example).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9271>
+
+2025-06-03 14:25:00 +0530  Pratik Pachange <ppachang@qti.qualcomm.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Add support for colorimetry bt2100-pq and 1:4:5:3
+	  Colorimetry bt2100-pq is a variant of colorspace V4L2_COLORSPACE_BT2020
+	  where the transfer function is SMPTE 2084 which is used by HDR content.
+	  Colorimetry 1:4:5:3 is a full-range variant of colorspace
+	  V4L2_COLORSPACE_470_SYSTEM_BG
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9259>
+
+2025-03-10 21:18:55 +0100  Jakub Adam <jakub.adam@collabora.com>
+
+	* ext/adaptivedemux2/dash/gstmpdclient.c:
+	  dashdemux2: Fix seeking in a stream with gaps
+	  When there are gaps between segments in the DASH manifest (e.g. it's a
+	  recording of a live stream during which the camera was turned on and off
+	  a couple times), seeking to a timestamp that belongs into a gap leads to
+	  repeat_index calculation yielding a nonsensical negative number (because
+	  ts < segment->start).
+	  In such event set the playback to continue at the first repetition of
+	  the segment that follows after the gap.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9253>
+
+2025-06-14 12:45:07 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2: transform: Fix pool leak on error
+	  Also remove un-needed nul checks.
+	  Suggested-by: Elham nikooie
+	  Fixes: #3097
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9252>
+
+2025-06-14 12:32:27 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2videoenc.c:
+	  v4l2: encoder: Fix possible internal pool leak
+	  Also remove the unneeded null checks that have spread around.
+	  Suggested-by: Elham nikooie
+	  Fixes: #3097
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9252>
+
+2025-05-21 08:19:45 +0200  Johan Sternerup <johast@axis.com>
+
+	* gst/rtpmanager/rtptwcc.c:
+	* tests/check/elements/rtpsession.c:
+	  twcc: Fix reference timestamp wrapping (again)
+	  With
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/7527
+	  an attempt was made to fix the wrapping of the TWCC 24-bit reference
+	  time. Unfortunately this fix was not correct due to a late change and
+	  the lack of unit tests to catch it. This time unit tests are provided to
+	  make sure we have a correct fix for all the edge cases.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9244>
+
+2025-06-17 14:39:49 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: Don't error out always when parsing acid chunks
+	  Remove stray goto introduced in ba8fd35e72b645c5048813d1bcc58271fb72ab6c
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4495
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9241>
+
+2025-06-13 19:50:52 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/rtp/gstrtph265pay.c:
+	  rtph265depay: CRA_NUT can also start an (open) GOP
+	  https://datatracker.ietf.org/doc/html/rfc7798#section-3.1.1 says that a CRA_NUT
+	  can start a GOP so add that to the list of nal types where VPS/SPS/PPS can be
+	  inserted.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9240>
+
+2025-06-11 19:25:47 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/rtp/gstrtph265depay.c:
+	  rtph265depay: fix codec_data generation
+	  When producing the profile_teir_level() struct, account for emulation
+	  prevention bytes (0x0, 0x0, 0x3) in the source SPS.  Also copy from the correct
+	  starting point in the source SPS and don't put the NAL header into codec_data.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9239>
+
+2025-06-12 18:26:33 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/elements/aacparse.c:
+	  aacparse: Add test for correctly parsing the number of channels from codec_data
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9236>
+
+2025-06-11 10:05:21 +0900  changyong.ahn <changyong.ahn@lge.com>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: Fix counting audio channels in program_config_element
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9236>
+
+2025-05-26 16:39:15 +0900  changyong.ahn <changyong.ahn@lge.com>
+
+	* gst/audioparsers/gstaacparse.c:
+	  gstaacparse: Fix counting audio channels in program_config_element
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9236>
+
+2025-06-04 14:42:17 +0200  César Alejandro Torrealba Vázquez <cesaratvgit@gmail.com>
+
+	* gst/isomp4/atoms.c:
+	* gst/isomp4/atoms.h:
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: Update chunk offsets when converting stco to co64 with faststart
+	  When creating a faststart file, qtmux has to take into account that
+	  any 32 bit stco atom may need to be converted into its 64 bit version
+	  due to the offset that is added before the mdat data by the moov atom,
+	  the extra atoms and the mdat header. If a stco atom is converted into
+	  co64, the chunk offset of all stco and co64 atoms has to be increased,
+	  which in turn may also cause that other stco atoms need to be converted
+	  into co64, modifying the chunk offsets again.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9237>
+
+2025-05-26 23:51:16 +0200  Aleix Pol <aleixpol@kde.org>
+
+	* ext/qt/qtitem.cc:
+	* ext/qt/qtitem.h:
+	* ext/qt6/qt6glitem.cc:
+	* ext/qt6/qt6glitem.h:
+	  qml6glitem,qtitem: Allow configuring if the item will consume input events
+	  At the moment we are always accepting the input events to forward into
+	  GStreamer infrastructure. This works but we might have other uses for
+	  such events elsewhere in the QtQuick scene so allow opting out to this
+	  behaviour.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9226>
+
+2025-03-11 14:45:46 +0900  Elliot Chen <elliot.chen@nxp.com>
+
+	* ext/adaptivedemux2/downloadhelper.c:
+	  adaptivedemux2: free cancellable when freeing transfer task
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9197>
+
+2025-05-30 09:40:21 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	  doc: Add some explanation about the logic of when to post navigation message in code
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9169>
+
+2025-05-08 00:10:42 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: Use gst_pad_push_event() and post navigation messages
+	  Use gst_pad_push_event() instead of manually getting peer pad and calling
+	  gst_pad_send_event() otherwise the pad probe on the sinkpad wouldn't get the
+	  events.
+	  Also ensure navigation events are posted to the bus even when gst_pad_push_event()
+	  fails in the render function, so navigation remains functional regardless
+	  of rendering issues.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9169>
+
+2025-05-30 00:03:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.26.2
+
 === release 1.26.2 ===
 
 2025-05-29 23:56:43 +0100  Tim-Philipp Müller <tim@centricular.com>
