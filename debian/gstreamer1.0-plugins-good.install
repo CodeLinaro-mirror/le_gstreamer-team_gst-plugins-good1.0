@@ -11,7 +11,6 @@ usr/lib/*/gstreamer-1.0/libgstautodetect.so
 usr/lib/*/gstreamer-1.0/libgstavi.so
 usr/lib/*/gstreamer-1.0/libgstcacasink.so
 usr/lib/*/gstreamer-1.0/libgstcairo.so
-usr/lib/*/gstreamer-1.0/libgstcamerabin.so
 usr/lib/*/gstreamer-1.0/libgstcutter.so
 usr/lib/*/gstreamer-1.0/libgstdebug.so
 usr/lib/*/gstreamer-1.0/libgstdeinterlace.so
@@ -31,7 +30,6 @@ usr/lib/*/gstreamer-1.0/libgstinterleave.so
 usr/lib/*/gstreamer-1.0/libgstid3demux.so
 usr/lib/*/gstreamer-1.0/libgstjack.so
 usr/lib/*/gstreamer-1.0/libgstjpeg.so
-usr/lib/*/gstreamer-1.0/libgstjpegformat.so
 usr/lib/*/gstreamer-1.0/libgstlame.so
 usr/lib/*/gstreamer-1.0/libgstlevel.so
 usr/lib/*/gstreamer-1.0/libgstmatroska.so
