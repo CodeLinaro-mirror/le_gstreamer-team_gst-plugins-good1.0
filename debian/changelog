@@ -1,3 +1,28 @@
+gst-plugins-good1.0 (1.28.0-1ubuntu3) resolute; urgency=medium
+
+  * Drop jpegformat, camerasrcbin, and gstphotography.
+    - Vendoring these -bad plugins into -good has been problematic for
+      a number of years. It's not only -good that is vendoring -bad
+      plugins in Ubuntu, but also packages like GTK4 (for the
+      GStreamer backend).
+    - It would be more maintainable for the distribution to introduce
+      a -bad plugin split wherein a subset of needed -bad plugins are
+      within the main repository, so that main dependents need not
+      vendor anything and instead can rely on a package tracking them.
+    - This will help us keep this subset of plugins up-to-date with
+      upstream. For instance, jpegparse was stuck at version 1.18,
+      since it was burdensome to update it beyond 1.21.1 (required
+      bringing codecparsers over with it.) (LP: #2089260)
+    - The pkgconfig patch needed for gstphotography has also been
+      removed as part of this change.
+  * Recommend gstreamer1.0-plugins-extra.
+    - To avoid breaking packages that depend on earlier versions of
+      gst-plugins-good1.0, in which packaging hacks were made to
+      incorporate some -bad plugins. These are going to be moved to
+      an -extra package.
+
+ -- Charles <charles05@canonical.com>  Wed, 18 Feb 2026 09:52:12 +0000
+
 gst-plugins-good1.0 (1.28.0-1ubuntu1) resolute; urgency=medium
 
   * Resynchronize on Debian. Remaining changes:
