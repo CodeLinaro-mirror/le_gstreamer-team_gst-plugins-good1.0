@@ -1,3 +1,113 @@
+=== release 1.26.4 ===
+
+2025-07-16 15:26:21 +0200  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.26.4
+
+2025-07-08 17:06:33 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/ka.po:
+	  gst-plugins-good: update translations
+
+2021-05-24 07:07:42 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtp/gstrtpjpegpay.c:
+	* tests/check/elements/rtpjpeg.c:
+	  rtpjpeg: fix copying of quant data if it spans memory segments
+	  rtpjpeg no longer joins all memory segments before encoding. Ensure
+	  we copy the data from the correct segments.
+	  Re-arrange test data so it's not correctly ordered and add test.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9369>
+
+2025-07-08 01:30:01 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  soup: Disable range requests when talking to Python's http.server
+	  Python's SimpleHTTP server doesn't add Accept-Ranges and also doesn't
+	  support range requests: https://github.com/python/cpython/issues/86809
+	  According to the spec, this means the server may or may not support
+	  Range requests, but we know that SimpleHTTP server doesn't, so let's
+	  disable it. If they fix it, they will hopefully add an Accept-Ranges
+	  header.
+	  See also: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8505#note_2994060
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9366>
+
+2025-03-25 17:22:41 +0900  Haihua Hu <jared.hu@nxp.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Fix alternative output format support
+	  Some decoder have the ability to output multiple formats.
+	  This has been supported for a while but stopped working
+	  after commit 77744c3d638. Restore this functionality
+	  by replacing acquired_caps with the new caps.
+	  Fixes #4528
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9363>
+
+2025-05-30 15:18:06 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/multifile/gstsplitmuxsrc.c:
+	  splitmuxsrc: Fix a memory leak
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9347>
+
+2025-05-28 08:34:02 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* tests/check/elements/rtpbin_buffer_list.c:
+	  tests: rtpbin_buffer_list: unref clock after usage
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9343>
+
+2025-07-01 12:37:25 -0300  Enock Gomes Neto <enocknt@gmail.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Fix incorrect FourCC used when iterating over sbgp atoms
+	  In qtdemux_parse_traf(), the loop over sbgp atoms used FOURCC_sgpd instead
+	  of FOURCC_sbgp when retrieving the next sibling node. This caused the loop
+	  to either terminate early or attempt to parse sgpd atoms as sbgp, leading
+	  to incorrect or incomplete seig group associations.
+	  This fix ensures that all sbgp atoms are properly parsed in sequence.
+	  Fixes: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4511
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9319>
+
+2025-06-22 03:10:15 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtp/gstrtph265pay.c:
+	  rtph265pay: Fix valgrind warning about uninitialized usage
+	  Skip NALs less than minimum size of 2.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9314>
+
+2025-01-24 15:55:06 +0100  Robert Mader <robert.mader@collabora.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Send tags after seeking
+	  Similar to what qtdemux does in `gst_qtdemux_stream_update_segment()`,
+	  in which case we want to resend tags according to our position.
+	  By setting the changed flag for all stream tags we ensure they will all
+	  be (re-)send as we progrees.
+	  This notably ensures that rotation tags are not lost when video players
+	  finish playback and jump back to the beginning of a video.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9313>
+
+2025-06-26 23:40:05 +0200  David Maseda Neira <david.maseda@cinfo.es>
+
+	* ext/adaptivedemux2/gstadaptivedemux-stream.c:
+	  adaptivedemux2: Fixed reverse playback
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9304>
+
+2025-06-11 21:10:10 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/rtp/gstrtph265pay.c:
+	* gst/rtp/gstrtph265pay.h:
+	  rtph265pay: add profile-id, tier-flag, and level-id to output rtp caps
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9302>
+
+2025-06-26 21:29:34 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.26.3
+
 === release 1.26.3 ===
 
 2025-06-26 21:25:24 +0100  Tim-Philipp Müller <tim@centricular.com>
