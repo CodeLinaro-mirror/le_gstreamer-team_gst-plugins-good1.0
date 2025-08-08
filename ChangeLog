@@ -1,3 +1,33 @@
+=== release 1.26.5 ===
+
+2025-08-07 19:06:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.26.5
+
+2025-08-01 16:33:39 +0800  Qian Hu (胡骞) <qian.hu@mediatek.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2: fix memory leak for dyn resolution change
+	  if resolution changed, old input state will not unref before
+	  new state overwrite self->input_state
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9491>
+
+2025-03-04 01:29:02 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/imagefreeze/gstimagefreeze.c:
+	  imagefreeze: add support for JPEG-XS
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9421>
+
+2025-07-16 15:33:19 +0200  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.26.4
+
 === release 1.26.4 ===
 
 2025-07-16 15:26:21 +0200  Tim-Philipp Müller <tim@centricular.com>
