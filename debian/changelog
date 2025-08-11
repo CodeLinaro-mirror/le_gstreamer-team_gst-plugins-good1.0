@@ -1,3 +1,12 @@
+gst-plugins-good1.0 (1.26.5-2) unstable; urgency=medium
+
+  * d/copyright: superfluous-file-pattern
+  * d/copyright: correct SPDX format
+  * d/copyright: add MIT license
+  * trixie has been release, re-upload to unstable
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Mon, 11 Aug 2025 09:17:03 +0200
+
 gst-plugins-good1.0 (1.26.5-1) experimental; urgency=medium
 
   * New upstream version 1.26.5
