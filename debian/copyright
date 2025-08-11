@@ -49,7 +49,6 @@ Files: ext/aalib/gstaasink.c
  gst/flx/flx_fmt.h
  gst/flx/gstflxdec.h
  gst/isomp4/qtdemux.h
- gst/isomp4/qtdemux_fourcc.h
  gst/isomp4/qtdemux_types.c
  gst/isomp4/qtpalette.h
  gst/law/mulaw-decode.c
@@ -70,7 +69,6 @@ Files: ext/aalib/gstaasink.c
  gst/smpte/paint.h
  gst/spectrum/gstspectrum.c
  gst/udp/gstudp.c
- gst/udp/gstudp.h
  gst/udp/gstudpsink.h
  gst/udp/gstudpsrc.h
  gst/videobox/gstvideobox.h
@@ -94,14 +92,6 @@ Files: ext/gdk_pixbuf/gstgdkpixbufoverlay.c
  gst/videocrop/gstvideocrop.h
  sys/oss4/oss4-audio.c
  sys/oss4/oss4-audio.h
- sys/oss4/oss4-mixer-enum.c
- sys/oss4/oss4-mixer-enum.h
- sys/oss4/oss4-mixer-slider.c
- sys/oss4/oss4-mixer-slider.h
- sys/oss4/oss4-mixer-switch.c
- sys/oss4/oss4-mixer-switch.h
- sys/oss4/oss4-mixer.c
- sys/oss4/oss4-mixer.h
  sys/oss4/oss4-property-probe.c
  sys/oss4/oss4-property-probe.h
  sys/oss4/oss4-sink.c
@@ -115,13 +105,8 @@ Files: ext/gdk_pixbuf/gstgdkpixbufoverlay.c
  tests/check/elements/id3demux.c
  tests/check/elements/id3v2mux.c
  tests/check/elements/matroskaparse.c
- tests/check/elements/sunaudio.c
  tests/check/elements/udpsrc.c
  tests/check/elements/videocrop.c
- tests/icles/equalizer-test.c
- tests/icles/gdkpixbufsink-test.c
- tests/icles/test-oss4.c
- tests/icles/videocrop-test.c
 Copyright: 2006, Tim-Philipp Müller <tim centricular net>
   2006-2008, Tim-Philipp Müller <tim centricular net>
   2007, Tim-Philipp Müller <tim centricular net>
@@ -241,10 +226,6 @@ Files: gst/avi/gstavimux.h
  gst/matroska/ebml-read.h
  gst/matroska/matroska-ids.h
  gst/matroska/matroska.c
- sys/oss/gstossmixer.c
- sys/oss/gstossmixer.h
- sys/oss/gstossmixertrack.c
- sys/oss/gstossmixertrack.h
  sys/v4l2/gstv4l2.c
  sys/v4l2/gstv4l2bufferpool.c
  sys/v4l2/gstv4l2bufferpool.h
@@ -256,10 +237,7 @@ Files: gst/avi/gstavimux.h
  sys/v4l2/gstv4l2src.h
  sys/v4l2/gstv4l2tuner.c
  sys/v4l2/gstv4l2tuner.h
- sys/v4l2/gstv4l2videooverlay.c
- sys/v4l2/gstv4l2videooverlay.h
  sys/v4l2/v4l2_calls.c
- sys/v4l2/v4l2_calls.h
 Copyright: 2001-2002, Ronald Bultje <rbultje@ronald.bitfreak.net>
   2002, Ronald Bultje <rbultje@ronald.bitfreak.net>
   2003, Ronald Bultje <rbultje@ronald.bitfreak.net>
@@ -334,32 +312,7 @@ Files: gst/rtp/gstrtph264depay.c
 Copyright: <2006> Wim Taymans <wim.taymans@gmail.com>
 License: LGPL-2+
 
-Files: ext/annodex/gstannodex.c
- ext/annodex/gstannodex.h
- ext/annodex/gstcmmldec.c
- ext/annodex/gstcmmldec.h
- ext/annodex/gstcmmlenc.c
- ext/annodex/gstcmmlenc.h
- ext/annodex/gstcmmlparser.c
- ext/annodex/gstcmmlparser.h
- ext/annodex/gstcmmltag.c
- ext/annodex/gstcmmltag.h
- ext/annodex/gstcmmlutils.c
- ext/annodex/gstcmmlutils.h
- tests/check/elements/cmmldec.c
- tests/check/elements/cmmlenc.c
-Copyright: 2005, Alessandro Decina
-License: LGPL-2+
-
 Files: ext/pulse/plugin.c
- ext/pulse/pulsemixer.c
- ext/pulse/pulsemixer.h
- ext/pulse/pulsemixerctrl.c
- ext/pulse/pulsemixerctrl.h
- ext/pulse/pulsemixertrack.c
- ext/pulse/pulsemixertrack.h
- ext/pulse/pulseprobe.c
- ext/pulse/pulseprobe.h
  ext/pulse/pulsesink.h
  ext/pulse/pulsesrc.c
  ext/pulse/pulsesrc.h
@@ -413,25 +366,6 @@ Files: gst/rtp/gstrtpbvdepay.c
  gst/rtp/gstrtpj2kdepay.h
  tests/check/elements/rtpbin.c
 Copyright: <2009> Wim Taymans <wim.taymans@gmail.com>
-License: LGPL-2+
-
-Files: sys/sunaudio/gstsunaudio.c
- sys/sunaudio/gstsunaudiomixer.c
- sys/sunaudio/gstsunaudiomixer.h
- sys/sunaudio/gstsunaudiomixerctrl.c
- sys/sunaudio/gstsunaudiomixerctrl.h
- sys/sunaudio/gstsunaudiomixeroptions.c
- sys/sunaudio/gstsunaudiomixeroptions.h
- sys/sunaudio/gstsunaudiomixertrack.c
- sys/sunaudio/gstsunaudiomixertrack.h
- sys/sunaudio/gstsunaudiosrc.c
- sys/sunaudio/gstsunaudiosrc.h
-Copyright: 2005,2008-2009, Sun Microsystems, Inc.
-  2005-2006, Sun Microsystems, Inc.
-  2005-2006,2008-2009, Sun Microsystems, Inc.
-  2005-2006,2009, Sun Microsystems, Inc.
-  2008, Sun Microsystems, Inc.
-  2009, Sun Microsystems, Inc.
 License: LGPL-2+
 
 Files: gst/replaygain/gstrganalysis.c
@@ -539,8 +473,6 @@ Files: gst/audiofx/audiokaraoke.c
  gst/rtp/gstrtpj2kpay.h
  tests/examples/rtp/client-PCMA.c
  tests/examples/rtp/server-alsasrc-PCMA.c
- tests/icles/videobox-test.c
- tests/icles/videocrop2-test.c
 Copyright: 2008, Wim Taymans <wim.taymans@gmail.com>
   2009, Wim Taymans <wim.taymans@gmail.com>
 License: LGPL-2+
@@ -573,7 +505,6 @@ Files: sys/osxaudio/gstosxaudioelement.c
  sys/osxaudio/gstosxaudiosink.c
  sys/osxaudio/gstosxaudiosink.h
  sys/osxaudio/gstosxaudiosrc.c
- sys/osxaudio/gstosxringbuffer.c
 Copyright: 2005-2006, Zaheer Abbas Merali <zaheerabbas at merali dot org>
   2006, Zaheer Abbas Merali <zaheerabbas at merali dot org>
   2007, Pioneers of the Inevitable <songbird@songbirdnest.com>
@@ -581,9 +512,7 @@ Copyright: 2005-2006, Zaheer Abbas Merali <zaheerabbas at merali dot org>
   2008, Pioneers of the Inevitable <songbird@songbirdnest.com>
 License: MIT/X11 (BSD like) LGPL-2+
 
-Files: ext/cairo/gsttextoverlay.c
- ext/cairo/gsttimeoverlay.c
- gst/debugutils/gstnavigationtest.c
+Files: gst/debugutils/gstnavigationtest.c
  gst/debugutils/gstnavseek.c
  gst/videofilter/gstvideotemplate.c
 Copyright: <1999> Erik Walthinsen <omega@cse.ogi.edu>
@@ -691,7 +620,6 @@ License: LGPL-2+
 
 Files: gst/isomp4/fourcc.h
  gst/rtsp/gstrtsp.c
- gst/rtsp/gstrtsp.h
  gst/rtsp/gstrtspsrc.h
 Copyright: <1999> Erik Walthinsen <omega@cse.ogi.edu>
 License: MIT/X11 (BSD like) LGPL-2+
@@ -709,12 +637,6 @@ Files: gst/isomp4/descriptors.c
  gst/isomp4/properties.h
 Copyright: 2008, Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>
 License: MIT/X11 (BSD like) LGPL-2+
-
-Files: common/coverage/coverage-report-entry.pl
- common/coverage/coverage-report.pl
- common/coverage/coverage-report.xsl
-Copyright: 2006, Daniel Berrange
-License: GPL-2+
 
 Files: gst/avi/gstavi.c
  gst/flx/flx_color.c
@@ -871,13 +793,6 @@ Copyright: 2001, FUKUCHI Kentarou
   <2003> David Schleef <ds@schleef.org>
 License: LGPL-2+
 
-Files: ext/gdk_pixbuf/pixbufscale.c
- ext/gdk_pixbuf/pixbufscale.h
-Copyright: <1999> Erik Walthinsen <omega@cse.ogi.edu>
-  <2004> Jan Schmidt <thaytan@mad.scientist.com>
-  <2004> Tim-Philipp Mueller <t.i.m@orange.net>
-License: LGPL-2+
-
 Files: gst/rtp/gstrtppcmapay.c
  gst/rtp/gstrtppcmupay.c
 Copyright: <1999> Erik Walthinsen <omega@cse.ogi.edu>
@@ -1009,16 +924,6 @@ Files: sys/v4l2/gstv4l2radio.c
 Copyright: 2010-2011, Alexey Chernov <4ernov@gmail.com>
 License: LGPL-2+
 
-Files: sys/oss/gstossmixerelement.c
- sys/oss/gstossmixerelement.h
-Copyright: 2005, Andrew Vander Wingo <wingo@pobox.com>
-License: LGPL-2+
-
-Files: gst/interleave/plugin.c
- gst/interleave/plugin.h
-Copyright: 2004,2007, Andy Wingo <wingo at pobox.com>
-License: LGPL-2+
-
 Files: ext/wavpack/gstwavpackcommon.h
  ext/wavpack/gstwavpackdec.h
 Copyright: 2004, Arwed v. Merkatz <v.merkatz@gmx.net>
@@ -1049,19 +954,6 @@ License: LGPL-2+
 Files: gst/multifile/gstsplitfilesrc.c
  gst/multifile/gstsplitfilesrc.h
 Copyright: 2011, Collabora Ltd. <tim.muller@collabora.co.uk>
-License: LGPL-2+
-
-Files: ext/gdk_pixbuf/gstgdkpixbuf.c
- ext/gdk_pixbuf/gstgdkpixbuf.h
-Copyright: 1999-2001, Erik Walthinsen <omega@cse.ogi.edu>
-  2003, David A. Schleef <ds@schleef.org>
-License: LGPL-2+
-
-Files: sys/sunaudio/gstsunaudiosink.c
- sys/sunaudio/gstsunaudiosink.h
-Copyright: 2004, David A. Schleef <ds@schleef.org>
-  2005-2006, Sun Microsystems, Inc.
-  2006, Jan Schmidt <thaytan@mad.scientist.com>
 License: LGPL-2+
 
 Files: ext/soup/gstsouphttpclientsink.c
@@ -1110,11 +1002,6 @@ License: LGPL-2+
 Files: ext/raw1394/gst1394probe.c
  ext/raw1394/gst1394probe.h
 Copyright: 2007, Julien Puydt <jpuydt@free.fr>
-License: LGPL-2+
-
-Files: ext/cairo/gstcairorender.c
- ext/cairo/gstcairorender.h
-Copyright: 2006-2009, Lutz Mueller <lutz@topfrose.de>
 License: LGPL-2+
 
 Files: gst/rtp/gstrtpdvdepay.h
@@ -1259,7 +1146,6 @@ Copyright: 2008, Tristan Matthews <tristan@sat.qc.ca>
 License: MIT/X11 (BSD like) LGPL-2+
 
 Files: sys/osxaudio/gstosxaudiosrc.h
- sys/osxaudio/gstosxringbuffer.h
 Copyright: 2005-2006, Zaheer Abbas Merali <zaheerabbas at merali dot org>
   2006, Zaheer Abbas Merali <zaheerabbas at merali dot org>
 License: MIT/X11 (BSD like) LGPL-2+
@@ -1279,10 +1165,6 @@ Files: gst/monoscope/monoscope.c
 Copyright: 1998-2001, Andy Lo A Foe <andy@alsaplayer.org>
   2002, Richard Boulton <richard@tartarus.org>
 License: BSD-3-clause
-
-Files: ltmain.sh
-Copyright: 1996-2001, 2003-2006
-License: GPL-2+
 
 Files: tests/examples/level/level-example.c
 Copyright: 2000-2003,2005
@@ -1457,10 +1339,6 @@ Files: gst/isomp4/gstrtpxqtdepay.c
 Copyright: <2006> Wim Taymans <wim@fluendo.com>
 License: LGPL-2+
 
-Files: tests/icles/ximagesrc-test.c
-Copyright: <2006> Zaheer Abbas Merali <zaheerabbas at merali dot org>
-License: LGPL-2+
-
 Files: gst/avi/gstavisubtitle.c
 Copyright: <2007> Thijs Vermeir <thijsvermeir@gmail.com>
   <2007> Tim-Philipp Müller <tim centricular net>
@@ -1585,10 +1463,6 @@ Files: gst/deinterlace/tvtime/x86-64_macros.inc
 Copyright: 2004, Dirk Ziegelmeier <dziegel@gmx.de>
 License: LGPL-2+
 
-Files: tests/icles/v4l2src-test.c
-Copyright: 2006, Edgard Lima <edgard dot lima at indt dot org dot br>
-License: LGPL-2+
-
 Files: gst/audioparsers/gstamrparse.c
 Copyright: 2006, Edgard Lima <edgard.lima@indt.org.br>
   2008, Nokia Corporation.
@@ -1608,10 +1482,6 @@ Files: gst/videobox/gstvideobox.c
 Copyright: 1999, Erik Walthinsen <omega@cse.ogi.edu>
   2006, Tim-Philipp Müller <tim centricular net>
   2010, Sebastian Dröge <sebastian.droege@collabora.co.uk>
-License: LGPL-2+
-
-Files: gst-libs/gst/gettext.h
-Copyright: 1995-1998, 2000-2002, Free Software Foundation, Inc
 License: LGPL-2+
 
 Files: gst/wavenc/gstwavenc.h
@@ -1700,10 +1570,6 @@ Files: tests/check/elements/deinterlace.c
 Copyright: 2010, Thiago Santos <thiago.sousa.santos@collabora.co.uk>
 License: LGPL-2+
 
-Files: gst-libs/gst/gst-i18n-plugin.h
-Copyright: 2004, Thomas Vander Stichele <thomas@apestaart.org>
-License: LGPL-2+
-
 Files: ext/speex/gstspeexdec.c
 Copyright: 2004, Wim Taymans <wim@fluendo.com>
   2006, Tim-Philipp Müller <tim centricular net>
@@ -1713,10 +1579,6 @@ Files: tests/check/elements/souphttpsrc.c
 Copyright: 2001-2003, Ximian, Inc
   2006-2007, Tim-Philipp Müller <tim centricular net>
   2008, Wouter Cloetens <wouter@mind.be>
-License: LGPL-2+
-
-Files: tests/examples/pulse/pulse.c
-Copyright: 2010, Wim Taymans <wim.taymans at gmail.com>
 License: LGPL-2+
 
 Files: sys/ximage/gstximagesrc.c
@@ -1757,10 +1619,6 @@ License: MIT/X11 (BSD like) LGPL-2+
 
 Files: gst/rtsp/gstrtpdec.h
 Copyright: <2005-2006> Wim Taymans <wim@fluendo.com>
-License: MIT/X11 (BSD like) LGPL-2+
-
-Files: gst/isomp4/ftypcc.h
-Copyright: <2008> Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>
 License: MIT/X11 (BSD like) LGPL-2+
 
 Files: gst/isomp4/atoms.c
