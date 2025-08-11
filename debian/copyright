@@ -510,7 +510,7 @@ Copyright: 2005-2006, Zaheer Abbas Merali <zaheerabbas at merali dot org>
   2007, Pioneers of the Inevitable <songbird@songbirdnest.com>
   2007-2008, Pioneers of the Inevitable <songbird@songbirdnest.com>
   2008, Pioneers of the Inevitable <songbird@songbirdnest.com>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: gst/debugutils/gstnavigationtest.c
  gst/debugutils/gstnavseek.c
@@ -622,21 +622,21 @@ Files: gst/isomp4/fourcc.h
  gst/rtsp/gstrtsp.c
  gst/rtsp/gstrtspsrc.h
 Copyright: <1999> Erik Walthinsen <omega@cse.ogi.edu>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: gst/isomp4/atomsrecovery.c
  gst/isomp4/atomsrecovery.h
  gst/isomp4/gstqtmoovrecover.c
  gst/isomp4/gstqtmoovrecover.h
 Copyright: 2010, Thiago Santos <thiago.sousa.santos@collabora.co.uk>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: gst/isomp4/descriptors.c
  gst/isomp4/descriptors.h
  gst/isomp4/properties.c
  gst/isomp4/properties.h
 Copyright: 2008, Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: gst/avi/gstavi.c
  gst/flx/flx_color.c
@@ -749,7 +749,7 @@ Files: gst/isomp4/gstqtmux-doc.c
 Copyright: 2008, Mark Nauwelaerts <mnauw@users.sf.net>
   2008-2010, Thiago Santos <thiagoss@embedded.ufcg.edu.br>
   2010, Nokia Corporation.
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: gst/effectv/gstradioac.c
  gst/effectv/gstradioac.h
@@ -1127,28 +1127,28 @@ License: LGPL-2.1+
 Files: gst/rtsp/gstrtspext.c
  gst/rtsp/gstrtspext.h
 Copyright: <2006> Wim Taymans <wim@fluendo.com>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: gst/isomp4/gstqtmuxmap.c
  gst/isomp4/gstqtmuxmap.h
 Copyright: 2008, Mark Nauwelaerts <mnauw@users.sf.net>
   2008, Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: gst/isomp4/atoms.h
  gst/isomp4/gstqtmux.h
 Copyright: 2008-2010, Thiago Santos <thiagoss@embedded.ufcg.edu.br>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: ext/jack/gstjackaudiosrc.c
  ext/jack/gstjackaudiosrc.h
 Copyright: 2008, Tristan Matthews <tristan@sat.qc.ca>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: sys/osxaudio/gstosxaudiosrc.h
 Copyright: 2005-2006, Zaheer Abbas Merali <zaheerabbas at merali dot org>
   2006, Zaheer Abbas Merali <zaheerabbas at merali dot org>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: ext/libpng/gstpng.c
  ext/libpng/gstpngenc.c
@@ -1611,25 +1611,25 @@ License: LGPL-2.1+
 
 Files: gst/rtsp/gstrtspsrc.c
 Copyright: <2005-2006> Wim Taymans <wim at fluendo dot com>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: gst/rtsp/gstrtpdec.c
 Copyright: <2005-2006> Wim Taymans <wim.taymans@gmail.com>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: gst/rtsp/gstrtpdec.h
 Copyright: <2005-2006> Wim Taymans <wim@fluendo.com>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: gst/isomp4/atoms.c
 Copyright: 2008, Mark Nauwelaerts <mnauw@users.sf.net>
   2008-2010, Thiago Santos <thiagoss@embedded.ufcg.edu.br>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: ext/jack/gstjackringbuffer.h
 Copyright: 2006, Wim Taymans <wim@fluendo.com>
   2008, Tristan Matthews <tristan@sat.qc.ca>
-License: MIT/X11 (BSD like) LGPL-2+
+License: MIT or LGPL-2+
 
 Files: ext/libpng/gstpngdec.c
 Copyright: <1999> Erik Walthinsen <omega@cse.ogi.edu>
