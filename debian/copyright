@@ -73,7 +73,6 @@ Files: ext/aalib/gstaasink.c
  gst/videobox/gstvideobox.h
  gst/videofilter/gstvideobalance.h
  gst/videofilter/gstvideoflip.h
- gst/y4m/gsty4mencode.h
  sys/oss/gstossaudio.c
 Copyright: <1999> Erik Walthinsen <omega@cse.ogi.edu>
 License: LGPL-2+
@@ -1226,11 +1225,6 @@ Files: ext/flac/gstflacdec.c
 Copyright: <1999> Erik Walthinsen <omega@cse.ogi.edu>
   <2006,2011> Tim-Philipp Müller <tim centricular net>
   <2006> Jan Schmidt <thaytan at mad scientist com>
-License: LGPL-2+
-
-Files: gst/y4m/gsty4mencode.c
-Copyright: <1999> Erik Walthinsen <omega@cse.ogi.edu>
-  <2006> Mark Nauwelaerts <mnauw@users.sourceforge.net>
 License: LGPL-2+
 
 Files: gst/avi/gstavidemux.h
