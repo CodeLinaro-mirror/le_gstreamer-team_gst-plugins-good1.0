@@ -1674,23 +1674,6 @@ License: BSD-3-clause
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  SUCH DAMAGE.
 
-License: GPL-2+
- This program is free software; you may redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2, or (at your option)
- any later version.
- .
- This is distributed in the hope that it will be useful, but without
- any warranty; without even the implied warranty of merchantability or
- fitness for a particular purpose. See the GNU General Public License
- for more details.
- .
- You should have received a copy of the GNU Lesser General Public License
- along with this package; if not, see http://www.gnu.org/licenses/.
- .
- On Debian GNU/Linux systems, the complete text of the GNU Lesser General
- Public License can be found in `/usr/share/common-licenses/GPL-2'.
-
 License: LGPL-2
  This program is free software; you can redistribute it and/or modify it
  under the terms of the GNU Library General Public License as published by the
