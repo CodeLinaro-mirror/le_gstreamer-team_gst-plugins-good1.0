@@ -280,7 +280,7 @@ gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
   if (self->input_state && !dyn_resolution) {
     if (compatible_caps (self, state->caps)) {
       GST_DEBUG_OBJECT (self, "Compatible caps");
-      return TRUE;
+      goto done;
     }
     gst_video_codec_state_unref (self->input_state);
     self->input_state = NULL;
@@ -319,16 +319,13 @@ gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
   if (!dyn_resolution)
     ret = gst_v4l2_object_set_format (self->v4l2output, state->caps, &error);
 
-  if (!ret) {
+  if (ret)
+    self->input_state = gst_video_codec_state_ref (state);
+  else
     gst_v4l2_error (self, &error);
-    return FALSE;
-  }
 
-  if (self->input_state)
-    gst_video_codec_state_unref (self->input_state);
-  self->input_state = gst_video_codec_state_ref (state);
-
-  return TRUE;
+done:
+  return ret;
 }
 
 static gboolean
@@ -513,10 +510,9 @@ gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
   GST_DEBUG_OBJECT (self, "Chosen decoded caps: %" GST_PTR_FORMAT, caps);
 
   /* Try to set negotiated format, on success replace acquired format */
-  if (gst_v4l2_object_set_format (self->v4l2capture, caps, &error)) {
-    gst_caps_replace (&acquired_caps, caps);
+  if (gst_v4l2_object_set_format (self->v4l2capture, caps, &error))
     info = self->v4l2capture->info;
-  } else
+  else
     gst_v4l2_clear_error (&error);
 
 use_acquired_caps:
