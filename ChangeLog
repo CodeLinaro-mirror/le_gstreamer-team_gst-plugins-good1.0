@@ -1,93 +1,29 @@
-=== release 1.26.5 ===
+=== release 1.27.1 ===
 
-2025-08-07 19:06:46 +0100  Tim-Philipp Müller <tim@centricular.com>
-
-	* NEWS:
-	* RELEASE:
-	* gst-plugins-good.doap:
-	* meson.build:
-	  Release 1.26.5
-
-2025-08-01 16:33:39 +0800  Qian Hu (胡骞) <qian.hu@mediatek.com>
-
-	* sys/v4l2/gstv4l2videodec.c:
-	  v4l2: fix memory leak for dyn resolution change
-	  if resolution changed, old input state will not unref before
-	  new state overwrite self->input_state
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9491>
-
-2025-03-04 01:29:02 +0000  Tim-Philipp Müller <tim@centricular.com>
-
-	* docs/gst_plugins_cache.json:
-	* gst/imagefreeze/gstimagefreeze.c:
-	  imagefreeze: add support for JPEG-XS
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9421>
-
-2025-07-16 15:33:19 +0200  Tim-Philipp Müller <tim@centricular.com>
-
-	* meson.build:
-	  Back to development after 1.26.4
-
-=== release 1.26.4 ===
-
-2025-07-16 15:26:21 +0200  Tim-Philipp Müller <tim@centricular.com>
+2025-07-08 19:55:15 +0100  Tim-Philipp Müller <tim@centricular.com>
 
 	* NEWS:
 	* RELEASE:
 	* gst-plugins-good.doap:
 	* meson.build:
-	  Release 1.26.4
+	  Release 1.27.1
 
 2025-07-08 17:06:33 +0100  Tim-Philipp Müller <tim@centricular.com>
 
 	* po/ka.po:
 	  gst-plugins-good: update translations
 
-2021-05-24 07:07:42 -0400  Doug Nazar <nazard@nazar.ca>
-
-	* gst/rtp/gstrtpjpegpay.c:
-	* tests/check/elements/rtpjpeg.c:
-	  rtpjpeg: fix copying of quant data if it spans memory segments
-	  rtpjpeg no longer joins all memory segments before encoding. Ensure
-	  we copy the data from the correct segments.
-	  Re-arrange test data so it's not correctly ordered and add test.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9369>
-
-2025-07-08 01:30:01 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
-
-	* ext/soup/gstsouphttpsrc.c:
-	  soup: Disable range requests when talking to Python's http.server
-	  Python's SimpleHTTP server doesn't add Accept-Ranges and also doesn't
-	  support range requests: https://github.com/python/cpython/issues/86809
-	  According to the spec, this means the server may or may not support
-	  Range requests, but we know that SimpleHTTP server doesn't, so let's
-	  disable it. If they fix it, they will hopefully add an Accept-Ranges
-	  header.
-	  See also: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8505#note_2994060
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9366>
-
-2025-03-25 17:22:41 +0900  Haihua Hu <jared.hu@nxp.com>
-
-	* sys/v4l2/gstv4l2videodec.c:
-	  v4l2videodec: Fix alternative output format support
-	  Some decoder have the ability to output multiple formats.
-	  This has been supported for a while but stopped working
-	  after commit 77744c3d638. Restore this functionality
-	  by replacing acquired_caps with the new caps.
-	  Fixes #4528
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9363>
-
 2025-05-30 15:18:06 -0400  Doug Nazar <nazard@nazar.ca>
 
 	* gst/multifile/gstsplitmuxsrc.c:
 	  splitmuxsrc: Fix a memory leak
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9347>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9151>
 
 2025-05-28 08:34:02 -0400  Doug Nazar <nazard@nazar.ca>
 
 	* tests/check/elements/rtpbin_buffer_list.c:
 	  tests: rtpbin_buffer_list: unref clock after usage
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9343>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9115>
 
 2025-07-01 12:37:25 -0300  Enock Gomes Neto <enocknt@gmail.com>
 
@@ -99,14 +35,14 @@
 	  to incorrect or incomplete seig group associations.
 	  This fix ensures that all sbgp atoms are properly parsed in sequence.
 	  Fixes: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4511
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9319>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9318>
 
 2025-06-22 03:10:15 -0400  Doug Nazar <nazard@nazar.ca>
 
 	* gst/rtp/gstrtph265pay.c:
 	  rtph265pay: Fix valgrind warning about uninitialized usage
 	  Skip NALs less than minimum size of 2.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9314>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9273>
 
 2025-01-24 15:55:06 +0100  Robert Mader <robert.mader@collabora.com>
 
@@ -118,35 +54,20 @@
 	  be (re-)send as we progrees.
 	  This notably ensures that rotation tags are not lost when video players
 	  finish playback and jump back to the beginning of a video.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9313>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8429>
 
 2025-06-26 23:40:05 +0200  David Maseda Neira <david.maseda@cinfo.es>
 
 	* ext/adaptivedemux2/gstadaptivedemux-stream.c:
 	  adaptivedemux2: Fixed reverse playback
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9304>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9298>
 
 2025-06-11 21:10:10 +1000  Matthew Waters <matthew@centricular.com>
 
 	* gst/rtp/gstrtph265pay.c:
 	* gst/rtp/gstrtph265pay.h:
 	  rtph265pay: add profile-id, tier-flag, and level-id to output rtp caps
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9302>
-
-2025-06-26 21:29:34 +0100  Tim-Philipp Müller <tim@centricular.com>
-
-	* meson.build:
-	  Back to development after 1.26.3
-
-=== release 1.26.3 ===
-
-2025-06-26 21:25:24 +0100  Tim-Philipp Müller <tim@centricular.com>
-
-	* NEWS:
-	* RELEASE:
-	* gst-plugins-good.doap:
-	* meson.build:
-	  Release 1.26.3
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9300>
 
 2025-06-25 00:00:57 -0400  Doug Nazar <nazard@nazar.ca>
 
@@ -155,16 +76,7 @@
 	  During a graceful close we try to notify the server that we're
 	  finished. There is no reason to consider it an error if the
 	  server has already closed the connection.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9280>
-
-2025-04-30 17:42:25 +0800  Qian Hu (胡骞) <qian.hu@mediatek.com>
-
-	* gst/imagefreeze/gstimagefreeze.c:
-	  imagefreeze: fix not negotiate error when stop
-	  when the chain is called between reset and pad deactive in base
-	  change state, a "not negotiation" error is produced.
-	  so, we add a judge for flushing and reset
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9272>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9278>
 
 2025-06-21 07:06:04 -0400  Doug Nazar <nazard@nazar.ca>
 
@@ -173,7 +85,16 @@
 	  We send a closed message on EOS. It's possible to receive multiple EOS
 	  messages before opening the next fragment (from an element change state
 	  for example).
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9271>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9266>
+
+2025-04-30 17:42:25 +0800  Qian Hu (胡骞) <qian.hu@mediatek.com>
+
+	* gst/imagefreeze/gstimagefreeze.c:
+	  imagefreeze: fix not negotiate error when stop
+	  when the chain is called between reset and pad deactive in base
+	  change state, a "not negotiation" error is produced.
+	  so, we add a judge for flushing and reset
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8916>
 
 2025-06-03 14:25:00 +0530  Pratik Pachange <ppachang@qti.qualcomm.com>
 
@@ -183,7 +104,7 @@
 	  where the transfer function is SMPTE 2084 which is used by HDR content.
 	  Colorimetry 1:4:5:3 is a full-range variant of colorspace
 	  V4L2_COLORSPACE_470_SYSTEM_BG
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9259>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9166>
 
 2025-03-10 21:18:55 +0100  Jakub Adam <jakub.adam@collabora.com>
 
@@ -196,7 +117,7 @@
 	  ts < segment->start).
 	  In such event set the playback to continue at the first repetition of
 	  the segment that follows after the gap.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9253>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8620>
 
 2025-06-14 12:45:07 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
 
@@ -205,7 +126,7 @@
 	  Also remove un-needed nul checks.
 	  Suggested-by: Elham nikooie
 	  Fixes: #3097
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9252>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9221>
 
 2025-06-14 12:32:27 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
 
@@ -214,7 +135,7 @@
 	  Also remove the unneeded null checks that have spread around.
 	  Suggested-by: Elham nikooie
 	  Fixes: #3097
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9252>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9221>
 
 2025-05-21 08:19:45 +0200  Johan Sternerup <johast@axis.com>
 
@@ -227,7 +148,15 @@
 	  time. Unfortunately this fix was not correct due to a late change and
 	  the lack of unit tests to catch it. This time unit tests are provided to
 	  make sure we have a correct fix for all the edge cases.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9244>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9051>
+
+2025-06-16 20:26:45 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/rtp/gstrtph265depay.c:
+	  rtph265depay: output profile, tier, level in output caps
+	  These values are very easy to provide and some cases in rtph265pay require
+	  these values to be set.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9223>
 
 2025-06-17 14:39:49 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -235,7 +164,7 @@
 	  wavparse: Don't error out always when parsing acid chunks
 	  Remove stray goto introduced in ba8fd35e72b645c5048813d1bcc58271fb72ab6c
 	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4495
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9241>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9230>
 
 2025-06-13 19:50:52 +1000  Matthew Waters <matthew@centricular.com>
 
@@ -244,7 +173,7 @@
 	  https://datatracker.ietf.org/doc/html/rfc7798#section-3.1.1 says that a CRA_NUT
 	  can start a GOP so add that to the list of nal types where VPS/SPS/PPS can be
 	  inserted.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9240>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9217>
 
 2025-06-11 19:25:47 +1000  Matthew Waters <matthew@centricular.com>
 
@@ -253,25 +182,7 @@
 	  When producing the profile_teir_level() struct, account for emulation
 	  prevention bytes (0x0, 0x0, 0x3) in the source SPS.  Also copy from the correct
 	  starting point in the source SPS and don't put the NAL header into codec_data.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9239>
-
-2025-06-12 18:26:33 +0300  Sebastian Dröge <sebastian@centricular.com>
-
-	* tests/check/elements/aacparse.c:
-	  aacparse: Add test for correctly parsing the number of channels from codec_data
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9236>
-
-2025-06-11 10:05:21 +0900  changyong.ahn <changyong.ahn@lge.com>
-
-	* gst/audioparsers/gstaacparse.c:
-	  aacparse: Fix counting audio channels in program_config_element
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9236>
-
-2025-05-26 16:39:15 +0900  changyong.ahn <changyong.ahn@lge.com>
-
-	* gst/audioparsers/gstaacparse.c:
-	  gstaacparse: Fix counting audio channels in program_config_element
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9236>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9205>
 
 2025-06-04 14:42:17 +0200  César Alejandro Torrealba Vázquez <cesaratvgit@gmail.com>
 
@@ -286,7 +197,121 @@
 	  co64, the chunk offset of all stco and co64 atoms has to be increased,
 	  which in turn may also cause that other stco atoms need to be converted
 	  into co64, modifying the chunk offsets again.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9237>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9102>
+
+2025-06-12 18:26:33 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* tests/check/elements/aacparse.c:
+	  aacparse: Add test for correctly parsing the number of channels from codec_data
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9074>
+
+2025-06-11 10:05:21 +0900  changyong.ahn <changyong.ahn@lge.com>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: Fix counting audio channels in program_config_element
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9074>
+
+2025-05-26 16:39:15 +0900  changyong.ahn <changyong.ahn@lge.com>
+
+	* gst/audioparsers/gstaacparse.c:
+	  gstaacparse: Fix counting audio channels in program_config_element
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9074>
+
+2025-06-06 17:20:16 +0200  Piotr Brzeziński <piotr@centricular.com>
+
+	* gst/imagefreeze/gstimagefreeze.c:
+	* gst/imagefreeze/gstimagefreeze.h:
+	  imagefreeze: Handle EOS from send_event()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9191>
+
+2025-05-08 21:19:38 +1000  Matthew Waters <matthew@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/qt6/gstqml6gloverlay.cc:
+	* ext/qt6/gstqml6gloverlay.h:
+	* ext/qt6/qt6glrenderer.cc:
+	* ext/qt6/qt6glrenderer.h:
+	* tests/examples/qt6/meson.build:
+	* tests/examples/qt6/qmloverlayitem/main.cpp:
+	* tests/examples/qt6/qmloverlayitem/main.qml:
+	* tests/examples/qt6/qmloverlayitem/meson.build:
+	* tests/examples/qt6/qmloverlayitem/overlay.qml:
+	* tests/examples/qt6/qmloverlayitem/qmloverlayitem.qrc:
+	  qml6gloverlay: support directly passing a QQuickItem for QML the render tree
+	  This is provided in addition to the text description in the qml-scene.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9180>
+
+2025-06-10 14:41:22 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* scripts/gen-changelog.py:
+	  gstreamer-vaapi: remove subproject
+	  It's almost superseded by va plugin in gst-plugins-bad.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9200>
+
+2021-05-24 07:07:42 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtp/gstrtpjpegpay.c:
+	* tests/check/elements/rtpjpeg.c:
+	  rtpjpeg: fix copying of quant data if it spans memory segments
+	  rtpjpeg no longer joins all memory segments before encoding. Ensure
+	  we copy the data from the correct segments.
+	  Re-arrange test data so it's not correctly ordered and add test.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5533>
+
+2025-03-11 14:45:46 +0900  Elliot Chen <elliot.chen@nxp.com>
+
+	* ext/adaptivedemux2/downloadhelper.c:
+	  adaptivedemux2: free cancellable when freeing transfer task
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8610>
+
+2025-06-03 16:38:49 +0530  Pratik Pachange <ppachang@qti.qualcomm.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Make extra-controls property mutable in playing state
+	  Certain encoder user controls as well as codec controls can be
+	  changed while the pipeline is in playing state.
+	  e.g. Codec controls like video_bitrate, frame_ltr_index,
+	  use_ltr_frames, etc. and user controls like horizontal_flip,
+	  vertical_flip can be changed while the pipeline is running.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9168>
+
+2025-05-30 09:40:21 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	  doc: Add some explanation about the logic of when to post navigation message in code
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9130>
+
+2025-05-08 00:10:42 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: Use gst_pad_push_event() and post navigation messages
+	  Use gst_pad_push_event() instead of manually getting peer pad and calling
+	  gst_pad_send_event() otherwise the pad probe on the sinkpad wouldn't get the
+	  events.
+	  Also ensure navigation events are posted to the bus even when gst_pad_push_event()
+	  fails in the render function, so navigation remains functional regardless
+	  of rendering issues.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9130>
+
+2025-05-12 18:09:06 +0530  Pratik Pachange <ppachang@qti.qualcomm.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Provide padding requirements during propose allocation
+	  If the driver has size alignment requirement, suggest the
+	  difference between aligned size required by diver and the actual
+	  size of the frame as padding requirement to the upstream element.
+	  This will ensure that the buffer size allocation is as per the
+	  driver requirement.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8971>
+
+2025-04-29 09:43:58 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Use byte reader to parse mvhd box
+	  This avoids OOB reads.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4394
+	  Fixes CVE-2025-47183
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9131>
 
 2025-05-26 23:51:16 +0200  Aleix Pol <aleixpol@kde.org>
 
@@ -299,55 +324,7 @@
 	  GStreamer infrastructure. This works but we might have other uses for
 	  such events elsewhere in the QtQuick scene so allow opting out to this
 	  behaviour.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9226>
-
-2025-03-11 14:45:46 +0900  Elliot Chen <elliot.chen@nxp.com>
-
-	* ext/adaptivedemux2/downloadhelper.c:
-	  adaptivedemux2: free cancellable when freeing transfer task
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9197>
-
-2025-05-30 09:40:21 +0200  Thibault Saunier <tsaunier@igalia.com>
-
-	* sys/osxvideo/osxvideosink.m:
-	  doc: Add some explanation about the logic of when to post navigation message in code
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9169>
-
-2025-05-08 00:10:42 -0400  Thibault Saunier <tsaunier@igalia.com>
-
-	* sys/osxvideo/osxvideosink.m:
-	  osxvideosink: Use gst_pad_push_event() and post navigation messages
-	  Use gst_pad_push_event() instead of manually getting peer pad and calling
-	  gst_pad_send_event() otherwise the pad probe on the sinkpad wouldn't get the
-	  events.
-	  Also ensure navigation events are posted to the bus even when gst_pad_push_event()
-	  fails in the render function, so navigation remains functional regardless
-	  of rendering issues.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9169>
-
-2025-05-30 00:03:12 +0100  Tim-Philipp Müller <tim@centricular.com>
-
-	* meson.build:
-	  Back to development after 1.26.2
-
-=== release 1.26.2 ===
-
-2025-05-29 23:56:43 +0100  Tim-Philipp Müller <tim@centricular.com>
-
-	* NEWS:
-	* RELEASE:
-	* gst-plugins-good.doap:
-	* meson.build:
-	  Release 1.26.2
-
-2025-04-29 09:43:58 +0300  Sebastian Dröge <sebastian@centricular.com>
-
-	* gst/isomp4/qtdemux.c:
-	  qtdemux: Use byte reader to parse mvhd box
-	  This avoids OOB reads.
-	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4394
-	  Fixes CVE-2025-47183
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9133>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9085>
 
 2025-05-23 05:07:38 -0400  Doug Nazar <nazard@nazar.ca>
 
@@ -359,67 +336,46 @@
 	  GTask 0x7f2c4400e930 (source object: (nil), source tag: (nil)) finalized
 	  without ever returning (using g_task_return_*()).
 	  This potentially indicates a bug in the program.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9108>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9060>
 
 2025-05-21 10:01:24 -0400  Doug Nazar <nazard@nazar.ca>
 
 	* ext/adaptivedemux2/dash/gstdashdemux.c:
 	  gstreamer: A few small memory cleanups
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9101>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9044>
+
+2025-05-23 16:02:43 -0300  L. E. Segovia <amy@centricular.com>
+
+	* gst/audiofx/audiopanoramaorc-dist.c:
+	* gst/audiofx/audiopanoramaorc-dist.h:
+	* gst/deinterlace/tvtime-dist.c:
+	* gst/deinterlace/tvtime-dist.h:
+	* gst/videobox/gstvideoboxorc-dist.c:
+	* gst/videobox/gstvideoboxorc-dist.h:
+	* gst/videomixer/videomixerorc-dist.c:
+	* gst/videomixer/videomixerorc-dist.h:
+	* meson.build:
+	  orc: Update pregenerated files
+	  Fixes -Wtype-limits on gstbayer.orc when emulating convuuslw.
+	  Regenerated Orc files use OrcOnce, which increases the minimum version to 0.4.34.
+	  See https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/212 (ORC_MIN)
+	  See https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/238 (AVX2 convussql)
+	  See https://gitlab.freedesktop.org/gstreamer/orc/-/commit/8a86d517530ce79c0ae47e37d768107c57ab31c4 (OrcOnce)
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9067>
+
+2025-05-23 13:04:43 -0300  L. E. Segovia <amy@centricular.com>
+
+	* scripts/update-orc-dist-files.py:
+	  orc: Remove references to gst-indent-1.0
+	  These are automatically handled by pre-commit now.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9067>
 
 2025-05-25 19:31:22 +0900  Seungha Yang <seungha@centricular.com>
 
 	* gst/rtp/gstrtputils.c:
 	  rtputils: Add debug category
 	  Use rtputils specific debug category instead of "default"
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9093>
-
-2025-03-19 14:56:52 -0300  Thibault Saunier <tsaunier@igalia.com>
-
-	* gst/imagefreeze/gstimagefreeze.c:
-	  imagefreeze: Reset 'flushing' state when receiving FLUSH_STOP
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9092>
-
-2025-03-19 14:55:58 -0300  Thibault Saunier <tsaunier@igalia.com>
-
-	* gst/imagefreeze/gstimagefreeze.c:
-	  imagefreeze: Set seqnum from segment too
-	  This is the right behavior, setting from seeks is also OK but we should take the seqnums from segment into account too
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9092>
-
-2025-05-14 14:42:19 -0400  Doug Nazar <nazard@nazar.ca>
-
-	* tests/check/elements/audiofirfilter.c:
-	* tests/check/elements/wavpackdec.c:
-	* tests/check/elements/wavpackenc.c:
-	  tests: Switch to GST_AUDIO_NE()
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9089>
-
-2025-05-14 14:41:44 -0400  Doug Nazar <nazard@nazar.ca>
-
-	* gst/spectrum/gstspectrum.c:
-	  spectrum: Switch to GST_AUDIO_NE()
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9089>
-
-2025-05-14 14:41:10 -0400  Doug Nazar <nazard@nazar.ca>
-
-	* gst/law/mulaw-decode.c:
-	* gst/law/mulaw-encode.c:
-	* gst/law/mulaw.c:
-	  law: Switch to GST_AUDIO_NE()
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9089>
-
-2025-05-14 14:39:57 -0400  Doug Nazar <nazard@nazar.ca>
-
-	* ext/flac/gstflacdec.c:
-	  flac: Switch to GST_AUDIO_NE()
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9089>
-
-2025-05-13 19:44:21 -0400  Doug Nazar <nazard@nazar.ca>
-
-	* gst/rtsp/gstrtspsrc.c:
-	  gstrtspsrc: Free various props before being set
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9088>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9070>
 
 2025-03-30 01:41:10 -0400  Doug Nazar <nazard@nazar.ca>
 
@@ -427,7 +383,7 @@
 	  dash: mpdclient: Don't pass terminating NUL to adapter
 	  libxml2 will complain if it detects any characters after the valid
 	  XML, including a NUL byte.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9068>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8734>
 
 2025-05-23 09:41:51 +0200  Branko Subasic <branko@axis.com>
 
@@ -436,7 +392,7 @@
 	  In the rare case when we get EOS on all pads before we get any buffer we
 	  would finish the file without writing headers, i.e. the file would be
 	  corrupt. This patch makes sure that a header is always written.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9066>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9061>
 
 2025-05-23 09:33:35 +0200  Jan Schmidt <jan@centricular.com>
 
@@ -444,13 +400,13 @@
 	  meson: Add build_rpath for qt6 plugin on macOS
 	  This is the same fix for qt6 that was done for the qt5 plugin
 	  in gstreamer/gstreamer!3708
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9064>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9059>
 
 2025-05-21 20:29:06 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
 
-	* meson_options.txt:
+	* meson.options:
 	  meson: Add a monorepo-wide qt-method option and yield to it
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9063>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9046>
 
 2025-05-21 20:23:47 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
 
@@ -459,7 +415,13 @@
 	  meson: Make qml/qml6 plugins use the right qt detection method
 	  Otherwise they can pick up the wrong qt and cause two different Qt
 	  instances to be used in the same program.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9063>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9046>
+
+2025-05-21 15:39:46 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: cmpd box is only mandatory for uncompressed video with uncC version 0
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9039>
 
 2025-05-17 15:24:29 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -467,13 +429,7 @@
 	  videobalance: Implement basetransform meta transform function
 	  This makes sure we can pass through more metas correctly, e.g.
 	  GstVideoOverlayComposition meta.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9041>
-
-2025-05-21 15:39:46 +0300  Sebastian Dröge <sebastian@centricular.com>
-
-	* gst/isomp4/qtdemux.c:
-	  qtdemux: cmpd box is only mandatory for uncompressed video with uncC version 0
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9040>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9004>
 
 2025-05-13 11:27:23 +0900  Hou Qi <qi.hou@nxp.com>
 
@@ -481,7 +437,38 @@
 	  v4l2: pool: Send drop frame signal after dqbuf success
 	  This is a regression introduced by https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5479
 	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4424
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9036>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8969>
+
+2025-03-19 14:56:52 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gst/imagefreeze/gstimagefreeze.c:
+	  imagefreeze: Reset 'flushing' state when receiving FLUSH_STOP
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9015>
+
+2025-03-19 14:55:58 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gst/imagefreeze/gstimagefreeze.c:
+	  imagefreeze: Set seqnum from segment too
+	  This is the right behavior, setting from seeks is also OK but we should take the seqnums from segment into account too
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9015>
+
+2025-05-17 11:15:11 +0200  Jan Schmidt <jan@centricular.com>
+
+	* ext/adaptivedemux2/gstadaptivedemux.c:
+	  adaptivedemux: Answer element-level SELECTABLE query
+	  Add handling for the selectable query as an element query,
+	  on top of the existing pad query handling. This is useful
+	  for uridecodebin when handling stream collection messages
+	  before any adaptivedemux source pads have been exposed.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9002>
+
+2025-05-17 11:13:33 +0200  Jan Schmidt <jan@centricular.com>
+
+	* ext/adaptivedemux2/gstadaptivedemux.c:
+	  adaptivedemux: Copy collection inside lock
+	  When posting the collection message, don't access the shared
+	  collection after releasing the manifest and track locks.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9002>
 
 2025-05-06 11:17:52 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -492,7 +479,7 @@
 	  ffmpeg uses the same codec ID for DNxHD and DNxHR so we use the same caps with
 	  just an additional, optional profile field for the DNxHR profile.
 	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3066
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-06 11:02:55 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -500,14 +487,14 @@
 	* gst/isomp4/qtdemux.c:
 	* gst/isomp4/qtdemux.h:
 	  qtdemux: Parse content light level and mastering display info if available
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-03 18:07:18 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/isomp4/qtdemux.c:
 	  qtdemux: Use already parsed codec data boxes instead of parsing a second time
 	  And parse common boxes in a central place.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-03 12:28:23 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -520,7 +507,7 @@
 	  many were not checking for different versions of the boxes and the corresponding
 	  different offsets.
 	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4403
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-06 09:30:03 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -528,7 +515,7 @@
 	* gst/isomp4/qtdemux_types.c:
 	  qtdemux: Take Theora headers directly out of the already parsed nodes
 	  Instead of parsing them yet another time.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-05 22:24:33 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -537,20 +524,20 @@
 	  It was already parsed above in general for all video codecs. Just put the number
 	  of fields into the JPEG-2000 in the specific field.
 	  As a side effect this also actually checks if enough data is available.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-05 22:20:41 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/isomp4/qtdemux.c:
 	  qtdemux: Remove second parsing of fiel box for JPEG
 	  Exactly the same is already done some hundred lines above for all video codecs.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-05 21:54:07 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/isomp4/qtdemux.c:
 	  qtdemux: Simplify parsing of SVQ3/VP31 boxes
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-05 19:20:06 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -559,7 +546,7 @@
 	  First find the wave box then include its whole content instead of just including
 	  everything from a random offset onwards.
 	  Also actually do that for QDMC instead of leaving commented code.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-05 18:55:47 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -567,7 +554,7 @@
 	  qtdemux: Use already parsed damr box for AMR NB/WB streams
 	  Instead of parsing it again and possibly getting the offset for reading
 	  it wrong.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-05 18:35:03 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -575,26 +562,26 @@
 	  qtdemux: Don't parse audio sample entry a second time in mp4a fallback case
 	  These values were all passed a few hundred lines above already and can directly
 	  be re-used here. The offset for the sample rate was also wrong.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-05 11:08:51 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/isomp4/qtdemux_tree.c:
 	* gst/isomp4/qtdemux_tree.h:
 	  qtdemux: Add qtdemux_tree_get_child_by_index_full() helper function
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-04 20:13:58 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/isomp4/qtdemux.c:
 	  qtdemux: Fix endianness/alignment problems with parsing omwa sample description entries
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-04 19:54:41 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/isomp4/qtdemux.c:
 	  qtdemux: Handle stsd entry offset correctly for audio in qtdemux_parse_node()
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-04 18:59:34 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -602,7 +589,7 @@
 	  qtdemux: Pass stsd entry node to caps creation functions
 	  Also fix lpcm to only read its additional fields from sound sample description v2.
 	  Previously it would read random data if a different stsd entry was used.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-04 18:47:07 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -612,21 +599,21 @@
 	  is only defined for MOV.
 	  ISOBMFF has AudioSampleEntryV1 but it has the exact same layout as
 	  AudioSampleEntry.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-04 16:22:38 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/isomp4/qtdemux.c:
 	  qtdemux: Don't retrieve video stsd entry multiple times
 	  And remove various duplicated checks.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-04 16:15:32 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/isomp4/qtdemux.c:
 	  qtdemux: Parse uncompressed video uncC / cmpd boxes from already parsed stsd entry
 	  Also simplifies code and error checking considerably.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-04 15:58:03 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -634,68 +621,25 @@
 	  qtdemux: Don't retrieve enca/encv boxes a second time, wrongly
 	  They need to be retrieved by index and they were already correctly retrieved
 	  just above so let's just use that.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-04 15:48:55 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/isomp4/qtdemux.c:
 	  qtdemux: Use already parsed stsd entries instead of parsing them again
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-05 17:28:20 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/isomp4/qtdemux.c:
 	  qtdemux: Fix typo in debug message
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
-
-2025-05-06 15:47:30 +0300  Sebastian Dröge <sebastian@centricular.com>
-
-	* gst/isomp4/qtdemux.c:
-	  qtdemux: Don't configure any channel-mask in fallback case with 1 channel
-	  For mono we don't set any channel mask. Setting 0 would mean an unpositioned
-	  layout with a single channel.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
-
-2025-05-03 17:49:06 +0300  Sebastian Dröge <sebastian@centricular.com>
-
-	* gst/isomp4/qtdemux.c:
-	  qtdemux: Add channel layouts to three more raw audio fourccs
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
-
-2025-05-03 12:26:43 +0300  Sebastian Dröge <sebastian@centricular.com>
-
-	* gst/isomp4/fourcc.h:
-	* gst/isomp4/qtdemux.c:
-	  qtdemux: Parse chan box
-	  This is another variant of providing channel positions.
-	  Also if neither chan nor chnl boxes are found, configure a default channel
-	  layout for raw audio tracks.
-	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4403
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9006>
-
-2025-05-17 11:15:11 +0200  Jan Schmidt <jan@centricular.com>
-
-	* ext/adaptivedemux2/gstadaptivedemux.c:
-	  adaptivedemux: Answer element-level SELECTABLE query
-	  Add handling for the selectable query as an element query,
-	  on top of the existing pad query handling. This is useful
-	  for uridecodebin when handling stream collection messages
-	  before any adaptivedemux source pads have been exposed.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9012>
-
-2025-05-17 11:13:33 +0200  Jan Schmidt <jan@centricular.com>
-
-	* ext/adaptivedemux2/gstadaptivedemux.c:
-	  adaptivedemux: Copy collection inside lock
-	  When posting the collection message, don't access the shared
-	  collection after releasing the manifest and track locks.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9012>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8929>
 
 2025-05-12 13:19:37 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/wavparse/gstwavparse.c:
 	  wavparse: Error out correctly if no data tag is found until EOS in pull mode
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8986>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8956>
 
 2025-05-09 10:49:20 +0300  Sebastian Dröge <sebastian@centricular.com>
 
@@ -704,7 +648,41 @@
 	  The file might be truncated or contain < 8 bytes of remaining data after the
 	  last chunk.
 	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4426
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8986>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8956>
+
+2025-05-14 14:42:19 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* tests/check/elements/audiofirfilter.c:
+	* tests/check/elements/wavpackdec.c:
+	* tests/check/elements/wavpackenc.c:
+	  tests: Switch to GST_AUDIO_NE()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8984>
+
+2025-05-14 14:41:44 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/spectrum/gstspectrum.c:
+	  spectrum: Switch to GST_AUDIO_NE()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8984>
+
+2025-05-14 14:41:10 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/law/mulaw-decode.c:
+	* gst/law/mulaw-encode.c:
+	* gst/law/mulaw.c:
+	  law: Switch to GST_AUDIO_NE()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8984>
+
+2025-05-14 14:39:57 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* ext/flac/gstflacdec.c:
+	  flac: Switch to GST_AUDIO_NE()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8984>
+
+2025-05-13 19:44:21 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  gstrtspsrc: Free various props before being set
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8978>
 
 2025-05-02 08:56:19 +0200  Alexander Slobodeniuk <aslobodeniuk@fluendo.com>
 
@@ -718,7 +696,7 @@
 	  properties: add G_PARAM_STATIC_STRINGS where missing
 	  "Hold on, I know you need to generate the registry, but let me just
 	  create copies of all those strings first", Framework whispered
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8962>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8915>
 
 2025-05-07 22:19:44 -0400  Olivier Crête <olivier.crete@collabora.com>
 
@@ -727,26 +705,152 @@
 	  Without the codec_data, it's impossible to know the size of the field
 	  for the number of NALu in a buffer. And since nal_length_size is unkown
 	  the stream can't be parsed and payloaded and we risk an infinite loop.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8959>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8954>
+
+2025-05-06 15:17:10 +0200  Jakub Adam <jakub.adam@collabora.com>
+
+	* ext/qt6/qt6glwindow.cc:
+	  qt6glwindow: add log message when a buffer pool gets set
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8938>
+
+2025-05-06 15:47:30 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Don't configure any channel-mask in fallback case with 1 channel
+	  For mono we don't set any channel mask. Setting 0 would mean an unpositioned
+	  layout with a single channel.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8928>
+
+2025-05-03 17:49:06 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Add channel layouts to three more raw audio fourccs
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8928>
+
+2025-05-03 12:26:43 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/fourcc.h:
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Parse chan box
+	  This is another variant of providing channel positions.
+	  Also if neither chan nor chnl boxes are found, configure a default channel
+	  layout for raw audio tracks.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4403
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8928>
 
 2025-05-04 13:41:56 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/isomp4/qtdemux.c:
 	  qtdemux: Check length of JPEG2000 colr box before parsing it
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8937>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8930>
 
 2025-05-03 18:24:49 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/isomp4/qtdemux.c:
 	  qtdemux: Remove obsolete TODO comment
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8937>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8930>
 
 2025-05-06 12:41:37 +0300  Sebastian Dröge <sebastian@centricular.com>
 
 	* gst/interleave/interleave.c:
 	  interleave: Don't hold object lock while querying caps downstream
 	  This can easily lead to deadlocks.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8934>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8933>
+
+2025-04-27 07:06:11 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/y4m/gsty4mdec.c:
+	* gst/y4m/gsty4menc.c:
+	* gst/y4m/gsty4mformat.c:
+	* gst/y4m/gsty4mformat.h:
+	  y4m: support more color formats
+	  These are unofficial yuv4mpegpipe formats, but used for 10bit streams.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8719>
+
+2025-04-26 10:41:11 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/y4m/gsty4mdec.c:
+	* gst/y4m/gsty4menc.c:
+	* gst/y4m/gsty4mformat.c:
+	* gst/y4m/gsty4mformat.h:
+	* tests/check/elements/y4mdata.c:
+	* tests/check/elements/y4menc.c:
+	  y4m: add color mappings
+	  Now the chroma subsampling tag will include the chroma site. Tests
+	  where updated accordingly.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8719>
+
+2025-04-24 22:08:56 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/y4m/gsty4mdec.c:
+	* gst/y4m/gsty4mdec.h:
+	  y4mdec: descend from GstBaseParse
+	  This is an overhaul/simplification of the element.
+	  Now it supports seek, while the performance remains more or less the same.
+	  Fixes: #4373
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8719>
+
+2025-04-10 12:13:10 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/check/elements/y4mdata.c:
+	* tests/check/elements/y4mdec.c:
+	* tests/check/elements/y4menc.c:
+	* tests/check/meson.build:
+	  tests: add y4mdec unit test
+	  simple decoding of a i420 15x15 red square, shared with the y4menc unit test.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8719>
+
+2025-04-08 15:27:03 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/y4m/gsty4mdec.c:
+	  y4mdec: handle time segments
+	  so chaining y4menc ! y4mdec is possible.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8719>
+
+2025-04-07 18:16:51 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/y4m/gsty4mdec.c:
+	* gst/y4m/gsty4mdec.h:
+	  y4mdec: instead of memcmp, use gst_video_info_is_equal()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8719>
+
+2025-04-07 18:16:22 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/y4m/gsty4mdec.c:
+	* gst/y4m/gsty4menc.c:
+	* gst/y4m/gsty4mformat.c:
+	* gst/y4m/gsty4mformat.h:
+	* gst/y4m/meson.build:
+	  y4m: share common code among encoder and decoder
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8719>
+
+2025-03-27 16:48:36 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/y4m/gsty4mdec.c:
+	* gst/y4m/gsty4mdec.h:
+	* gst/y4m/gsty4menc.c:
+	* gst/y4m/gsty4menc.h:
+	* gst/y4m/meson.build:
+	* gst/y4m/plugin.c:
+	  y4m: move y4mdec to good to have a single y4m plugin
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8719>
+
+2025-04-26 02:51:14 +0200  Alexander Slobodeniuk <aslobodeniuk@fluendo.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: fix building with -DGST_REMOVE_DEPRECATED
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8901>
+
+2025-03-15 20:56:17 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.options:
+	  meson: rename meson_options.txt to meson.options
+	  Which is supported since Meson 1.1:
+	  https://mesonbuild.com/Release-notes-for-1-1-0.html#support-for-reading-options-from-mesonoptions
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8651>
 
 2025-04-01 23:03:02 +0200  Jakub Adam <jakub.adam@collabora.com>
 
@@ -761,7 +865,7 @@
 	  meta->format' failed
 	  Where the left side of the assertion was GST_VIDEO_FORMAT_DMA_DRM and
 	  the right side was some GstVideoFormat converted from DRM fourcc.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8922>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8913>
 
 2025-04-03 02:24:13 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
 
@@ -772,7 +876,7 @@
 	  We need to disable libsoup 3.0 tests because they fail to build on
 	  Windows.
 	  Closes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1115
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8919>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8753>
 
 2025-04-01 17:58:14 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
 
@@ -784,29 +888,31 @@
 	  a part of the gstreamer project, and should be treated as system deps.
 	  libsoup needs some porting work for the bump, and vorbis/lame are
 	  already at their latest releases.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8919>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8753>
 
 2025-04-28 13:24:45 +0900  Hou Qi <qi.hou@nxp.com>
 
 	* sys/v4l2/gstv4l2videoenc.c:
 	  v4l2videoenc: report error only when buffer pool parameters are invalid
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8912>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8908>
 
-2025-04-24 20:26:57 +0100  Tim-Philipp Müller <tim@centricular.com>
+2025-04-26 19:28:56 +0200  Alexander Slobodeniuk <aslobodeniuk@fluendo.com>
 
-	* meson.build:
-	  Back to development after 1.26.1
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8890>
-
-=== release 1.26.1 ===
-
-2025-04-24 20:20:14 +0100  Tim-Philipp Müller <tim@centricular.com>
-
-	* NEWS:
-	* RELEASE:
-	* gst-plugins-good.doap:
-	* meson.build:
-	  Release 1.26.1
+	* ext/gtk/gstgtkglsink.c:
+	* ext/gtk/gstgtksink.c:
+	* ext/qt/gstqtoverlay.cc:
+	* ext/qt/gstqtsink.cc:
+	* ext/qt/gstqtsrc.cc:
+	* ext/qt6/gstqml6glmixer.cc:
+	* ext/qt6/gstqml6gloverlay.cc:
+	* ext/qt6/gstqml6glsink.cc:
+	* ext/qt6/gstqml6glsrc.cc:
+	* gst/rtp/gstrtpreddec.c:
+	* gst/rtp/gstrtpredenc.c:
+	* tests/check/elements/qtmux.c:
+	  elements: use set_static_metadata when it's allowed
+	  Those strings are nice but CPU doesn't want to copy them
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8905>
 
 2025-04-23 12:06:48 -0700  Eli Mallon <eli@aquareum.tv>
 
@@ -814,7 +920,7 @@
 	  qtdemux: unref simple caps after use
 	  Otherwise we leak a GSTCaps object every time we
 	  use qtdemux on a file with Opus audio
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8880>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8879>
 
 2024-02-21 17:19:45 +0900  Hou Qi <qi.hou@nxp.com>
 
@@ -825,7 +931,13 @@
 	  does not drop them as soon as possible. So add "output-error-dequeued" and
 	  "capture-error-dequeued" signal for v4l2 to drop such frames.
 	  Fixes #3031
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8869>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5479>
+
+2025-04-17 11:15:08 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* docs/gst_plugins_cache.json:
+	  doc: Update cache for plugins automatically picks NV16_10LE40
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5612>
 
 2025-04-16 11:58:45 +0200  Stefan Andersson <stefana@axis.com>
 
@@ -835,7 +947,7 @@
 	  isn't known set it to zero. If next_cluster_offfset isn't updated it will
 	  be the same as current and if the cluster parsing fails the same cluster
 	  will be parsed again leading to duplication of the data in the cluster.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8856>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8855>
 
 2025-04-10 11:31:28 +0200  Gustav Fahlen <gustafah@axis.com>
 
@@ -862,7 +974,7 @@
 	  streams are added to after gst_element_add_pad. This will make sure
 	  signal 'no-more-pads' is not emitted until all code in
 	  gst_element_add_pad is completed for all streams.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8836>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8832>
 
 2025-04-09 18:08:19 +1000  Jan Schmidt <jan@centricular.com>
 
@@ -874,7 +986,7 @@
 	  in the first ones to appear.
 	  Follow up to
 	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/7946
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8816>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8798>
 
 2025-04-07 17:16:20 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
 
@@ -882,7 +994,7 @@
 	  y4menc: fix Y41B format
 	  This a regression of commit fb0bea8f where output info variable was swapped with
 	  input info variable by mistake.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8796>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8786>
 
 2025-03-26 13:09:30 +0100  Ognyan Tonchev <ognyan@axis.com>
 
@@ -890,20 +1002,20 @@
 	  gstrtpsession: Do not push events while holding SESSION_LOCK
 	  Doing so can trigger deadlocks
 	  Fixes: #4328
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8781>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8695>
 
 2025-03-26 13:04:41 +0100  Ognyan Tonchev <ognyan@axis.com>
 
 	* gst/rtpmanager/gstrtpsession.c:
 	* gst/rtpmanager/gstrtpsession.h:
 	  gstrtpsession: protect recv_rtcp_segment_seqnum with a lock
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8781>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8695>
 
 2025-03-26 12:34:35 +0100  Ognyan Tonchev <ognyan@axis.com>
 
 	* gst/rtpmanager/gstrtpsession.c:
 	  gstrtpsession: use correct seqnum for the STREAM_START ans SEGMENT events
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8781>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8695>
 
 2025-03-06 09:54:21 -0700  dukesook <devonsookhoo14@gmail.com>
 
@@ -913,28 +1025,30 @@
 	  - LUT now supports various subsampling, interleaves, and bit depths.
 	  - Replaces stride with GstVideoInfo pre_info to represent original data.
 	  - Simplifies gst_row_align_buffer() with gst_video_frame_copy().
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8780>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8598>
 
-2025-03-24 15:32:22 +0100  Stéphane Cerveau <scerveau@igalia.com>
+2019-07-27 15:15:47 -0400  Doug Nazar <nazard@nazar.ca>
 
-	* sys/v4l2/gstv4l2object.c:
-	  v4l2object: fix memory leak
-	  The tmp caps should be unreffed as the template structure.
-	  The leaks can be reproduced with
-	  gst-launch-1.0 v4l2src num-buffers=1 ! autovideosink
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8706>
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-demux.h:
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska-read-common.c:
+	  matroskademux: Add support for relative position cues
+	  Cueing data can contain the block number within a cluster and/or
+	  a relative offset into the cluster.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5535>
 
 2019-08-07 18:01:53 -0400  Doug Nazar <nazard@nazar.ca>
 
 	* gst/matroska/matroska-mux.c:
 	  matroskamux: Add support for chroma siting
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8732>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5534>
 
 2019-08-07 17:48:47 -0400  Doug Nazar <nazard@nazar.ca>
 
 	* gst/matroska/matroska-mux.c:
 	  matroskamux: Add support for interlaced field order
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8732>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5534>
 
 2019-08-07 17:47:29 -0400  Doug Nazar <nazard@nazar.ca>
 
@@ -944,7 +1058,7 @@
 	* gst/matroska/matroska-mux.h:
 	* tests/check/elements/matroskamux.c:
 	  matroskamux: Always use v4 for DocType version
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8732>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5534>
 
 2019-07-29 23:16:26 -0400  Doug Nazar <nazard@nazar.ca>
 
@@ -952,26 +1066,26 @@
 	* gst/matroska/matroska-ids.c:
 	* gst/matroska/matroska-ids.h:
 	  matroskademux: Handle chroma site color information
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8732>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5534>
 
 2025-03-26 22:00:43 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
 
 	* tests/check/elements/y4menc.c:
 	  tests: y4menc: padded frame test
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8716>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8654>
 
 2025-03-26 12:31:52 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
 
 	* gst/y4m/gsty4mencode.c:
 	  y4menc: use start() vmethod rather than change_state()
 	  Also it wil call negotiate() vmethod at set_format()
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8716>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8654>
 
 2025-03-20 16:25:05 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
 
 	* gst/y4m/gsty4mencode.c:
 	  y4menc: enable y4menc debugging category
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8716>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8654>
 
 2025-03-27 14:07:25 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
 
@@ -986,7 +1100,7 @@
 	  it ill call the agnostic gst_buffer_copy() for a shallow copy.
 	  Supersedes: !5042
 	  Fixes: #2765
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8716>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8654>
 
 2025-03-27 12:46:54 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
 
@@ -996,38 +1110,38 @@
 	  The unpadded strides and offsets calculations for the video info are inspired
 	  from y4mdec.
 	  A boolean flags is toggled if the video info is padded for the given resolution.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8716>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8654>
 
 2025-03-26 12:33:32 -0400  Arun Raghavan <arun@asymptotic.io>
 
 	* ext/qt6/gstqt6glutility.cc:
 	  qt6: Add a missing newline in unsupported platform message
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8715>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8702>
 
 2025-03-14 22:14:42 -0400  Doug Nazar <nazard@nazar.ca>
 
 	* gst/rtsp/gstrtspsrc.c:
 	  rtspsrc: Free various props during cleanup
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8714>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8648>
 
 2025-03-14 22:13:44 -0400  Doug Nazar <nazard@nazar.ca>
 
 	* sys/ximage/gstximagesrc.c:
 	  ximagesrc: Free various props during cleanup
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8714>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8648>
 
 2025-03-14 22:12:56 -0400  Doug Nazar <nazard@nazar.ca>
 
 	* gst/isomp4/gstqtmoovrecover.c:
 	  qtmoovrecover: Free various props during cleanup
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8714>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8648>
 
 2025-03-14 22:11:39 -0400  Doug Nazar <nazard@nazar.ca>
 
 	* ext/jack/gstjackaudiosink.c:
 	* ext/jack/gstjackaudiosrc.c:
 	  jack: Free various props during cleanup
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8714>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8648>
 
 2025-03-14 19:25:48 -0400  Doug Nazar <nazard@nazar.ca>
 
@@ -1040,7 +1154,7 @@
 	  dash: Free various props before set & during cleanup
 	  In addition several members were being freed via xmlFree() even though
 	  being created via g_value_dup_string(). Switch to g_free().
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8714>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8648>
 
 2025-03-14 19:14:43 -0400  Doug Nazar <nazard@nazar.ca>
 
@@ -1051,7 +1165,16 @@
 	  all: Annotate *_set_property() contructor only props without free
 	  Properties that are marked constructor only aren't required to be freed
 	  before g_value_dup_string() as they can only be called once during construction.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8714>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8648>
+
+2025-03-24 15:32:22 +0100  Stéphane Cerveau <scerveau@igalia.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: fix memory leak
+	  The tmp caps should be unreffed as the template structure.
+	  The leaks can be reproduced with
+	  gst-launch-1.0 v4l2src num-buffers=1 ! autovideosink
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8669>
 
 2025-03-21 02:16:58 +0100  Jakub Adam <jakub.adam@collabora.com>
 
@@ -1062,7 +1185,7 @@
 	  keeps using the old, now defunct, pool.
 	  Unset current pool on Qt6GLWindow in decide_allocation(). This will
 	  trigger a switch to the new pool inside create().
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8705>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8676>
 
 2025-03-20 11:01:25 +0200  Sebastian Dröge <sebastian@centricular.com>
 
@@ -1074,7 +1197,7 @@
 	  Merging the sample tables would've always failed because of the too strict size
 	  check and one audio sample per GStreamer buffer would've been output, which
 	  doesn't perform very well.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8684>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8657>
 
 2025-03-11 16:36:58 +0100  Alyssa Ross <hi@alyssa.is>
 
@@ -1088,13 +1211,31 @@
 	  v4l2_ioctl() and ioctl().  It's therefore necessary to wrap one of them so that
 	  both options can have the same type.  This fixes an assignment from incompatible
 	  pointer type error when building for musl.
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8642>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8613>
 
-2025-03-11 20:23:16 +0000  Tim-Philipp Müller <tim@centricular.com>
+2025-03-04 01:29:02 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* docs/gst_plugins_cache.json:
+	* gst/imagefreeze/gstimagefreeze.c:
+	  imagefreeze: add support for JPEG-XS
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8601>
+
+2025-03-10 13:14:07 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ext/dv/gstdvdec.c:
+	* gst/deinterlace/gstdeinterlace.c:
+	* gst/rtp/gstrtpvrawdepay.c:
+	  video: Give better names to buffer pools
+	  Making debugging simpler
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8617>
+
+2025-03-12 13:59:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* README.md:
+	* RELEASE:
 	* meson.build:
-	  Back to development after 1.26.0
-	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8618>
+	  Back to development in main branch after 1.26.0
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8621>
 
 === release 1.26.0 ===
 
