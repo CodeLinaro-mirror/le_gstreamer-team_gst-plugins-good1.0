@@ -1,3 +1,13 @@
+gst-plugins-good1.0 (1.26.5-3) unstable; urgency=medium
+
+  [ Marc Leeman ]
+  * d/control: libtag1-dev -> libtag-dev (Closes: #1110940)
+
+  [ Samuel Thibault ]
+  * d/rules: re-enable soup plugin for hurd (Closes: #1111862)
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Sat, 23 Aug 2025 14:43:17 +0200
+
 gst-plugins-good1.0 (1.26.5-2) unstable; urgency=medium
 
   * d/copyright: superfluous-file-pattern
