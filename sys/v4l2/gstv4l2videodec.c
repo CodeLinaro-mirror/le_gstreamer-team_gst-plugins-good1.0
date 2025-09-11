@@ -31,6 +31,7 @@
 
 #include "gstv4l2object.h"
 #include "gstv4l2videodec.h"
+#include "ext/drm_fourcc.h"
 
 #include "gstv4l2h264codec.h"
 #include "gstv4l2h265codec.h"
@@ -280,7 +281,7 @@ gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
   if (self->input_state && !dyn_resolution) {
     if (compatible_caps (self, state->caps)) {
       GST_DEBUG_OBJECT (self, "Compatible caps");
-      goto done;
+      return TRUE;
     }
     gst_video_codec_state_unref (self->input_state);
     self->input_state = NULL;
@@ -319,13 +320,16 @@ gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
   if (!dyn_resolution)
     ret = gst_v4l2_object_set_format (self->v4l2output, state->caps, &error);
 
-  if (ret)
-    self->input_state = gst_video_codec_state_ref (state);
-  else
+  if (!ret) {
     gst_v4l2_error (self, &error);
+    return FALSE;
+  }
 
-done:
-  return ret;
+  if (self->input_state)
+    gst_video_codec_state_unref (self->input_state);
+  self->input_state = gst_video_codec_state_ref (state);
+
+  return TRUE;
 }
 
 static gboolean
@@ -447,7 +451,10 @@ gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
   /* Create caps from the acquired format, removing the format fields */
   fixation_caps = gst_caps_new_empty ();
 
-  acquired_drm_caps = gst_video_info_dma_drm_to_caps (&info);
+  if (info.drm_fourcc == DRM_FORMAT_INVALID)
+    acquired_drm_caps = NULL;
+  else
+    acquired_drm_caps = gst_video_info_dma_drm_to_caps (&info);
   if (acquired_drm_caps) {
     GST_DEBUG_OBJECT (self, "Acquired DRM caps: %" GST_PTR_FORMAT,
         acquired_drm_caps);
@@ -510,9 +517,10 @@ gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
   GST_DEBUG_OBJECT (self, "Chosen decoded caps: %" GST_PTR_FORMAT, caps);
 
   /* Try to set negotiated format, on success replace acquired format */
-  if (gst_v4l2_object_set_format (self->v4l2capture, caps, &error))
+  if (gst_v4l2_object_set_format (self->v4l2capture, caps, &error)) {
+    gst_caps_replace (&acquired_caps, caps);
     info = self->v4l2capture->info;
-  else
+  } else
     gst_v4l2_clear_error (&error);
 
 use_acquired_caps:
