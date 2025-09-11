@@ -1,3 +1,16 @@
+gst-plugins-good1.0 (1.27.2-1) experimental; urgency=medium
+
+  [ Marc Leeman ]
+  * d/control: API change, gst deps to 1.27.1
+  * d/control: libtag1-dev -> libtag-dev (Closes: #1110940)
+  * New upstream version 1.27.2
+  * d/control: bump minimal version after new symbols
+
+  [ Samuel Thibault ]
+  * d/rules: re-enable soup plugin for hurd (Closes: #1111862)
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Thu, 11 Sep 2025 11:46:58 +0200
+
 gst-plugins-good1.0 (1.27.1-1) experimental; urgency=medium
 
   * Revert "d/watch: pin to 1.26.x"
