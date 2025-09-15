@@ -1,3 +1,66 @@
+=== release 1.26.6 ===
+
+2025-09-14 13:13:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.26.6
+
+2025-09-10 16:38:33 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123audiodec: Always break the decoding loop and return downstream flow errors
+	  mpg123audiodec can currently run into a situation where it always returns
+	  GST_FLOW_OK even with downstream always returns any kind of error, including
+	  GST_FLOW_FLUSHING which causes problems during shutdown.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9685>
+
+2025-09-04 14:23:06 +0900  Hou Qi <qi.hou@nxp.com>
+
+	* docs/gst_plugins_cache.json:
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: Add support for WVC1 and WMV3
+	  Map WVC1 codec format to V4L2_PIX_FMT_VC1_ANNEX_G and map WMV3 codec
+	  format to V4L2_PIX_FMT_VC1_ANNEX_L.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9669>
+
+2025-09-01 21:02:22 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/dv/meson.build:
+	* ext/jpeg/meson.build:
+	  meson: Convert all remaining fallback: usages to [provide]
+	  Only commonly-used plugin deps like pango, orc, openh264, libvpx,
+	  libnice are enabled by default.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1788
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9637>
+
+2025-08-06 19:51:54 +0800  Vivian LEE <vivian.lee@harmonicinc.com>
+
+	* ext/adaptivedemux2/gstadaptivedemux.c:
+	  adaptivedemux2: fix crash due to log
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4588
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9574>
+
+2025-08-11 22:54:29 +1000  Jan Schmidt <jan@centricular.com>
+
+	* ext/adaptivedemux2/hls/m3u8.c:
+	  hlsdemux2: Fix parsing of byterange and init map directives
+	  Don't reuse the same offset and size variables when reading
+	  the byterange out of a MAP directive, as it can overwrite
+	  values from a pending BYTERANGE directive for the next
+	  fragment URI.
+	  Fixes problems where the EXT-X-MAP directive has been written
+	  into the playlist between an EXT-X-BYTERANGE and the fragment
+	  URI it applies to.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9541>
+
+2025-08-07 19:15:29 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.26.5
+
 === release 1.26.5 ===
 
 2025-08-07 19:06:46 +0100  Tim-Philipp Müller <tim@centricular.com>
