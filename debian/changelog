@@ -1,3 +1,9 @@
+gst-plugins-good1.0 (1.26.5-1ubuntu2) questing; urgency=medium
+
+  * No-change rebuild for Qt 6.9.2 private ABI.
+
+ -- Rik Mills <rikmills@kde.org>  Tue, 16 Sep 2025 14:10:48 +0100
+
 gst-plugins-good1.0 (1.26.5-1ubuntu1) questing; urgency=medium
 
   * Resynchronize on Debian. Remaining changes:
