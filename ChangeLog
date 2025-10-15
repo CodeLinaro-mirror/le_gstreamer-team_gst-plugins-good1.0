@@ -1,3 +1,151 @@
+=== release 1.26.7 ===
+
+2025-10-14 18:25:43 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.26.7
+
+2025-10-03 10:40:57 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst/isomp4/fourcc.h:
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: fix open/seek perf for GoPro files with SOS track
+	  Older GoPro adds an SOS track using the `fdsc` FOURCC that seems to be
+	  used for file recovery. This track contains high-frequency samples with
+	  timestamp 0 that are parsed and pushed by the demuxer when opening the
+	  file or doing non-accurate seeks, slowing down considerably the process
+	  (up to 3 seconds delay with an M1 in an 11-minute file).
+	  Ignore this stream in qtdemux so that it's not parsed or exposed. This
+	  information is hardly useful/usable for GStreamer applications.
+	  Fix #4679
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9832>
+
+2025-10-08 13:26:43 +0200  Branko Subasic <branko.subasic@axis.com>
+
+	* gst/flv/gstflvmux.c:
+	  flvmux: Properly check if pads are EOS in find_best_pad
+	  In find_best_pad(), when checking if a pad is EOS we use the macro
+	  GST_PAD_IS_EOS. But the aggregator pads will not propagate EOS received
+	  on it's sinkpads until it has received EOS on all of them. Instead the
+	  EOS event is put in the queue, which means that GST_PAD_IS_EOS will
+	  return FALSE.
+	  This makes find_best_pad() fail to find a best pad when all but one sink
+	  pad has received EOS, and have no data left in their queues, and the
+	  last one has data. The problem is solved by modifying find_best_pad() to
+	  use gst_aggregator_pad_is_eos() instead.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9821>
+
+2025-10-06 10:09:40 +0200  Branko Subasic <branko.subasic@axis.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: Properly check if pads are EOS in find_best_pad
+	  In find_best_pad(), when checking if a pad is EOS we use the macro
+	  GST_PAD_IS_EOS. But the aggregator pads will not propagate EOS received
+	  on it's sinkpads until it has received EOS on all of them. Instead the
+	  EOS event is put in the queue, which means that GST_PAD_IS_EOS will
+	  return FALSE.
+	  This makes find_best_pad() fail to find a best pad when all but one sink
+	  pad has received EOS, and have no data left in their queues, and the
+	  last one has data. The problem is solved by modifying find_best_pad() to
+	  use gst_aggregator_pad_is_eos() instead.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9821>
+
+2025-08-27 21:56:41 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Prefer an empty SET_PARAMETER call for keep-alive
+	  In RTSP 2.0, they started recommending that clients use an
+	  empty SET_PARAMETER request as the preferred keep-alive mechanism
+	  as all cameras must support that method. It also works
+	  for RTSP 1.0, so use it as the preferred method unconditionally.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9801>
+
+2025-08-18 23:58:32 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Send RTSP keepalives in TCP/interleaved modes
+	  When rtspsrc is using an interleaved connection to the camera,
+	  it will continously receive a stream of tunnelled RTP packets
+	  from the server, so the rtspconnection doesn't return ETIMEOUT
+	  and trigger the keepalive. Add a check on the RTSP timer
+	  and send the keepalive whenever we haven't sent a message to
+	  the server in some time.
+	  Fixes problems with some cameras that don't see the RTCP traffic
+	  as sufficient proof of liveness, when using TCP/HTTP tunnelled
+	  modes
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9801>
+
+2025-10-02 06:10:47 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2: Fix memory leak for DRM caps negotiation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9781>
+
+2025-09-29 16:11:30 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/qt/gstqtglutility.cc:
+	  qt: Fix building examples on macOS
+	  GL/gl.h is an incorrect include on macOS, and the correct include is
+	  already done by gstgl.
+	  qt_current_nsopengl_context() wasn't being exported, leading to build
+	  failures
+	  Also add comments to gstqtglutility.cc to clarify dense #ifdef usage.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9768>
+
+2025-09-27 11:01:48 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: set channel-mask to 0 for unknown layout tags
+	  When encountering AUDIO_CHANNEL_LAYOUT_TAG_UNKNOWN, explicitly set
+	  the channel-mask to 0 for multi-channel audio to indicate unpositioned
+	  channels.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9754>
+
+2025-09-26 17:45:30 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: handle unsupported channel layout tags gracefully
+	  When encountering unsupported channel layout tags in the chan atom,
+	  fall back to using the channel count from the entry. This ensures
+	  we still get a meaningful channel-mask for negotiation rather than
+	  failing negotiation completely.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9752>
+
+2025-09-08 17:50:32 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* ext/qt6/gstqsg6material.cc:
+	* gst/isomp4/gstqtmux.c:
+	  gst: Don't use g_assert() around production code
+	  If G_DISABLE_ASSERT is defined the code will not be compiled.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9721>
+
+2025-09-03 14:48:41 +0900  ekwang.lee <ekwang.lee@lge.com>
+
+	* sys/v4l2/gstv4l2deviceprovider.c:
+	* sys/v4l2/v4l2-utils.c:
+	* sys/v4l2/v4l2_calls.c:
+	  v4l2: Add GstV4l2Error handling in gst_v4l2_get_capabilities
+	  The v4l2deviceprovider would cause an assertion failure when probing a non-V4L2 device node.
+	  This change captures the error and posts a warning from the element itself,
+	  instead of triggering the assertion.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9714>
+
+2025-05-03 00:34:06 +0200  Jakub Adam <jakub.adam@collabora.com>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: reconfigure v4l2object only if respective caps changed
+	  Stop the change of output resolution from triggering unnecessary
+	  renegotiation with upstream.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9699>
+
+2025-09-14 13:19:28 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.26.6
+
 === release 1.26.6 ===
 
 2025-09-14 13:13:58 +0100  Tim-Philipp Müller <tim@centricular.com>
