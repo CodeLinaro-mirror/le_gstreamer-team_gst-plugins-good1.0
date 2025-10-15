@@ -1,3 +1,13 @@
+gst-plugins-good1.0 (1.26.7-1) unstable; urgency=medium
+
+  [ Simon McVittie ]
+  * d/control: Drop unused B-D on libgirepository1.0-dev (Closes: #1116592)
+
+  [ Marc Leeman ]
+  * New upstream version 1.26.7
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Wed, 15 Oct 2025 09:48:00 +0200
+
 gst-plugins-good1.0 (1.26.6-1) unstable; urgency=medium
 
   * New upstream version 1.26.6
