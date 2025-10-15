@@ -14459,12 +14459,24 @@ qtdemux_parse_chan (GstQTDemux * qtdemux, GstByteReader * br,
         break;
       }
     }
+  } else if (layout_tag == AUDIO_CHANNEL_LAYOUT_TAG_UNKNOWN) {
+    GST_INFO_OBJECT (qtdemux,
+        "Channel layout tag is \"unknown\", marking as unpositioned");
+
+    if (entry->n_channels > 1) {
+      gst_caps_set_simple (entry->caps, "channel-mask", GST_TYPE_BITMASK,
+          0, NULL);
+    }
+
+    return;
   }
 
+  /* If the channel counts don't match, ignore the chan atom layout */
   if (n_channels == 0) {
     GST_WARNING_OBJECT (qtdemux, "Unsupported channel layout tag 0x%08x",
         layout_tag);
-    return;
+    n_channels = entry->n_channels;
+    goto error;
   }
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -14569,6 +14581,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
   guint value_size, stsd_len, len;
   guint32 track_id;
   guint32 dummy;
+  guint32 fourcc;
 
   GST_DEBUG_OBJECT (qtdemux, "parse_trak");
 
@@ -14766,7 +14779,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
   for (stsd_index = 0; stsd_index < stsd_entry_count; stsd_index++) {
     GNode *stsd_entry;
     const guint8 *stsd_entry_data;
-    guint32 fourcc;
     gchar *codec = NULL;
     QtDemuxStreamStsdEntry *entry = &stream->stsd_entries[stsd_index];
 
@@ -16954,6 +16966,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
           "type %" GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
           GST_FOURCC_ARGS (fourcc), entry->caps);
     } else if (stream->subtype == FOURCC_meta) {
+      if (fourcc == FOURCC_fdsc) {
+        // GoPro SOS track with file recovery data, ignore this stream
+        // See: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4679
+        goto ignored_stream;
+      }
+
       entry->sampled = TRUE;
       entry->sparse = TRUE;
 
@@ -17132,6 +17150,13 @@ unknown_stream:
   {
     GST_INFO_OBJECT (qtdemux, "unknown subtype %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (stream->subtype));
+    gst_qtdemux_stream_unref (stream);
+    return TRUE;
+  }
+ignored_stream:
+  {
+    GST_INFO_OBJECT (qtdemux, "ignored stream type %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (fourcc));
     gst_qtdemux_stream_unref (stream);
     return TRUE;
   }
