@@ -15,9 +15,9 @@ Build-Depends: debhelper,
                xauth,
                libgirepository1.0-dev,
                libglib2.0-dev (>= 2.62),
-               libgstreamer1.0-dev (>= 1.26.0),
-               libgstreamer-plugins-base1.0-dev (>= 1.26.0),
-               gstreamer1.0-plugins-base (>= 1.26.0),
+               libgstreamer1.0-dev (>= 1.27.2),
+               libgstreamer-plugins-base1.0-dev (>= 1.27.2),
+               gstreamer1.0-plugins-base (>= 1.27.2),
                liborc-0.4-dev (>= 1:0.4.17),
                libcairo2-dev (>= 1.10.0),
                libcaca-dev,
@@ -35,7 +35,7 @@ Build-Depends: debhelper,
                libxv-dev,
                libx11-xcb-dev,
                libgtk-3-dev (>= 3.15),
-               libtag1-dev (>= 1.5),
+               libtag-dev,
                libwavpack-dev (>= 4.60),
                libpulse-dev (>= 2.0),
                libbz2-dev,
@@ -63,7 +63,7 @@ Build-Depends: debhelper,
                libv4l-dev [linux-any],
                libgudev-1.0-dev (>= 147) [linux-any],
                nasm (>= 2.13) [any-amd64]
-Standards-Version: 4.6.2
+Standards-Version: 4.7.2
 Vcs-Git: https://salsa.debian.org/gstreamer-team/gst-plugins-good1.0.git
 Vcs-Browser: https://salsa.debian.org/gstreamer-team/gst-plugins-good1.0/
 Homepage: https://gstreamer.freedesktop.org
@@ -72,7 +72,7 @@ Package: gstreamer1.0-pulseaudio
 Architecture: any
 Multi-Arch: same
 Section: oldlibs
-Depends: gstreamer1.0-plugins-good (>= 1.26.0), ${misc:Depends}
+Depends: gstreamer1.0-plugins-good (>= 1.27.2), ${misc:Depends}
 Description: GStreamer plugin for PulseAudio (transitional package)
  GStreamer is a streaming media framework, based on graphs of filters
  which operate on media data.  Applications using this library can do
@@ -165,7 +165,7 @@ Multi-Arch: same
 Depends: ${misc:Depends},
          ${shlibs:Depends},
          gstreamer1.0-audiosink,
-         gstreamer1.0-plugins-base (>= 1.26.0),
+         gstreamer1.0-plugins-base (>= 1.27.2),
          libgstreamer-plugins-good1.0-0 (= ${binary:Version}),
          libsoup-3.0-0
 Recommends: gstreamer1.0-x

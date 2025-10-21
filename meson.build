@@ -1,5 +1,5 @@
 project('gst-plugins-good', 'c',
-  version : '1.26.5',
+  version : '1.27.2',
   meson_version : '>= 1.4',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
@@ -23,7 +23,7 @@ if have_cxx
 endif
 
 glib_req = '>= 2.64.0'
-orc_req = '>= 0.4.17'
+orc_req = '>= 0.4.34'
 
 if gst_version_is_stable
   gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
@@ -409,7 +409,7 @@ endif
 zlib_dep = dependency('zlib')
 cdata.set('HAVE_ZLIB', true)
 
-gio_dep = dependency('gio-2.0', version: glib_req)
+gio_dep = dependency('gio-2.0', version: glib_req, default_options: {'sysprof': 'disabled'})
 gmodule_dep = dependency('gmodule-no-export-2.0')
 
 gst_plugins_good_args = ['-DHAVE_CONFIG_H']
@@ -576,7 +576,7 @@ endif
 
 configure_file(output : 'config.h', configuration : cdata)
 
-meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.24.0', meson.project_version())
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.26.0', meson.project_version())
 
 plugin_names = []
 gst_plugins = []

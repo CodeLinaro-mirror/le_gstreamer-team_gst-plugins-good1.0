@@ -59,10 +59,8 @@ ifneq (,$(filter $(DEB_HOST_ARCH_OS), hurd))
 conf_flags += -Dqt-egl=disabled
 endif
 
-# soup is not available on non-Linux, this plugin is compiled against
-# the system version
 ifeq ($(DEB_HOST_ARCH_OS),hurd)
-conf_flags+= -Dadaptivedemux2=disabled -Dsoup=disabled
+conf_flags+= -Dadaptivedemux2=disabled
 endif
 
 %:
