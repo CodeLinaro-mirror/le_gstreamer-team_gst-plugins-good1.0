@@ -1,6 +1,6 @@
-gst-plugins-good1.0 (1.27.2-1ubuntu1) UNRELEASED; urgency=medium
+gst-plugins-good1.0 (1.27.2-1ubuntu1) resolute; urgency=medium
 
-  * Resynchronize on Debian. Remaining changes:
+  * Resynchronize on Debian (LP: #2130181). Remaining changes:
     + Import plugins from -bad that are needed for main applications.
       - jpegformat (pinned still at 1.18) See LP#2089260
       - camerabin (+ basecamerabinsrc + photography)
@@ -17,7 +17,7 @@ gst-plugins-good1.0 (1.27.2-1ubuntu1) UNRELEASED; urgency=medium
       usr/lib/*/gstreamer-1.0/libgstamrnb.so and
       usr/lib/*/gstreamer-1.0/libgstamrwbdec.so
 
- -- Charles <charles05@canonical.com>  Fri, 25 Jul 2025 20:41:05 +0200
+ -- Charles <charles05@canonical.com>  Wed, 29 Oct 2025 16:44:03 -0400
 
 gst-plugins-good1.0 (1.27.2-1) experimental; urgency=medium
 
