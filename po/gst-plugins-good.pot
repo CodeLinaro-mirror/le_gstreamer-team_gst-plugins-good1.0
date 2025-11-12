@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.26.7\n"
+"Project-Id-Version: gst-plugins-good-1.26.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-14 18:26+0100\n"
+"POT-Creation-Date: 2025-11-10 17:23+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -349,7 +349,7 @@ msgid "Failed to allocated required memory."
 msgstr ""
 
 #: sys/v4l2/gstv4l2src.c:958 sys/v4l2/gstv4l2videodec.c:567
-#: sys/v4l2/gstv4l2videodec.c:1109 sys/v4l2/gstv4l2videoenc.c:872
+#: sys/v4l2/gstv4l2videodec.c:1109 sys/v4l2/gstv4l2videoenc.c:875
 msgid "Failed to allocate required memory."
 msgstr ""
 
@@ -372,7 +372,7 @@ msgstr ""
 msgid "Failed to start decoding thread."
 msgstr ""
 
-#: sys/v4l2/gstv4l2videodec.c:1130 sys/v4l2/gstv4l2videoenc.c:892
+#: sys/v4l2/gstv4l2videodec.c:1130 sys/v4l2/gstv4l2videoenc.c:895
 msgid "Failed to process frame."
 msgstr ""
 
@@ -386,11 +386,11 @@ msgstr ""
 msgid "Encoder on device %s has no supported input format"
 msgstr ""
 
-#: sys/v4l2/gstv4l2videoenc.c:838
+#: sys/v4l2/gstv4l2videoenc.c:841
 msgid "Failed to force keyframe."
 msgstr ""
 
-#: sys/v4l2/gstv4l2videoenc.c:885
+#: sys/v4l2/gstv4l2videoenc.c:888
 msgid "Failed to start encoding thread."
 msgstr ""
 
