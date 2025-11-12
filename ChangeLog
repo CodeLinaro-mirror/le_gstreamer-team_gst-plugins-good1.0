@@ -1,3 +1,117 @@
+=== release 1.26.8 ===
+
+2025-11-10 17:22:05 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.26.8
+
+2025-11-09 18:02:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/multifile.c:
+	  multifile: add unit test for location verification utility functions
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10057>
+
+2025-11-09 17:32:21 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/multifile/gstimagesequencesrc.c:
+	* gst/multifile/gstmultifilesink.c:
+	* gst/multifile/gstmultifilesrc.c:
+	* gst/multifile/gstsplitmuxsink.c:
+	* gst/multifile/location-utils.c:
+	* gst/multifile/location-utils.h:
+	* gst/multifile/meson.build:
+	  multifile: verify format identifiers in filename template strings
+	  Make sure there's only one integer-type format identifier in
+	  the filename template string of the location property, and no
+	  other identifiers or unexpected modifiers that could otherwise
+	  lead to a crash or undefined behaviour when constructing the
+	  filename later.
+	  In multifilesrc, multifilesink, splitmuxsink and imagesequencesrc.
+	  Fixes #4710
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10057>
+
+2025-11-09 15:34:35 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/multifile/gstmultifilesink.c:
+	  multifilesink: fix property name for filename in documentation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10057>
+
+2025-11-06 17:37:49 +0800  Qian Hu (胡骞) <qian.hu@mediatek.com>
+
+	* sys/v4l2/gstv4l2videoenc.c:
+	  v4l2videoenc: fix memory leak about output state and caps
+	  since gst_video_encoder_get_output_state will add ref count,
+	  we should decrease it after use
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10033>
+
+2025-11-04 14:31:08 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/rtp/gstrtpvp9pay.c:
+	  rtp: vp9pay: Fix parsing of show-existing-frame
+	  The frames with show_existing_frame set are only 1 byte long. Fix the minimum
+	  length check to avoid failing on valid streams.
+	  Fixes #4730
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10019>
+
+2025-10-27 22:54:59 +0530  Christo Joseph <1538412+josephch@users.noreply.github.com>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: support streams which does not have frequent loas config
+	  Do not reset previous loas config on setting src caps. The config
+	  is required if next frames does not contain config expected to use
+	  previous config
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9990>
+
+2025-10-28 18:09:28 +0900  Jeehyun Lee <jeehyun.lee@lge.com>
+
+	* gst/rtp/gstrtph263pay.c:
+	  rtph263pay: Fix Out-of-bounds access (OVERRUN)
+	  Calling gst_rtp_h263_pay_B_fragment_push with gob->macroblocks
+	  and mb - 1U is suspicious because of the very large index,4294967295.
+	  The index may be due to a negative parameter being interpreted
+	  as unsigned.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9953>
+
+2025-10-27 23:43:27 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtp/gstrtpredenc.c:
+	* gst/rtp/gstrtpulpfecenc.c:
+	* tests/check/elements/rtpred.c:
+	  rtp: Fix usage of uninitialized variable
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9940>
+
+2025-10-24 12:13:25 +0200  Manuel Torres <mtorres@fluendo.com>
+
+	* gst/multifile/gstsplitmuxsink.c:
+	  splitmuxsink: accept pads named 'sink_%u' on the muxer
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9922>
+
+2025-10-21 11:19:05 +0000  Artem Martus <artemmartus2012@gmail.com>
+
+	* gst/rtp/gstrtpvp9depay.c:
+	  vp9depay: fix wrong event referencing, use same packet lost logic from neighboring vp8depay
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9914>
+
+2025-10-21 10:30:22 +0200  Kevin Wolf <kwolf@redhat.com>
+
+	* sys/v4l2/gstv4l2deviceprovider.c:
+	  v4l2: Fix NULL pointer dereference in probe error path
+	  Commit ee492917 added an access to v4l2obj->dbg_obj in the cleanup path
+	  of gst_v4l2_device_provider_probe_device(). However, very early error
+	  paths in the function haven't allocated v4l2obj yet and segfault now.
+	  Fix this by skipping the code that assumes that v4l2obj might be
+	  non-NULL.
+	  Fixes: ee4929175683a8323477305d0028d0bf99e428e3
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9890>
+
+2025-10-14 18:34:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.26.7
+
 === release 1.26.7 ===
 
 2025-10-14 18:25:43 +0100  Tim-Philipp Müller <tim@centricular.com>
