@@ -291,7 +291,6 @@ gst_osx_audio_device_provider_probe_internal (GstOsxAudioDeviceProvider * self,
       if (device) {
         GST_DEBUG ("Input Device ID: %u Name: %s", (unsigned) osx_devices[i],
             device_name);
-        gst_object_ref_sink (device);
         *devices = g_list_prepend (*devices, device);
       }
     }
@@ -303,7 +302,6 @@ gst_osx_audio_device_provider_probe_internal (GstOsxAudioDeviceProvider * self,
       if (device) {
         GST_DEBUG ("Output Device ID: %u Name: %s", (unsigned) osx_devices[i],
             device_name);
-        gst_object_ref_sink (device);
         *devices = g_list_prepend (*devices, device);
       }
     }
@@ -323,11 +321,11 @@ gst_osx_audio_device_provider_probe (GstDeviceProvider * provider)
   osx_devices = _audio_system_get_devices (&ndevices);
 
   if (ndevices < 1) {
-    GST_WARNING ("no audio output devices found");
+    GST_WARNING ("No audio devices found");
     goto done;
   }
 
-  GST_INFO ("found %d audio device(s)", ndevices);
+  GST_INFO ("Found %d audio device(s)", ndevices);
 
   gst_osx_audio_device_provider_probe_internal (self, osx_devices, ndevices,
       &devices);
@@ -346,13 +344,14 @@ gst_osx_audio_device_provider_start (GstDeviceProvider * provider)
   GList *iter;
 
   devices = gst_osx_audio_device_provider_probe (provider);
-  if (devices) {
-    for (iter = devices; iter; iter = g_list_next (iter)) {
-      gst_device_provider_device_add (provider, GST_DEVICE (iter->data));
-    }
 
-    g_list_free (devices);
+  for (iter = devices; iter; iter = iter->next) {
+    gst_device_provider_device_add (provider, GST_DEVICE (iter->data));
   }
+
+  /* Device references were floating, so were transferred in
+   * gst_device_provider_device_add() */
+  g_list_free (devices);
 
   return _start_audio_device_watcher (self);
 }
@@ -549,6 +548,8 @@ gst_osx_audio_device_new (AudioDeviceID device_id, const gchar * device_name,
   gstdev = g_object_new (GST_TYPE_OSX_AUDIO_DEVICE, "device-id",
       device_id, "display-name", device_name, "caps", caps,
       "properties", props, "device-class", klass, NULL);
+  gst_structure_free (props);
+  gst_caps_unref (caps);
 
   gstdev->element = element_name;
 

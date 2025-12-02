@@ -1,3 +1,111 @@
+=== release 1.26.9 ===
+
+2025-12-01 17:27:07 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.26.9
+
+2025-11-20 16:43:07 +0530  Pratik Pachange <ppachang@qti.qualcomm.com>
+
+	* sys/v4l2/gstv4l2allocator.c:
+	  v4l2allocator: Add KEEP_MAPPED flag to the allocated buffers
+	  This flag prevents the same buffer from being mapped twice
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10164>
+
+2025-08-05 18:38:48 +1000  Jan Schmidt <jan@centricular.com>
+
+	* ext/adaptivedemux2/hls/gsthlsdemux.c:
+	  hlsdemux2: Keep streams with different names
+	  If 2 variant streams have distinct names but the same language, they
+	  are distinct streams. Previously, the 2nd stream would replace the
+	  first (e.g. an english commentary track would replace the primary
+	  english language track)
+	  Fixes #2636
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10248>
+
+2025-11-27 23:55:54 +1100  Jan Schmidt <jan@centricular.com>
+
+	* ext/adaptivedemux2/gstadaptivedemux.c:
+	* ext/adaptivedemux2/hls/gsthlsdemux-stream.c:
+	  adaptivedemux2: Improve wording in some comments
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10247>
+
+2025-11-27 23:54:16 +1100  Jan Schmidt <jan@centricular.com>
+
+	* ext/adaptivedemux2/gstadaptivedemux-stream.c:
+	* ext/adaptivedemux2/hls/gsthlsdemux.c:
+	  hlsdemux2: Fix startup busy waiting
+	  Improve some state management around stream preparation that
+	  avoids a busy wait when starting some HLS streams, while the
+	  main playlist was being fetched. Instead, set up the stream
+	  state properly so it will wait cleanly once in _wait_prepared().
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10247>
+
+2025-11-27 23:38:19 +1100  Jan Schmidt <jan@centricular.com>
+
+	* ext/adaptivedemux2/gstadaptivedemux-stream.c:
+	  adaptivedemux2: Fix a crash on rapid state changes
+	  Fix a crash in adaptive demuxers triggered when setting the element
+	  back to NULL while it's still processing the incoming manifest,
+	  leading to accessing an invalid stream. Hold a ref to the stream
+	  while it's needed in the waiting function.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10247>
+
+2025-11-27 21:57:26 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* sys/osxaudio/gstosxaudiodeviceprovider.c:
+	  osxaudio: Remove unnecessary if, add comment about GstDevice lifetime
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10235>
+
+2025-10-15 04:35:52 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* sys/osxaudio/gstosxaudiodeviceprovider.c:
+	  osxaudio: Fix a bunch of device provider leaks
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10141>
+
+2025-10-15 02:00:25 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* sys/osxaudio/gstosxaudiodeviceprovider.c:
+	* sys/osxaudio/gstosxcoreaudiohal.c:
+	  osxaudio: Fix some log messages
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10141>
+
+2025-10-14 06:00:11 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* sys/osxaudio/gstosxaudioringbuffer.c:
+	  osxaudio: Simplify some code
+	  No functional changes.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10141>
+
+2025-11-18 16:17:15 +0800  Qian Hu (胡骞) <qian.hu@mediatek.com>
+
+	* sys/v4l2/gstv4l2videoenc.c:
+	  v4l2videoenc: Fix codec frame leak on error
+	  This patch addresses a frame leak issue. When the encoder
+	  has insufficient resources, ioctl calls can fail. For instance,
+	  within the handle_frame function, an attempt to
+	  activate the capture buffer pool (via gst_buffer_pool_set_active)
+	  will fail(caused by capture QBUF fail). As a result, handle_frame
+	  returns immediately. However, the codec frame passed to
+	  handle_frame is not dropped in this failure path, which leads to the leak.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10149>
+
+2025-11-14 13:52:45 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/adaptivedemux2/hls/gsthlsdemux-stream.c:
+	  hlsdemux2: error out instead of aborting on negative stream time
+	  We should only assert on things that we control internally, not
+	  on something that could be triggered by unexpected external data.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10094>
+
+2025-11-10 17:30:54 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.26.8
+
 === release 1.26.8 ===
 
 2025-11-10 17:22:05 +0000  Tim-Philipp Müller <tim@centricular.com>
