@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.26.8\n"
+"Project-Id-Version: gst-plugins-good-1.26.9\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-10 17:23+0000\n"
+"POT-Creation-Date: 2025-12-01 17:27+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -196,11 +196,11 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr ""
 
-#: sys/osxaudio/gstosxaudioringbuffer.c:148
+#: sys/osxaudio/gstosxaudioringbuffer.c:145
 msgid "CoreAudio device not found"
 msgstr ""
 
-#: sys/osxaudio/gstosxaudioringbuffer.c:154
+#: sys/osxaudio/gstosxaudioringbuffer.c:151
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
