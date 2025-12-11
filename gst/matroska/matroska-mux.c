@@ -533,7 +533,6 @@ gst_matroska_mux_init (GstMatroskaMux * mux, gpointer g_class)
 
   /* initialize internal variables */
   mux->index = NULL;
-  mux->num_streams = 0;
   mux->num_a_streams = 0;
   mux->num_t_streams = 0;
   mux->num_v_streams = 0;
@@ -580,8 +579,9 @@ gst_matroska_pad_reset (GstMatroskaMuxPad * pad, gboolean full)
   /* free track information */
   if (pad->track != NULL) {
     /* retrieve for optional later use */
-    name = pad->track->name;
+    name = g_steal_pointer (&pad->track->name);
     type = pad->track->type;
+
     /* extra for video */
     if (type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
       GstMatroskaTrackVideoContext *ctx =
@@ -594,8 +594,7 @@ gst_matroska_pad_reset (GstMatroskaMuxPad * pad, gboolean full)
     }
     g_free (pad->track->codec_id);
     g_free (pad->track->codec_name);
-    if (full)
-      g_free (pad->track->name);
+    g_free (pad->track->name);
     g_free (pad->track->language);
     g_free (pad->track->codec_priv);
     g_free (pad->track);
@@ -629,7 +628,7 @@ gst_matroska_pad_reset (GstMatroskaMuxPad * pad, gboolean full)
     }
 
     context->type = type;
-    context->name = name;
+    context->name = g_steal_pointer (&name);
     context->uid = gst_matroska_mux_create_uid ();
     /* TODO: check default values for the context */
     context->flags = GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT;
@@ -639,6 +638,8 @@ gst_matroska_pad_reset (GstMatroskaMuxPad * pad, gboolean full)
     pad->tags = gst_tag_list_new_empty ();
     gst_tag_list_set_scope (pad->tags, GST_TAG_SCOPE_STREAM);
   }
+
+  g_free (name);
 }
 
 static gboolean
@@ -2528,7 +2529,9 @@ gst_matroska_mux_request_new_pad (GstElement * element,
     if (req_name != NULL && sscanf (req_name, "audio_%u", &pad_id) == 1) {
       pad_name = req_name;
     } else {
-      name = g_strdup_printf ("audio_%u", mux->num_a_streams++);
+      name =
+          g_strdup_printf ("audio_%u", g_atomic_int_add (&mux->num_a_streams,
+              1));
       pad_name = name;
     }
     capsfunc = GST_DEBUG_FUNCPTR (gst_matroska_mux_audio_pad_setcaps);
@@ -2542,7 +2545,9 @@ gst_matroska_mux_request_new_pad (GstElement * element,
     if (req_name != NULL && sscanf (req_name, "video_%u", &pad_id) == 1) {
       pad_name = req_name;
     } else {
-      name = g_strdup_printf ("video_%u", mux->num_v_streams++);
+      name =
+          g_strdup_printf ("video_%u", g_atomic_int_add (&mux->num_v_streams,
+              1));
       pad_name = name;
     }
     capsfunc = GST_DEBUG_FUNCPTR (gst_matroska_mux_video_pad_setcaps);
@@ -2556,7 +2561,9 @@ gst_matroska_mux_request_new_pad (GstElement * element,
     if (req_name != NULL && sscanf (req_name, "subtitle_%u", &pad_id) == 1) {
       pad_name = req_name;
     } else {
-      name = g_strdup_printf ("subtitle_%u", mux->num_t_streams++);
+      name =
+          g_strdup_printf ("subtitle_%u", g_atomic_int_add (&mux->num_t_streams,
+              1));
       pad_name = name;
     }
     capsfunc = GST_DEBUG_FUNCPTR (gst_matroska_mux_subtitle_pad_setcaps);
@@ -2575,6 +2582,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
       GST_ELEMENT_CLASS (parent_class)->request_new_pad (element,
       templ, pad_name, caps);
 
+  GST_OBJECT_LOCK (mux);
   pad->track = context;
   gst_matroska_pad_reset (pad, FALSE);
   if (id)
@@ -2582,10 +2590,9 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   pad->track->dts_only = FALSE;
 
   pad->capsfunc = capsfunc;
+  GST_OBJECT_UNLOCK (mux);
 
   g_free (name);
-
-  mux->num_streams++;
 
   GST_DEBUG_OBJECT (pad, "Added new request pad");
 
@@ -2625,8 +2632,6 @@ gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
   GST_OBJECT_UNLOCK (mux);
 
   GST_ELEMENT_CLASS (parent_class)->release_pad (element, pad);
-
-  mux->num_streams--;
 }
 
 static void
@@ -4363,7 +4368,7 @@ gst_matroska_mux_find_best_pad (GstMatroskaMux * mux, GstClockTime * best_time,
 
     buffer = gst_aggregator_pad_peek_buffer (GST_AGGREGATOR_PAD (mux_pad));
     if (!buffer) {
-      if (!timeout && !GST_PAD_IS_EOS (mux_pad)) {
+      if (!timeout && !gst_aggregator_pad_is_eos (GST_AGGREGATOR_PAD (mux_pad))) {
         best = NULL;
         best_ts = GST_CLOCK_TIME_NONE;
         break;

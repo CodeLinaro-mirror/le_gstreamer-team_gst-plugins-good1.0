@@ -53,11 +53,16 @@ typedef struct _GstFlvMuxClass GstFlvMuxClass;
 #define GST_IS_FLV_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_FLV_MUX))
 
+typedef enum {
+  GST_FLV_MUX_TRACK_TYPE_AUDIO = 1,
+  GST_FLV_MUX_TRACK_TYPE_VIDEO = 2,
+} GstFlvMuxTrackType;
+
 struct _GstFlvMuxPad
 {
   GstAggregatorPad aggregator_pad;
 
-  guint codec;
+  guint32 codec;
   guint rate;
   guint width;
   guint channels;
@@ -71,6 +76,9 @@ struct _GstFlvMuxPad
 
   gboolean info_changed;
   gboolean drop_deltas;
+  guint32 codec_fourcc;
+  gint16 track_id;
+  GstFlvMuxTrackType type;
 };
 
 struct _GstFlvMuxPadClass {
@@ -90,8 +98,8 @@ struct _GstFlvMux {
 
   /* <private> */
   GstFlvMuxState state;
-  GstFlvMuxPad *audio_pad;
-  GstFlvMuxPad *video_pad;
+  GList *audio_pads;
+  GList *video_pads;
   gboolean streamable;
   gchar *metadatacreator;
   gchar *encoder;
