@@ -76,6 +76,7 @@
 #include <glib/gstdio.h>
 #include <gst/video/video.h>
 #include "gstsplitmuxsink.h"
+#include "location-utils.h"
 
 GST_DEBUG_CATEGORY_STATIC (splitmux_debug);
 #define GST_CAT_DEFAULT splitmux_debug
@@ -237,7 +238,8 @@ static GstStateChangeReturn gst_splitmux_sink_change_state (GstElement *
     element, GstStateChange transition);
 
 static void bus_handler (GstBin * bin, GstMessage * msg);
-static void set_next_filename (GstSplitMuxSink * splitmux, MqStreamCtx * ctx);
+static gboolean set_next_filename (GstSplitMuxSink * splitmux,
+    MqStreamCtx * ctx);
 static GstFlowReturn start_next_fragment (GstSplitMuxSink * splitmux,
     MqStreamCtx * ctx);
 static void mq_stream_ctx_free (MqStreamCtx * ctx);
@@ -1250,8 +1252,8 @@ eos_context_async (MqStreamCtx * ctx, GstSplitMuxSink * splitmux)
       sinkpad, ctx);
 
   g_assert_nonnull (helper->pad);
-  gst_element_call_async (GST_ELEMENT (splitmux),
-      (GstElementCallAsyncFunc) send_eos_async, helper, NULL);
+  gst_object_call_async (GST_OBJECT (splitmux),
+      (GstObjectCallAsyncFunc) send_eos_async, helper);
 }
 
 /* Called with lock held. TRUE iff all contexts have a
@@ -2146,6 +2148,12 @@ _lock_and_set_to_null (GstElement * element, GstSplitMuxSink * splitmux)
   gst_bin_remove (GST_BIN (splitmux), element);
 }
 
+static void
+_lock_and_set_to_null_async (GstElement * element, GstSplitMuxSink * splitmux)
+{
+  _lock_and_set_to_null (element, splitmux);
+  gst_object_unref (splitmux);
+}
 
 static void
 _send_event (const GValue * value, gpointer user_data)
@@ -2284,7 +2292,9 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   }
 
   GST_SPLITMUX_LOCK (splitmux);
-  set_next_filename (splitmux, ctx);
+  if (!set_next_filename (splitmux, ctx))
+    goto fail_next_filename_with_lock_held;
+
   splitmux->next_fragment_id++;
   splitmux->muxed_out_bytes = 0;
   splitmux->out_fragment_start_runts = GST_CLOCK_STIME_NONE;
@@ -2344,6 +2354,14 @@ fail:
       ("Could not create the new muxer/sink"), NULL);
   return GST_FLOW_ERROR;
 
+fail_next_filename_with_lock_held:
+  gst_object_unref (sink);
+  gst_object_unref (muxer);
+
+  GST_SPLITMUX_STATE_UNLOCK (splitmux);
+  splitmux->switching_fragment = FALSE;
+  return GST_FLOW_ERROR;
+
 fail_output:
   GST_ELEMENT_ERROR (splitmux, RESOURCE, SETTINGS,
       ("Could not start new output sink"), NULL);
@@ -2400,12 +2418,12 @@ bus_handler (GstBin * bin, GstMessage * message)
             gst_object_unref (sinksink);
             gst_object_unref (muxersrc);
 
-            gst_element_call_async (muxer,
-                (GstElementCallAsyncFunc) _lock_and_set_to_null,
-                gst_object_ref (splitmux), gst_object_unref);
-            gst_element_call_async (sink,
-                (GstElementCallAsyncFunc) _lock_and_set_to_null,
-                gst_object_ref (splitmux), gst_object_unref);
+            gst_object_call_async (GST_OBJECT_CAST (muxer),
+                (GstObjectCallAsyncFunc) _lock_and_set_to_null_async,
+                gst_object_ref (splitmux));
+            gst_object_call_async (GST_OBJECT_CAST (sink),
+                (GstObjectCallAsyncFunc) _lock_and_set_to_null_async,
+                gst_object_ref (splitmux));
             gst_object_unref (muxer);
           } else {
             g_object_set_qdata ((GObject *) sink, EOS_FROM_US,
@@ -3291,7 +3309,7 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
     switch (splitmux->input_state) {
       case SPLITMUX_INPUT_STATE_COLLECTING_GOP_START:
         if (ctx->is_reference) {
-          const InputGop *gop, *next_gop;
+          const InputGop *gop GST_UNUSED_ASSERT, *next_gop;
 
           /* This is the reference context. If it's a keyframe,
            * it marks the start of a new GOP and we should wait in
@@ -3300,8 +3318,10 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
            * so set loop_again to FALSE */
           loop_again = FALSE;
 
+#ifndef G_DISABLE_ASSERT
           gop = g_queue_peek_head (&splitmux->pending_input_gops);
           g_assert (gop != NULL);
+#endif
           next_gop = g_queue_peek_nth (&splitmux->pending_input_gops, 1);
 
           if (ctx->in_running_time > splitmux->max_in_running_time)
@@ -3626,6 +3646,14 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
       mux_template =
           gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
           (splitmux->muxer), "sink_%d");
+      name = NULL;
+    }
+    if (mux_template == NULL) {
+      GST_DEBUG_OBJECT (element,
+          "searching for pad-template with name 'sink_%%u'");
+      mux_template =
+          gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
+          (splitmux->muxer), "sink_%u");
       name = NULL;
     }
     if (mux_template == NULL) {
@@ -4039,12 +4067,13 @@ fail:
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-static void
+static gboolean
 set_next_filename (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
 {
   gchar *fname = NULL;
   GstSample *sample;
   GstCaps *caps;
+  gboolean res = TRUE;
 
   gst_splitmux_sink_ensure_max_files (splitmux);
 
@@ -4066,9 +4095,15 @@ set_next_filename (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
         splitmux->next_fragment_id, &fname);
   }
 
-  if (!fname) {
-    fname = splitmux->location ?
-        g_strdup_printf (splitmux->location, splitmux->next_fragment_id) : NULL;
+  if (fname == NULL && splitmux->location != NULL) {
+    fname = multifile_utils_printf_string_from_template (splitmux,
+        splitmux->location, splitmux->next_fragment_id);
+
+    if (fname == NULL) {
+      GST_ELEMENT_ERROR (splitmux, RESOURCE, SETTINGS,
+          ("Invalid location"), ("%s", splitmux->location));
+      res = FALSE;
+    }
   }
 
   if (fname) {
@@ -4080,6 +4115,8 @@ set_next_filename (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
     g_free (fname);
   }
   splitmux->cur_fragment_id = splitmux->next_fragment_id;
+
+  return res;
 }
 
 /* called with GST_SPLITMUX_LOCK */

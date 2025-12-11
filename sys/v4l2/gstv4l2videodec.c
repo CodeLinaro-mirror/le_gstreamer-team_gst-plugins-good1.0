@@ -500,7 +500,7 @@ gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
    * process */
   if (acquired_drm_caps) {
     if (gst_caps_is_subset (acquired_drm_caps, caps)) {
-      gst_caps_replace (&acquired_caps, acquired_drm_caps);
+      gst_caps_take (&acquired_caps, acquired_drm_caps);
       acquired_drm_caps = NULL;
       goto use_acquired_caps;
     }
@@ -923,6 +923,7 @@ beach:
   if (ret == GST_V4L2_FLOW_RESOLUTION_CHANGE) {
     GST_VIDEO_DECODER_STREAM_LOCK (decoder);
     self->draining = TRUE;
+    self->wait_for_source_change = FALSE;
     GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
     GST_INFO_OBJECT (decoder, "Received resolution change");
     return;
