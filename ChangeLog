@@ -1,3 +1,207 @@
+=== release 1.26.10 ===
+
+2025-12-25 15:44:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.26.10
+
+2025-11-28 01:47:09 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/level/gstlevel.c:
+	  level: fix crash if no caps have been sent
+	  It's possible to receive a buffer without any caps
+	  having been sent first if it comes from one of the
+	  generic sources, e.g.
+	  filesrc location=/dev/zero ! level ! fakeaudiosink
+	  in which case we would abort with a floating point exception
+	  owing to a division by zero because the audio info is unset.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4769
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10441>
+
+2025-12-19 13:17:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Bump maximum block size from 15MB to 32MB
+	  A raw 4k RGB frame for example is around 25MB. This probably will have to be
+	  implemented differently in the future but for now this solves the immediate
+	  problem and keeps the maximum in sync with qtdemux.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10419>
+
+2025-12-18 18:41:56 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/wavenc/gstwavenc.c:
+	  wavenc: Fix downstream negotiation
+	  gst_pad_get_allowed_caps() can return NULL or empty caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10413>
+
+2025-12-17 18:59:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-parse.c:
+	* gst/matroska/matroska-parse.h:
+	  matroskaparse: Remove segment closing on non-flushing seeks
+	  That's a 0.10 leftover and not necessary anymore, and can confuse downstream
+	  elements unnecessarily.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10400>
+
+2025-12-13 19:32:28 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/flac/gstflacenc.c:
+	  flacenc: Support S32 samples
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10379>
+
+2025-12-13 18:00:59 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/flac/gstflacdec.c:
+	* ext/flac/gstflacenc.c:
+	  flac: Fix 6.1 / 7.1 channel layouts
+	  They were previously randomly selected but since then they were actually defined
+	  in the specification, and of course differently than what we selected here.
+	  Update the layouts with what the specification actually says.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10378>
+
+2025-12-13 10:17:12 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/flac/gstflacdec.c:
+	  flacdec: Don't forbid S32 sample size (0x07) unnecessarily
+	  It's assigned to S32 samples since around FLAC 1.4.0.
+	  flacparse already handles this correctly since b9011f3541e1da518df5b0857547d833555cc49e.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4808
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10372>
+
+2025-12-10 14:51:27 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroska-mux: Unify and clean up pad reset code
+	  And don't re-allocate the context but instead make sure it's always
+	  in place.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4800
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10355>
+
+2025-12-10 14:23:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-ids.c:
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska-mux.c:
+	  matroska: Clean up track context a bit
+	  And document which fields are used by only the muxer or demuxer/parser.
+	  Also remove one unused field. There are probably more.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10355>
+
+2025-12-10 14:01:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroska-mux: Don't re-allocate pad context after creation immediately
+	  Just keep the cleanly initialized one around.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10355>
+
+2025-12-10 13:46:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroska-mux: Switch from GstElement::request_new_pad() to GstAggregator::create_new_pad()
+	  The latter allows setting pad state before the pad is added to the element and
+	  generally available to other parts inside and outside the element.
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4800
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10355>
+
+2025-12-09 22:49:30 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/multifile/gstsplitmuxsrc.c:
+	  splitmuxsrc: Rework locking around seek flush events
+	  There's no need to hold the splitmux lock while pushing
+	  flush events during a seek, and it can lead to a deadlock
+	  if downstream does a latency query from the flush-stop event.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10348>
+
+2025-12-09 22:48:22 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/multifile/gstsplitmuxsrc.c:
+	  splitmuxsrc: Clear segment seqnum when restarting
+	  Minor fix for clean reuse. Also, use the GST_SEQNUM_INVALID
+	  constant instead of direct comparison to 0
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10348>
+
+2025-12-09 15:07:29 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroska-mux: Fix thread-safety issues when requesting new pads
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4800
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10346>
+
+2025-12-09 14:28:21 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-mux.c:
+	* gst/matroska/matroska-mux.h:
+	  matroska-mux: Remove unused variable
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10346>
+
+2025-12-09 14:21:11 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroska-mux: Simplify some string pointer ownership when resetting pads
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10346>
+
+2025-12-07 15:29:44 +0100  Robert Mader <robert.mader@collabora.com>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: Improve pool configuration
+	  1. Validate and retry pool config if it failed
+	  2. Try all pools from query and fall back to default pool otherwise
+	  3. Enable video alignment option if supported, needed by GstVideoDmabufPool
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10328>
+
+2025-11-20 15:38:28 +0530  Pratik Pachange <ppachang@qti.qualcomm.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Add support for colorimetry 1:4:16:3
+	  Colorimetry 1:4:16:3, also known as SMPTE170M / ITU-R BT1358 525
+	  or 625 / ITU-R BT1700 NTSC
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10326>
+
+2025-12-04 14:52:19 +0200  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Use gst_util_uint64_scale to scale guint64
+	  It was otherwise skipping the video track of this file:
+	  qtdemux.c:14714:qtdemux_parse_trak:<qtdemux0> Track shorter than 20%
+	  (22890000000/300000000 vs. 22918400000/300000000) of the stream found,
+	  assuming preview image or something; skipping track qtdemux
+	  qtdemux.c:14720:qtdemux_parse_trak:<qtdemux0> tdur1 6875520000000000000
+	  tdur2 6867000000000000000 div result 1
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10293>
+
+2025-12-04 22:01:18 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: Fix robust recording estimates
+	  Fix for the 'reserved-duration-remaining' estimate of how
+	  much more data can fit into the current file - it was not correctly
+	  accounting for files that start with a timestamp offset, leading
+	  to it calculating the wrong growth rate of the moov data.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10290>
+
+2025-12-04 15:26:03 +0900  Hou Qi <qi.hou@nxp.com>
+
+	* ext/adaptivedemux2/dash/gstdashdemux.c:
+	* ext/adaptivedemux2/hls/gsthlsdemux.c:
+	  adaptivedemux2: Initialize start bitrate for dashdemux2 and hlsdemux2
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10289>
+
+2025-12-02 15:37:14 +0100  RSWilli <bartel.wilhelm@gmail.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: prevent setting empty strings as title tag
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10273>
+
+2025-12-01 17:32:18 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.26.9
+
 === release 1.26.9 ===
 
 2025-12-01 17:27:07 +0000  Tim-Philipp Müller <tim@centricular.com>
