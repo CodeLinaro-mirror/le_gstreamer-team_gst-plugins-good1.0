@@ -15,9 +15,9 @@ Build-Depends: debhelper,
                xauth,
                libgirepository1.0-dev,
                libglib2.0-dev (>= 2.62),
-               libgstreamer1.0-dev (>= 1.27.2),
-               libgstreamer-plugins-base1.0-dev (>= 1.27.2),
-               gstreamer1.0-plugins-base (>= 1.27.2),
+               libgstreamer1.0-dev (>= 1.27.90),
+               libgstreamer-plugins-base1.0-dev (>= 1.27.90),
+               gstreamer1.0-plugins-base (>= 1.27.90),
                liborc-0.4-dev (>= 1:0.4.17),
                libcairo2-dev (>= 1.10.0),
                libcaca-dev,
@@ -70,7 +70,7 @@ Package: gstreamer1.0-pulseaudio
 Architecture: any
 Multi-Arch: same
 Section: oldlibs
-Depends: gstreamer1.0-plugins-good (>= 1.27.2), ${misc:Depends}
+Depends: gstreamer1.0-plugins-good (>= 1.27.90), ${misc:Depends}
 Description: GStreamer plugin for PulseAudio (transitional package)
  GStreamer is a streaming media framework, based on graphs of filters
  which operate on media data.  Applications using this library can do
@@ -163,7 +163,7 @@ Multi-Arch: same
 Depends: ${misc:Depends},
          ${shlibs:Depends},
          gstreamer1.0-audiosink,
-         gstreamer1.0-plugins-base (>= 1.27.2),
+         gstreamer1.0-plugins-base (>= 1.27.90),
          libgstreamer-plugins-good1.0-0 (= ${binary:Version}),
          libsoup-3.0-0
 Recommends: gstreamer1.0-x

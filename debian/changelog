@@ -1,3 +1,22 @@
+gst-plugins-good1.0 (1.27.90-1) experimental; urgency=medium
+
+  * New upstream version 1.27.90
+  * d/control: update dependencies to 1.27.90
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Tue, 06 Jan 2026 10:42:16 +0100
+
+gst-plugins-good1.0 (1.27.50-2) experimental; urgency=medium
+
+  * d/control: update dependencies to >= 1.27.50
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Thu, 11 Dec 2025 09:09:22 +0100
+
+gst-plugins-good1.0 (1.27.50-1) experimental; urgency=medium
+
+  * New upstream version 1.27.50
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Thu, 11 Dec 2025 08:57:36 +0100
+
 gst-plugins-good1.0 (1.27.2-1ubuntu1) resolute; urgency=medium
 
   * Resynchronize on Debian (LP: #2130181). Remaining changes:
