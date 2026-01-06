@@ -1,3 +1,324 @@
+=== release 1.27.90 ===
+
+2026-01-05 20:15:10 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.27.90
+
+2025-12-30 18:53:26 -0500  Doug Nazar <nazard@nazar.ca>
+
+	* gst/interleave/interleave.c:
+	* gst/isomp4/gstqtmux.c:
+	  gst: Properly unref pad template caps
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10477>
+
+2025-12-30 17:53:22 -0500  Doug Nazar <nazard@nazar.ca>
+
+	* tests/check/elements/rtpbin_buffer_list.c:
+	  tests: Fix several memory leaks
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10476>
+
+2025-12-29 09:36:45 -0500  Paxton Hare <paxtonhare@users.noreply.github.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Add mapping for tsc2 fourcc
+	  The "tsc2" fourcc (TechSmith Screen Codec 2) was falling back to
+	  the generic unknown codec handler, outputting video/x-gst-fourcc-tsc2
+	  instead of the correct caps: video/x-tscc with tsccversion=2.
+	  This prevented the avdec_tscc2 decoder from being linked.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4839
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10471>
+
+2025-12-27 17:03:28 +0100  Stéphane Cerveau <scerveau@igalia.com>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer2: handle non-TIME segment events gracefully
+	  Replace g_assert() with proper error handling when receiving
+	  segments in non-TIME format. This prevents crashes and logs
+	  an error message instead.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10459>
+
+2025-12-27 14:03:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Fix splitting up / padding of captions
+	  Fixes a regression introduced by c5a470e5.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4833
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10458>
+
+2025-11-28 01:47:09 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/level/gstlevel.c:
+	  level: fix crash if no caps have been sent
+	  It's possible to receive a buffer without any caps
+	  having been sent first if it comes from one of the
+	  generic sources, e.g.
+	  filesrc location=/dev/zero ! level ! fakeaudiosink
+	  in which case we would abort with a floating point exception
+	  owing to a division by zero because the audio info is unset.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4769
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10236>
+
+2025-12-19 15:40:26 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/cairo/meson.build:
+	  meson: Solve some cyclic dependencies caused by test-only deps
+	  gstreamer => gobject-introspection => cairo => fontconfig => freetype2 => harfbuzz => cairo
+	  gst-plugins-base => libdrm => cairo => fontconfig => freetype2 => harfbuzz => cairo
+	  gst-plugins-good => cairo => librsvg => cairo
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10422>
+
+2025-12-16 18:35:31 +0100  Alicia Boya García <aboya@igalia.com>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux.h:
+	  qtdemux: rename time_position to cur_global_pts
+	  This makes it more obvious what kind of time it represents -- that is,
+	  PTS after applying edit lists and cslg_offset.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10383>
+
+2025-12-16 18:26:47 +0100  Alicia Boya García <aboya@igalia.com>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux.h:
+	  qtdemux: Improve documentation of timestamps
+	  There are many ways timestamps can be encoded for MP4, which makes
+	  having documentation and good variable names quite important for being
+	  able to follow the code efficiently.
+	  This patch consists of the clarifications I found the need to add while
+	  working on https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4600.
+	  I have placed them in a separate commit to not mix functional changes
+	  with documentation changes in an already tricky patch.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10383>
+
+2025-12-16 18:13:22 +0100  Alicia Boya García <aboya@igalia.com>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux.h:
+	* tests/check/elements/qtdemux.c:
+	* tests/files/explosion-large-composition-offset.mp4:
+	  qtdemux: use PTS instead of DTS for sample scheduling
+	  Some MP4 files have extremely large composition offsets (e.g. 3
+	  seconds). The current sample scheduling code is based on DTS, under the
+	  assumption that they will be close enough. Files like these, however,
+	  break that assumption and cause very unbalanced sample scheduling during
+	  preroll, as well as unexpected gap events.
+	  This patch updates the sample scheduling algorithm of qtdemux to follow
+	  global PTS instead of global DTS. Care is taken to so that the global
+	  PTS cursor is advanced mononotically. This means that whenever the next
+	  sample in decode order has lower PTS than the previous one, the
+	  time_position does not advance and that same track will be picked again
+	  in the next tick of the scheduler.
+	  A check test using the affected file from the bug report has been added.
+	  The test makes sure that the interleaving of samples in qtdemux doesn't
+	  cause large (>= 1 second) jumps in stream time PTS.
+	  Fixes #4600
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10383>
+
+2025-12-19 13:17:49 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Bump maximum block size from 15MB to 32MB
+	  A raw 4k RGB frame for example is around 25MB. This probably will have to be
+	  implemented differently in the future but for now this solves the immediate
+	  problem and keeps the maximum in sync with qtdemux.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10417>
+
+2025-12-18 18:41:56 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/wavenc/gstwavenc.c:
+	  wavenc: Fix downstream negotiation
+	  gst_pad_get_allowed_caps() can return NULL or empty caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10412>
+
+2025-12-17 18:59:09 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-parse.c:
+	* gst/matroska/matroska-parse.h:
+	  matroskaparse: Remove segment closing on non-flushing seeks
+	  That's a 0.10 leftover and not necessary anymore, and can confuse downstream
+	  elements unnecessarily.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10399>
+
+2025-11-30 00:45:21 +0530  Taruntej Kanakamalla <tarun@centricular.com>
+
+	* tests/check/elements/flvmux.c:
+	* tests/files/flv_test/.gitattributes:
+	* tests/files/flv_test/aac/0.aac:
+	* tests/files/flv_test/aac/1.aac:
+	* tests/files/flv_test/aac/2.aac:
+	* tests/files/flv_test/aac/3.aac:
+	* tests/files/flv_test/aac/4.aac:
+	* tests/files/flv_test/aac/5.aac:
+	* tests/files/flv_test/aac/6.aac:
+	* tests/files/flv_test/h264/0.h264:
+	* tests/files/flv_test/h264/1.h264:
+	* tests/files/flv_test/h264/2.h264:
+	* tests/files/flv_test/h264/3.h264:
+	* tests/files/flv_test/h264/4.h264:
+	* tests/files/flv_test/h265/0.h265:
+	* tests/files/flv_test/h265/1.h265:
+	* tests/files/flv_test/h265/2.h265:
+	* tests/files/flv_test/h265/3.h265:
+	* tests/files/flv_test/h265/4.h265:
+	* tests/files/flv_test/mp3_8k/0.mp3:
+	* tests/files/flv_test/mp3_8k/1.mp3:
+	* tests/files/flv_test/mp3_8k/10.mp3:
+	* tests/files/flv_test/mp3_8k/2.mp3:
+	* tests/files/flv_test/mp3_8k/3.mp3:
+	* tests/files/flv_test/mp3_8k/4.mp3:
+	* tests/files/flv_test/mp3_8k/5.mp3:
+	* tests/files/flv_test/mp3_8k/6.mp3:
+	* tests/files/flv_test/mp3_8k/7.mp3:
+	* tests/files/flv_test/mp3_8k/8.mp3:
+	* tests/files/flv_test/mp3_8k/9.mp3:
+	  flv: add tests for multitrack and eFLV features
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10071>
+
+2025-12-06 00:02:11 +0530  Taruntej Kanakamalla <tarun@centricular.com>
+
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvdemux.h:
+	  flvdemux: default track functionality fixes
+	  output track 0 as default track (i.e. audio/video) pad
+	  as per the new spec update:
+	  https://github.com/veovera/enhanced-rtmp/commit/476deeb6f31abedc68dda4954f0a031a1ece32cf
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10071>
+
+2025-12-12 18:21:59 +0530  Taruntej Kanakamalla <tarun@centricular.com>
+
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvmux.c:
+	  flv: add additional audio metadata for default track
+	  sample rate, stereo and sample size can used for default track in global
+	  metadata in case of extended audio header which will not hold this information
+	  unlike the legacy FLV header
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10071>
+
+2025-12-12 17:56:17 +0530  Taruntej Kanakamalla <tarun@centricular.com>
+
+	* gst/flv/gstflvmux.c:
+	* gst/flv/gstflvmux.h:
+	  flvmux: read metadata values from local instead of current caps
+	  the current caps values can be different and newer compared to that of the  buffer we currently using
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10071>
+
+2025-12-05 23:57:19 +0530  Taruntej Kanakamalla <tarun@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/flv/gsteflvmux.c:
+	* gst/flv/gsteflvmux.h:
+	* gst/flv/gstflvmux.c:
+	* gst/flv/gstflvmux.h:
+	  flvmux: eflv: default track semantics fix
+	  as per the new spec update:
+	  https://github.com/veovera/enhanced-rtmp/commit/476deeb6f31abedc68dda4954f0a031a1ece32cf
+	  Use the audio/video pad as the default track, with track id 0
+	  in case of multitrack
+	  The pad can be selected to stream legacy flv, or non-multitrack eflv
+	  or multitrack eflv using the property on `EFlvMuxPad`
+	  Validate the pad template and pad name requested to disallow requesting
+	  audio_0/video_0 pads. Change the `create_new_pad` to create the pad internally without calling the
+	  base class method
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10071>
+
+2025-12-05 20:40:42 +0530  Taruntej Kanakamalla <tarun@centricular.com>
+
+	* gst/flv/flvdefs.h:
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvmux.c:
+	* gst/flv/gstflvmux.h:
+	  flv: improve enum naming and minor fixes
+	  change the enum names to be consistent
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10071>
+
+2025-12-13 19:32:28 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/flac/gstflacenc.c:
+	  flacenc: Support S32 samples
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10377>
+
+2025-12-13 18:00:59 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/flac/gstflacdec.c:
+	* ext/flac/gstflacenc.c:
+	  flac: Fix 6.1 / 7.1 channel layouts
+	  They were previously randomly selected but since then they were actually defined
+	  in the specification, and of course differently than what we selected here.
+	  Update the layouts with what the specification actually says.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10375>
+
+2025-12-13 10:17:12 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/flac/gstflacdec.c:
+	  flacdec: Don't forbid S32 sample size (0x07) unnecessarily
+	  It's assigned to S32 samples since around FLAC 1.4.0.
+	  flacparse already handles this correctly since b9011f3541e1da518df5b0857547d833555cc49e.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4808
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10369>
+
+2025-12-10 14:51:27 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroska-mux: Unify and clean up pad reset code
+	  And don't re-allocate the context but instead make sure it's always
+	  in place.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4800
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10349>
+
+2025-12-10 14:23:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-ids.c:
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska-mux.c:
+	  matroska: Clean up track context a bit
+	  And document which fields are used by only the muxer or demuxer/parser.
+	  Also remove one unused field. There are probably more.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10349>
+
+2025-12-10 14:01:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroska-mux: Don't re-allocate pad context after creation immediately
+	  Just keep the cleanly initialized one around.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10349>
+
+2025-12-10 13:46:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-mux.c:
+	  matroska-mux: Switch from GstElement::request_new_pad() to GstAggregator::create_new_pad()
+	  The latter allows setting pad state before the pad is added to the element and
+	  generally available to other parts inside and outside the element.
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4800
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10349>
+
+2025-12-09 22:49:30 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/multifile/gstsplitmuxsrc.c:
+	  splitmuxsrc: Rework locking around seek flush events
+	  There's no need to hold the splitmux lock while pushing
+	  flush events during a seek, and it can lead to a deadlock
+	  if downstream does a latency query from the flush-stop event.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10344>
+
+2025-12-09 22:48:22 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/multifile/gstsplitmuxsrc.c:
+	  splitmuxsrc: Clear segment seqnum when restarting
+	  Minor fix for clean reuse. Also, use the GST_SEQNUM_INVALID
+	  constant instead of direct comparison to 0
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10344>
+
+2025-12-09 19:13:20 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.27.50
+
 === release 1.27.50 ===
 
 2025-12-09 19:08:48 +0000  Tim-Philipp Müller <tim@centricular.com>

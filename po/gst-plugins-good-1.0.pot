@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.27.50\n"
+"Project-Id-Version: gst-plugins-good-1.27.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-09 19:09+0000\n"
+"POT-Creation-Date: 2026-01-05 20:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -99,39 +99,39 @@ msgstr ""
 msgid "This file contains no playable streams."
 msgstr ""
 
-#: gst/isomp4/qtdemux.c:564 gst/isomp4/qtdemux.c:8142 gst/isomp4/qtdemux.c:8211
-#: gst/isomp4/qtdemux.c:8529 gst/isomp4/qtdemux.c:10095
+#: gst/isomp4/qtdemux.c:564 gst/isomp4/qtdemux.c:8163 gst/isomp4/qtdemux.c:8232
+#: gst/isomp4/qtdemux.c:8550 gst/isomp4/qtdemux.c:10116
 msgid "This file is invalid and cannot be played."
 msgstr ""
 
-#: gst/isomp4/qtdemux.c:3079
+#: gst/isomp4/qtdemux.c:3080
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr ""
 
-#: gst/isomp4/qtdemux.c:4735 gst/isomp4/qtdemux.c:9477
-#: gst/isomp4/qtdemux.c:9484 gst/isomp4/qtdemux.c:10818
-#: gst/isomp4/qtdemux.c:11260 gst/isomp4/qtdemux.c:11267
-#: gst/isomp4/qtdemux.c:17296
+#: gst/isomp4/qtdemux.c:4736 gst/isomp4/qtdemux.c:9498
+#: gst/isomp4/qtdemux.c:9505 gst/isomp4/qtdemux.c:10839
+#: gst/isomp4/qtdemux.c:11281 gst/isomp4/qtdemux.c:11288
+#: gst/isomp4/qtdemux.c:17317
 msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-#: gst/isomp4/qtdemux.c:4977
+#: gst/isomp4/qtdemux.c:4978
 msgid "Invalid atom size."
 msgstr ""
 
-#: gst/isomp4/qtdemux.c:5030 gst/isomp4/qtdemux.c:5037
+#: gst/isomp4/qtdemux.c:5031 gst/isomp4/qtdemux.c:5038
 msgid "Cannot query file size"
 msgstr ""
 
-#: gst/isomp4/qtdemux.c:5046
+#: gst/isomp4/qtdemux.c:5047
 msgid "Cannot demux file"
 msgstr ""
 
-#: gst/isomp4/qtdemux.c:5086
+#: gst/isomp4/qtdemux.c:5087
 msgid "This file is incomplete and cannot be played."
 msgstr ""
 
-#: gst/isomp4/qtdemux.c:14934
+#: gst/isomp4/qtdemux.c:14955
 msgid "The video in this file might not play correctly."
 msgstr ""
 
