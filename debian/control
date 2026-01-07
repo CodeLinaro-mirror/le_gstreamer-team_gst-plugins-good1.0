@@ -195,7 +195,6 @@ Description: GStreamer plugins from the "good" set
 
 Package: libgstreamer-plugins-good1.0-0
 Architecture: any
-Section: libs
 Multi-Arch: same
 Depends: ${misc:Depends},
          ${shlibs:Depends},
