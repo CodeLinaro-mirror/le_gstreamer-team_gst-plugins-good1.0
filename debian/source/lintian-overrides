@@ -1,0 +1,7 @@
+# Original-Maintainer has not been adopted by dpkg, it will throw its
+# own warnings.
+gst-plugins-good1.0 source: adopted-extended-field * XSBC-Original-Maintainer [debian/control:*]
+# External dependents
+gst-plugins-good1.0 source: adopted-extended-field * XB-GStreamer-* [debian/control:*]
+# Part of the test-suite
+gst-plugins-good1.0 source: source-contains-prebuilt-flash-object [tests/files/pcm16sine.flv]
