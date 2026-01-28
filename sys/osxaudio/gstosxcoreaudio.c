@@ -42,6 +42,7 @@ enum
   PROP_DEVICE,
   PROP_IS_SRC,
   PROP_CONFIGURE_SESSION,
+  PROP_UNIQUE_ID,
 };
 
 static void gst_core_audio_set_property (GObject * object, guint prop_id,
@@ -54,7 +55,7 @@ gst_core_audio_finalize (GObject * object)
 {
   GstCoreAudio *core_audio = GST_CORE_AUDIO (object);
   g_mutex_clear (&core_audio->timing_lock);
-  g_free (core_audio->unique_id);
+  g_clear_pointer (&core_audio->unique_id, g_free);
 
   G_OBJECT_CLASS (gst_core_audio_parent_class)->finalize (object);
 }
@@ -67,6 +68,11 @@ gst_core_audio_class_init (GstCoreAudioClass * klass)
 
   object_klass->set_property = gst_core_audio_set_property;
   object_klass->get_property = gst_core_audio_get_property;
+
+  g_object_class_install_property (object_klass, PROP_UNIQUE_ID,
+      g_param_spec_string ("unique-id", "Unique ID",
+          "Unique ID of audio device", NULL,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   g_object_class_install_property (object_klass, PROP_DEVICE,
       g_param_spec_int ("device", "Device ID", "Device ID of input device",
@@ -118,6 +124,9 @@ gst_core_audio_set_property (GObject * object, guint prop_id,
     case PROP_IS_SRC:
       self->is_src = g_value_get_boolean (value);
       break;
+    case PROP_UNIQUE_ID:
+      self->unique_id = g_value_dup_string (value);
+      break;
     case PROP_DEVICE:
       self->device_id = g_value_get_int (value);
       break;
@@ -141,6 +150,9 @@ gst_core_audio_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_IS_SRC:
       g_value_set_boolean (value, self->is_src);
+      break;
+    case PROP_UNIQUE_ID:
+      g_value_set_string (value, self->unique_id);
       break;
     case PROP_DEVICE:
       g_value_set_int (value, self->device_id);
@@ -337,7 +349,7 @@ gst_core_audio_get_samples_and_latency (GstCoreAudio * core_audio,
           core_audio->anchor_pend_samples;
     }
 
-    GST_DEBUG_OBJECT (core_audio,
+    GST_LOG_OBJECT (core_audio,
         "now_ns %" G_GUINT64_FORMAT " anchor %" G_GUINT64_FORMAT " elapsed ns %"
         G_GINT64_FORMAT " rate %f captured_ns %" G_GINT64_FORMAT
         " anchor_pend_samples %u samples_remain %u", now_ns, anchor_ns,
@@ -359,7 +371,7 @@ gst_core_audio_get_samples_and_latency (GstCoreAudio * core_audio,
       }
     }
 
-    GST_DEBUG_OBJECT (core_audio,
+    GST_LOG_OBJECT (core_audio,
         "now_ns %" G_GUINT64_FORMAT " anchor %" G_GUINT64_FORMAT " elapsed ns %"
         G_GINT64_FORMAT " rate %f unplayed_ns %" G_GINT64_FORMAT
         " anchor_pend_samples %u", now_ns, anchor_ns, now_ns - anchor_ns, rate,
@@ -388,7 +400,7 @@ gst_core_audio_update_timing (GstCoreAudio * core_audio,
     core_audio->anchor_pend_samples = inNumberFrames;
     core_audio->rate_scalar = inTimeStamp->mRateScalar;
 
-    GST_DEBUG_OBJECT (core_audio,
+    GST_LOG_OBJECT (core_audio,
         "anchor hosttime_ns %" G_GUINT64_FORMAT
         " scalar_rate %f anchor_pend_samples %u",
         core_audio->anchor_hosttime_ns,
@@ -449,7 +461,7 @@ gst_core_audio_select_device (GstCoreAudio * core_audio)
 #ifndef HAVE_IOS
   if (core_audio->device_id != kAudioDeviceUnknown)
     core_audio->unique_id =
-        gst_core_audio_device_get_prop (core_audio->device_id,
+        gst_core_audio_device_get_prop_str (core_audio->device_id,
         kAudioDevicePropertyDeviceUID);
 #endif
 
@@ -483,7 +495,7 @@ _is_core_audio_layout_positioned (AudioChannelLayout * layout)
   for (i = 0; i < layout->mNumberChannelDescriptions; ++i) {
     GstAudioChannelPosition p =
         gst_core_audio_channel_label_to_gst
-        (layout->mChannelDescriptions[i].mChannelLabel, i, FALSE);
+        (layout->mChannelDescriptions[i].mChannelLabel, i, FALSE, 0);
 
     if (p >= 0)                 /* not special positition */
       return TRUE;
@@ -506,7 +518,7 @@ _core_audio_has_invalid_channel_labels (AudioChannelLayout * layout)
      * aren't useful to us anyway. */
     GstAudioChannelPosition p =
         gst_core_audio_channel_label_to_gst
-        (layout->mChannelDescriptions[i].mChannelLabel, i, FALSE);
+        (layout->mChannelDescriptions[i].mChannelLabel, i, FALSE, 0);
 
     if (p == GST_AUDIO_CHANNEL_POSITION_INVALID)
       return TRUE;
@@ -517,8 +529,10 @@ _core_audio_has_invalid_channel_labels (AudioChannelLayout * layout)
 
 static void
 _core_audio_parse_channel_descriptions (AudioChannelLayout * layout,
-    guint * channels, guint64 * channel_mask, GstAudioChannelPosition * pos)
+    AudioDeviceID device_id, guint * channels, guint64 * channel_mask,
+    GstAudioChannelPosition * pos)
 {
+  gboolean should_warn = TRUE;
   gboolean positioned;
   guint i;
 
@@ -556,9 +570,14 @@ _core_audio_parse_channel_descriptions (AudioChannelLayout * layout,
    */
   *channels = 0;
   for (i = 0; i < layout->mNumberChannelDescriptions; ++i) {
+    AudioChannelLabel label = layout->mChannelDescriptions[i].mChannelLabel;
     GstAudioChannelPosition p =
-        gst_core_audio_channel_label_to_gst
-        (layout->mChannelDescriptions[i].mChannelLabel, i, TRUE);
+        gst_core_audio_channel_label_to_gst (label, i, should_warn, device_id);
+
+    if (p == GST_AUDIO_CHANNEL_POSITION_NONE && label >> 16 != 0) {
+      /* Avoid warning spam for kAudioChannelLabel_Discrete_N channels losing order */
+      should_warn = FALSE;
+    }
 
     /* In positioned layouts, skip all unpositioned channels.
      * In unpositioned layouts, skip all invalid channels. */
@@ -578,7 +597,8 @@ _core_audio_parse_channel_descriptions (AudioChannelLayout * layout,
 
 gboolean
 gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
-    guint * channels, guint64 * channel_mask, GstAudioChannelPosition * pos)
+    AudioDeviceID device_id, guint * channels, guint64 * channel_mask,
+    GstAudioChannelPosition * pos)
 {
   g_assert (channels != NULL);
   g_assert (channel_mask != NULL);
@@ -611,8 +631,8 @@ gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
             GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
         return TRUE;
       default:
-        _core_audio_parse_channel_descriptions (layout, channels, channel_mask,
-            pos);
+        _core_audio_parse_channel_descriptions (layout, device_id, channels,
+            channel_mask, pos);
         return TRUE;
     }
   } else if (layout->mChannelLayoutTag == kAudioChannelLayoutTag_Mono) {
@@ -715,7 +735,7 @@ gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
  */
 GstCaps *
 gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
-    AudioChannelLayout * layout)
+    AudioDeviceID device_id, AudioChannelLayout * layout)
 {
   GstAudioInfo info;
   GstAudioFormat format = GST_AUDIO_FORMAT_UNKNOWN;
@@ -773,8 +793,8 @@ gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
   }
 
   if (layout) {
-    if (!gst_core_audio_parse_channel_layout (layout, &channels, &channel_mask,
-            pos)) {
+    if (!gst_core_audio_parse_channel_layout (layout, device_id, &channels,
+            &channel_mask, pos)) {
       GST_WARNING
           ("Failed to parse channel layout, best effort channels layout mapping will be used");
       layout = NULL;
@@ -892,8 +912,8 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
       (unsigned) core_audio->device_id, spdif_allowed);
 
   if (layout) {
-    if (!gst_core_audio_parse_channel_layout (layout, &channels, &channel_mask,
-            NULL)) {
+    if (!gst_core_audio_parse_channel_layout (layout, core_audio->device_id,
+            &channels, &channel_mask, NULL)) {
       GST_WARNING_OBJECT (core_audio, "Failed to parse channel layout");
       channel_mask = 0;
     }
@@ -911,14 +931,17 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
 
     /* If available, start with the preferred caps. */
     if (got_outer_asbd)
-      caps = gst_core_audio_asbd_to_caps (&outer_asbd, layout);
+      caps =
+          gst_core_audio_asbd_to_caps (&outer_asbd, core_audio->device_id,
+          layout);
 
     g_free (layout);
   } else if (got_outer_asbd) {
     channels = outer_asbd.mChannelsPerFrame;
     channel_mask = 0;
     /* If available, start with the preferred caps */
-    caps = gst_core_audio_asbd_to_caps (&outer_asbd, NULL);
+    caps =
+        gst_core_audio_asbd_to_caps (&outer_asbd, core_audio->device_id, NULL);
   } else {
     GST_ERROR_OBJECT (core_audio,
         "Unable to get any information about hardware");

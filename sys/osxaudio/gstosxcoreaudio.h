@@ -97,7 +97,7 @@ struct _GstCoreAudio
   GstCaps *cached_caps;
   gint stream_idx;
   gboolean io_proc_active;
-  gboolean io_proc_needs_deactivation;
+  gboolean io_proc_dropping;
 
   /* For LPCM in/out */
   AudioUnit audiounit;
@@ -177,8 +177,8 @@ AudioChannelLayout *
 gst_core_audio_get_channel_layout (GstCoreAudio * core_audio, gboolean outer);
 
 gboolean gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
-    guint * channels, guint64 * channel_mask, GstAudioChannelPosition * pos);
-GstCaps * gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
+    AudioDeviceID device_id, guint * channels, guint64 * channel_mask, GstAudioChannelPosition * pos);
+GstCaps * gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd, AudioDeviceID device_id,
     AudioChannelLayout * layout);
 
 G_END_DECLS
