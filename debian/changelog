@@ -1,3 +1,14 @@
+gst-plugins-good1.0 (1.28.0-1) unstable; urgency=medium
+
+  [ Marc Leeman ]
+  * d/install libgsty4menc.so -> libgsty4m.so
+  * d/copyright: remove superfluous-file-pattern gst/y4m/gsty4mencode.[ch]
+  * d/copyright: remove unused GPL-2+
+  * New upstream version 1.28.0
+  * d/control: update dependencies to 1.28.0
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Wed, 28 Jan 2026 13:32:13 +0100
+
 gst-plugins-good1.0 (1.26.10-1) unstable; urgency=medium
 
   * New upstream version 1.26.10
