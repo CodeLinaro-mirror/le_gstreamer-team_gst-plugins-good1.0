@@ -39,10 +39,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <string.h>
-#include <gst/gst.h>
-#include <gst/video/video.h>
-#include "gsty4mencode.h"
+
+#include "gsty4menc.h"
+#include "gsty4mformat.h"
 
 /* Filter signals and args */
 enum
@@ -67,7 +68,7 @@ static GstStaticPadTemplate y4mencode_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ IYUV, I420, Y42B, Y41B, Y444 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (Y4M_VIDEO_FORMATS))
     );
 
 GST_DEBUG_CATEGORY (y4menc_debug);
@@ -139,68 +140,18 @@ gst_y4m_encode_set_format (GstVideoEncoder * encoder,
   GstY4mEncode *y4menc;
   GstVideoInfo *info, out_info;
   GstVideoCodecState *output_state;
-  gint width, height;
-  GstVideoFormat format;
-  gsize cr_h;
 
   y4menc = GST_Y4M_ENCODE (encoder);
   info = &state->info;
 
-  format = GST_VIDEO_INFO_FORMAT (info);
-  width = GST_VIDEO_INFO_WIDTH (info);
-  height = GST_VIDEO_INFO_HEIGHT (info);
+  y4menc->colorspace =
+      gst_y4m_video_get_chroma_tag_from_format (GST_VIDEO_INFO_FORMAT (info),
+      GST_VIDEO_INFO_CHROMA_SITE (info));
+  if (y4menc->colorspace == NULL)
+    goto invalid_format;
 
-  gst_video_info_set_format (&out_info, format, width, height);
-
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-      y4menc->colorspace = "420";
-      out_info.stride[0] = width;
-      out_info.stride[1] = GST_ROUND_UP_2 (width) / 2;
-      out_info.stride[2] = out_info.stride[1];
-      out_info.offset[0] = 0;
-      out_info.offset[1] = out_info.stride[0] * height;
-      cr_h = GST_ROUND_UP_2 (height) / 2;
-      if (GST_VIDEO_INFO_IS_INTERLACED (info))
-        cr_h = GST_ROUND_UP_2 (height);
-      out_info.offset[2] = out_info.offset[1] + out_info.stride[1] * cr_h;
-      out_info.size = out_info.offset[2] + out_info.stride[2] * cr_h;
-      break;
-    case GST_VIDEO_FORMAT_Y42B:
-      y4menc->colorspace = "422";
-      out_info.stride[0] = width;
-      out_info.stride[1] = GST_ROUND_UP_2 (width) / 2;
-      out_info.stride[2] = out_info.stride[1];
-      out_info.offset[0] = 0;
-      out_info.offset[1] = out_info.stride[0] * height;
-      out_info.offset[2] = out_info.offset[1] + out_info.stride[1] * height;
-      /* simplification of ROUNDUP4(w)*h + 2*(ROUNDUP8(w)/2)*h */
-      out_info.size = out_info.offset[2] + out_info.stride[2] * height;
-      break;
-    case GST_VIDEO_FORMAT_Y41B:
-      y4menc->colorspace = "411";
-      out_info.stride[0] = width;
-      out_info.stride[1] = GST_ROUND_UP_2 (width) / 4;
-      out_info.stride[2] = out_info.stride[1];
-      out_info.offset[0] = 0;
-      out_info.offset[1] = out_info.stride[0] * height;
-      out_info.offset[2] = out_info.offset[1] + out_info.stride[1] * height;
-      /* simplification of ROUNDUP4(w)*h + 2*((ROUNDUP16(w)/4)*h */
-      out_info.size = (width + (GST_ROUND_UP_2 (width) / 2)) * height;
-      break;
-    case GST_VIDEO_FORMAT_Y444:
-      y4menc->colorspace = "444";
-      out_info.stride[0] = width;
-      out_info.stride[1] = out_info.stride[0];
-      out_info.stride[2] = out_info.stride[0];
-      out_info.offset[0] = 0;
-      out_info.offset[1] = out_info.stride[0] * height;
-      out_info.offset[2] = out_info.offset[1] * 2;
-      out_info.size = out_info.stride[0] * height * 3;
-      break;
-    default:
-      goto invalid_format;
-  }
+  if (!gst_y4m_video_unpadded_info (&out_info, info))
+    goto invalid_format;
 
   y4menc->info = *info;
   y4menc->out_info = out_info;
@@ -237,6 +188,7 @@ gst_y4m_encode_get_stream_header (GstY4mEncode * filter, gboolean tff)
     interlaced = 'p';
   }
 
+  /* TODO: add YSCSS and color range */
   header = g_strdup_printf ("YUV4MPEG2 C%s W%d H%d I%c F%d:%d A%d:%d\n",
       filter->colorspace, GST_VIDEO_INFO_WIDTH (&filter->info),
       GST_VIDEO_INFO_HEIGHT (&filter->info), interlaced,
@@ -390,15 +342,3 @@ not_negotiated:
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  return GST_ELEMENT_REGISTER (y4menc, plugin);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    y4menc,
-    "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
