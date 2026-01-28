@@ -1,89 +1,59 @@
-gst-plugins-good1.0 (1.27.90-1ubuntu1) resolute; urgency=medium
-
-  * Resynchronize on Debian. Remaining changes:
-    + Import plugins from -bad that are needed for main applications.
-      - jpegformat (pinned still at 1.18) See LP#2089260
-      - camerabin (+ basecamerabinsrc + photography)
-    + Add a library package containing the shared library and a -dev package for
-      compiling against it. Add Breaks and Replaces against the plugins packages
-      which formerly contained files shipped here.
-    + Add 'pluginsdir' variable to our added pcfile for compatibility with
-      some external software
-    + debian/gbp.conf: Update Vcs-* for Ubuntu
-    + debian/rules: Disable amrnb and amrwbdec because opencore-amr is
-      currently in universe in Ubuntu, and packages in main cannot
-      depend on it
-    + debian/gstreamer1.0-plugins-good.install: Drop
-      usr/lib/*/gstreamer-1.0/libgstamrnb.so and
-      usr/lib/*/gstreamer-1.0/libgstamrwbdec.so
-    + Resolve several lintian nags
-
- -- Charles <charles05@canonical.com>  Wed, 7 Jan 2026 16:01:29 +0100
-
-gst-plugins-good1.0 (1.27.90-1) experimental; urgency=medium
-
-  * New upstream version 1.27.90
-  * d/control: update dependencies to 1.27.90
-
- -- Marc Leeman <marc.leeman@gmail.com>  Tue, 06 Jan 2026 10:42:16 +0100
-
-gst-plugins-good1.0 (1.27.50-2) experimental; urgency=medium
-
-  * d/control: update dependencies to >= 1.27.50
-
- -- Marc Leeman <marc.leeman@gmail.com>  Thu, 11 Dec 2025 09:09:22 +0100
-
-gst-plugins-good1.0 (1.27.50-1) experimental; urgency=medium
-
-  * New upstream version 1.27.50
-
- -- Marc Leeman <marc.leeman@gmail.com>  Thu, 11 Dec 2025 08:57:36 +0100
-
-gst-plugins-good1.0 (1.27.2-1ubuntu1) resolute; urgency=medium
-
-  * Resynchronize on Debian (LP: #2130181). Remaining changes:
-    + Import plugins from -bad that are needed for main applications.
-      - jpegformat (pinned still at 1.18) See LP#2089260
-      - camerabin (+ basecamerabinsrc + photography)
-    + Add a library package containing the shared library and a -dev package for
-      compiling against it. Add Breaks and Replaces against the plugins packages
-      which formerly contained files shipped here.
-    + Add 'pluginsdir' variable to our added pcfile for compatibility with
-      some external software
-    + debian/gbp.conf: Update Vcs-* for Ubuntu
-    + debian/rules: Disable amrnb and amrwbdec because opencore-amr is
-      currently in universe in Ubuntu, and packages in main cannot
-      depend on it
-    + debian/gstreamer1.0-plugins-good.install: Drop
-      usr/lib/*/gstreamer-1.0/libgstamrnb.so and
-      usr/lib/*/gstreamer-1.0/libgstamrwbdec.so
-
- -- Charles <charles05@canonical.com>  Wed, 29 Oct 2025 16:44:03 -0400
-
-gst-plugins-good1.0 (1.27.2-1) experimental; urgency=medium
+gst-plugins-good1.0 (1.28.0-1) unstable; urgency=medium
 
   [ Marc Leeman ]
-  * d/control: API change, gst deps to 1.27.1
+  * d/install libgsty4menc.so -> libgsty4m.so
+  * d/copyright: remove superfluous-file-pattern gst/y4m/gsty4mencode.[ch]
+  * d/copyright: remove unused GPL-2+
+  * New upstream version 1.28.0
+  * d/control: update dependencies to 1.28.0
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Wed, 28 Jan 2026 13:32:13 +0100
+
+gst-plugins-good1.0 (1.26.10-1) unstable; urgency=medium
+
+  * New upstream version 1.26.10
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Fri, 26 Dec 2025 17:55:05 +0100
+
+gst-plugins-good1.0 (1.26.9-1) unstable; urgency=medium
+
+  * d/control: bump Standards-Version to 4.7.2
+  * New upstream version 1.26.9
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Tue, 02 Dec 2025 09:43:50 +0100
+
+gst-plugins-good1.0 (1.26.8-1) unstable; urgency=medium
+
+  * d/control: bump meson version to match meson.build
+  * New upstream version 1.26.8
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Wed, 12 Nov 2025 10:34:17 +0100
+
+gst-plugins-good1.0 (1.26.7-1) unstable; urgency=medium
+
+  [ Simon McVittie ]
+  * d/control: Drop unused B-D on libgirepository1.0-dev (Closes: #1116592)
+
+  [ Marc Leeman ]
+  * New upstream version 1.26.7
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Wed, 15 Oct 2025 09:48:00 +0200
+
+gst-plugins-good1.0 (1.26.6-1) unstable; urgency=medium
+
+  * New upstream version 1.26.6
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Mon, 15 Sep 2025 10:04:50 +0200
+
+gst-plugins-good1.0 (1.26.5-3) unstable; urgency=medium
+
+  [ Marc Leeman ]
   * d/control: libtag1-dev -> libtag-dev (Closes: #1110940)
-  * New upstream version 1.27.2
-  * d/control: bump minimal version after new symbols
 
   [ Samuel Thibault ]
   * d/rules: re-enable soup plugin for hurd (Closes: #1111862)
 
- -- Marc Leeman <marc.leeman@gmail.com>  Thu, 11 Sep 2025 11:46:58 +0200
-
-gst-plugins-good1.0 (1.27.1-1) experimental; urgency=medium
-
-  * Revert "d/watch: pin to 1.26.x"
-  * d/gbp.conf: adjust for experimental
-  * New upstream version 1.27.1
-  * d/install libgsty4menc.so -> libgsty4m.so
-  * d/copyright: remove superfluous-file-pattern gst/y4m/gsty4mencode.[ch]
-  * d/control: bump standards-version to 4.7.2
-  * d/copyright: remove unused GPL-2+
-
- -- Marc Leeman <marc.leeman@gmail.com>  Tue, 12 Aug 2025 12:25:17 +0200
+ -- Marc Leeman <marc.leeman@gmail.com>  Sat, 23 Aug 2025 14:43:17 +0200
 
 gst-plugins-good1.0 (1.26.5-2) unstable; urgency=medium
 

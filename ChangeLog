@@ -1,3 +1,75 @@
+=== release 1.28.0 ===
+
+2026-01-27 17:02:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* README.md:
+	* RELEASE:
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.28.0
+
+2026-01-26 12:32:30 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux.h:
+	  qtdemux: Use DTS instead of PTS for deciding whether we're after segment.stop
+	  Using the PTS can mean that qtdemux is stopping too early in case of frame
+	  reordering. By using the DTS we can make sure that all frames with a PTS before
+	  the segment.stop are actually output.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4867
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10601>
+
+2026-01-20 13:15:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: First get information for the current sample and only then check if the stream is EOS
+	  Not preparing the current sample has the effect that if a seek after the end of
+	  the file has happened that the corresponding segment event for the seek is never
+	  sent downstream and only EOS/segment-done is sent downstream.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10567>
+
+2026-01-25 17:17:52 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/LINGUAS:
+	* po/ar.po:
+	* po/hr.po:
+	* po/ka.po:
+	* po/pl.po:
+	* po/ro.po:
+	  gst-plugins-good: update translations
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10598>
+
+2026-01-18 17:09:10 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* meson.options:
+	  meson: Don't disable orc support when orcc is not available
+	  This was breaking usage of orc when cross-compiling with no orcc
+	  available in PATH. We can use the orc-dist.{c,h} files in that case as
+	  long as the orc library itself is available. Using the subproject, for
+	  example.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10553>
+
+2026-01-09 14:33:50 -0500  Dominique Leroux <dominique.p.leroux@gmail.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: avoid NULL dereference when VP9 caps lack chroma-site
+	  gst_qt_mux_video_sink_set_caps() assumes that the VP9 caps field
+	  "chroma-site" is present when chroma-format is 4:2:0 and passes the
+	  result directly to gst_video_chroma_site_from_string().
+	  When chroma-site is missing, this results in a NULL dereference and a
+	  segmentation fault.
+	  Guard against a missing chroma-site field and treat it as UNKNOWN,
+	  preserving the existing fallback behavior.
+	  Closes #4851
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/10525>
+
+2026-01-05 20:20:51 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.27.90
+
 === release 1.27.90 ===
 
 2026-01-05 20:15:10 +0000  Tim-Philipp Müller <tim@centricular.com>

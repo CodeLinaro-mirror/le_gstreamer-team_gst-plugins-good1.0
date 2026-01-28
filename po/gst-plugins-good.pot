@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.27.90\n"
+"Project-Id-Version: gst-plugins-good-1.28.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-05 20:15+0000\n"
+"POT-Creation-Date: 2026-01-27 17:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -99,8 +99,8 @@ msgstr ""
 msgid "This file contains no playable streams."
 msgstr ""
 
-#: gst/isomp4/qtdemux.c:564 gst/isomp4/qtdemux.c:8163 gst/isomp4/qtdemux.c:8232
-#: gst/isomp4/qtdemux.c:8550 gst/isomp4/qtdemux.c:10116
+#: gst/isomp4/qtdemux.c:564 gst/isomp4/qtdemux.c:8140 gst/isomp4/qtdemux.c:8209
+#: gst/isomp4/qtdemux.c:8526 gst/isomp4/qtdemux.c:10110
 msgid "This file is invalid and cannot be played."
 msgstr ""
 
@@ -108,10 +108,10 @@ msgstr ""
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr ""
 
-#: gst/isomp4/qtdemux.c:4736 gst/isomp4/qtdemux.c:9498
-#: gst/isomp4/qtdemux.c:9505 gst/isomp4/qtdemux.c:10839
-#: gst/isomp4/qtdemux.c:11281 gst/isomp4/qtdemux.c:11288
-#: gst/isomp4/qtdemux.c:17317
+#: gst/isomp4/qtdemux.c:4736 gst/isomp4/qtdemux.c:9492
+#: gst/isomp4/qtdemux.c:9499 gst/isomp4/qtdemux.c:10833
+#: gst/isomp4/qtdemux.c:11275 gst/isomp4/qtdemux.c:11282
+#: gst/isomp4/qtdemux.c:17311
 msgid "This file is corrupt and cannot be played."
 msgstr ""
 
@@ -131,7 +131,7 @@ msgstr ""
 msgid "This file is incomplete and cannot be played."
 msgstr ""
 
-#: gst/isomp4/qtdemux.c:14955
+#: gst/isomp4/qtdemux.c:14949
 msgid "The video in this file might not play correctly."
 msgstr ""
 
