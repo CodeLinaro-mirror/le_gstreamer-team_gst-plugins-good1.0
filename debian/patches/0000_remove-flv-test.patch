@@ -9,9 +9,11 @@ This test fails during build; disable for the time being.
  tests/check/meson.build | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/tests/check/meson.build b/tests/check/meson.build
+index c230460..18e8ee9 100644
 --- a/tests/check/meson.build
 +++ b/tests/check/meson.build
-@@ -41,7 +41,7 @@
+@@ -41,7 +41,7 @@ good_tests = [
    [ 'elements/deinterlace', get_option('deinterlace').disabled()],
    [ 'elements/dtmf', get_option('dtmf').disabled()],
    [ 'elements/flvdemux', get_option('flv').disabled()],

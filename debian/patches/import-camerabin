@@ -6,16 +6,16 @@ Subject: This is a copy of the camerabin2,
 
 Forwarded: not-needed
 ---
- .../basecamerabinsrc/basecamerabinsrc-prelude.h    |   35 +
+ .../basecamerabinsrc/basecamerabinsrc-prelude.h    |   35 +-
  gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c   |  587 +++++
  gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h   |  159 ++
- gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.c  |   45 +
+ .../gst/basecamerabinsrc/gstcamerabin-enum.c       |   31 +-
  gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.h  |   68 +
  .../gst/basecamerabinsrc/gstcamerabinpreview.c     |  409 ++++
  .../gst/basecamerabinsrc/gstcamerabinpreview.h     |   69 +
  gst-libs/gst/basecamerabinsrc/meson.build          |   63 +
  gst-libs/gst/interfaces/meson.build                |   33 +
- gst-libs/gst/interfaces/photography-prelude.h      |   35 +
+ .../gst/interfaces/photography-prelude.h           |   25 +-
  gst-libs/gst/interfaces/photography.c              |  732 ++++++
  gst-libs/gst/interfaces/photography.h              |  685 ++++++
  gst-libs/gst/meson.build                           |    2 +
@@ -24,11 +24,11 @@ Forwarded: not-needed
  gst/camerabin2/camerabin2-src.txt                  |   73 +
  gst/camerabin2/camerabingeneral.c                  |  260 +++
  gst/camerabin2/camerabingeneral.h                  |   37 +
- gst/camerabin2/gstcamerabin2.c                     | 2397 ++++++++++++++++++++
+ gst/camerabin2/gstcamerabin2.c                     | 2399 ++++++++++++++++++++
  gst/camerabin2/gstcamerabin2.h                     |  168 ++
  gst/camerabin2/gstdigitalzoom.c                    |  386 ++++
  gst/camerabin2/gstdigitalzoom.h                    |   79 +
- gst/camerabin2/gstplugin.c                         |   45 +
+ gst/{avi/gstavi.c => camerabin2/gstplugin.c}       |   17 +-
  gst/camerabin2/gstviewfinderbin.c                  |  365 +++
  gst/camerabin2/gstviewfinderbin.h                  |   60 +
  gst/camerabin2/gstwrappercamerabinsrc.c            | 1169 ++++++++++
@@ -37,25 +37,25 @@ Forwarded: not-needed
  gst/meson.build                                    |    2 +-
  meson.build                                        |   44 +-
  meson.options                                      |    1 +
- tests/check/elements/camerabin.c                   | 2002 ++++++++++++++++
+ tests/check/elements/camerabin.c                   | 2006 ++++++++++++++++
  tests/check/meson.build                            |    3 +-
  tests/examples/camerabin2/gst-camera2.c            |  338 +++
  tests/examples/camerabin2/gst-camera2.h            |   54 +
  tests/examples/camerabin2/gst-camera2.ui           |  203 ++
- tests/examples/camerabin2/gst-camerabin2-test.c    | 1324 +++++++++++
- tests/examples/camerabin2/meson.build              |   24 +
+ tests/examples/camerabin2/gst-camerabin2-test.c    | 1323 +++++++++++
+ tests/examples/camerabin2/meson.build              |   25 +
  tests/examples/meson.build                         |    1 +
- 39 files changed, 12166 insertions(+), 5 deletions(-)
- create mode 100644 gst-libs/gst/basecamerabinsrc/basecamerabinsrc-prelude.h
+ 39 files changed, 12067 insertions(+), 58 deletions(-)
+ copy gst/autodetect/gstautodetectelement.c => gst-libs/gst/basecamerabinsrc/basecamerabinsrc-prelude.h (59%)
  create mode 100644 gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c
  create mode 100644 gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h
- create mode 100644 gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.c
+ copy ext/qt6/gstqt6element.cc => gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.c (59%)
  create mode 100644 gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.h
  create mode 100644 gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c
  create mode 100644 gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.h
  create mode 100644 gst-libs/gst/basecamerabinsrc/meson.build
  create mode 100644 gst-libs/gst/interfaces/meson.build
- create mode 100644 gst-libs/gst/interfaces/photography-prelude.h
+ copy ext/raw1394/gst1394probe.h => gst-libs/gst/interfaces/photography-prelude.h (62%)
  create mode 100644 gst-libs/gst/interfaces/photography.c
  create mode 100644 gst-libs/gst/interfaces/photography.h
  create mode 100644 gst-libs/gst/meson.build
@@ -68,7 +68,7 @@ Forwarded: not-needed
  create mode 100644 gst/camerabin2/gstcamerabin2.h
  create mode 100644 gst/camerabin2/gstdigitalzoom.c
  create mode 100644 gst/camerabin2/gstdigitalzoom.h
- create mode 100644 gst/camerabin2/gstplugin.c
+ copy gst/{avi/gstavi.c => camerabin2/gstplugin.c} (69%)
  create mode 100644 gst/camerabin2/gstviewfinderbin.c
  create mode 100644 gst/camerabin2/gstviewfinderbin.h
  create mode 100644 gst/camerabin2/gstwrappercamerabinsrc.c
@@ -81,35 +81,41 @@ Forwarded: not-needed
  create mode 100644 tests/examples/camerabin2/gst-camerabin2-test.c
  create mode 100644 tests/examples/camerabin2/meson.build
 
---- /dev/null
+diff --git a/gst/autodetect/gstautodetectelement.c b/gst-libs/gst/basecamerabinsrc/basecamerabinsrc-prelude.h
+similarity index 59%
+copy from gst/autodetect/gstautodetectelement.c
+copy to gst-libs/gst/basecamerabinsrc/basecamerabinsrc-prelude.h
+index ad736e5..ec9a766 100644
+--- a/gst/autodetect/gstautodetectelement.c
 +++ b/gst-libs/gst/basecamerabinsrc/basecamerabinsrc-prelude.h
-@@ -0,0 +1,35 @@
+@@ -1,5 +1,7 @@
+-/* GStreamer
+- * (c) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
 +/* GStreamer BaseCameraBinSrc Library
 + * Copyright (C) 2018 GStreamer developers
 + *
 + * basecamerasrc-prelude.h: prelude include header for gst-basecamerasrc library
-+ *
-+ * This library is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU Library General Public
-+ * License as published by the Free Software Foundation; either
-+ * version 2 of the License, or (at your option) any later version.
-+ *
-+ * This library is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * Library General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU Library General Public
-+ * License along with this library; if not, write to the
-+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
-+ * Boston, MA 02110-1301, USA.
-+ */
-+
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Library General Public
+@@ -17,26 +19,17 @@
+  * Boston, MA 02110-1301, USA.
+  */
+ 
+-#ifdef HAVE_CONFIG_H
+-#include "config.h"
+-#endif
+-
+-#include <stdio.h>
+-#include <string.h>
 +#ifndef __GST_BASE_CAMERA_BIN_SRC_PRELUDE_H__
 +#define __GST_BASE_CAMERA_BIN_SRC_PRELUDE_H__
-+
-+#include <gst/gst.h>
-+
+ 
+ #include <gst/gst.h>
+ 
+-#include "gstautodetectelements.h"
+-
+-GST_DEBUG_CATEGORY (autodetect_debug);
 +#ifndef GST_BASE_CAMERA_BIN_SRC_API
 +# ifdef BUILDING_GST_BASE_CAMERA_BIN_SRC
 +#  define GST_BASE_CAMERA_BIN_SRC_API GST_API_EXPORT         /* from config.h */
@@ -117,8 +123,21 @@ Forwarded: not-needed
 +#  define GST_BASE_CAMERA_BIN_SRC_API GST_API_IMPORT
 +# endif
 +#endif
-+
+ 
+-void
+-autodetect_element_init (GstPlugin * plugin)
+-{
+-  static gsize res = FALSE;
+-  if (g_once_init_enter (&res)) {
+-    GST_DEBUG_CATEGORY_INIT (autodetect_debug, "autodetect", 0,
+-        "Autodetection audio/video output wrapper elements");
+-    g_once_init_leave (&res, TRUE);
+-  }
+-}
 +#endif /* __GST_BASE_CAMERA_BIN_SRC_PRELUDE_H__ */
+diff --git a/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c b/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c
+new file mode 100644
+index 0000000..0639f10
 --- /dev/null
 +++ b/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c
 @@ -0,0 +1,587 @@
@@ -709,6 +728,9 @@ Forwarded: not-needed
 +    GST_DEBUG_OBJECT (self, "Previews not enabled, not posting");
 +  }
 +}
+diff --git a/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h b/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h
+new file mode 100644
+index 0000000..9318c01
 --- /dev/null
 +++ b/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h
 @@ -0,0 +1,159 @@
@@ -871,40 +893,48 @@ Forwarded: not-needed
 +G_END_DECLS
 +
 +#endif /* __GST_BASE_CAMERA_SRC_H__ */
---- /dev/null
+diff --git a/ext/qt6/gstqt6element.cc b/gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.c
+similarity index 59%
+copy from ext/qt6/gstqt6element.cc
+copy to gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.c
+index aa93471..6963e0c 100644
+--- a/ext/qt6/gstqt6element.cc
 +++ b/gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.c
-@@ -0,0 +1,45 @@
-+/*
-+ * GStreamer
+@@ -1,6 +1,6 @@
+ /*
+  * GStreamer
+- * Copyright (C) 2015 Matthew Waters <matthew@centricular.com>
 + * Copyright (C) 2009 Nokia Corporation <multimedia@maemo.org>
-+ *
-+ * This library is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU Library General Public
-+ * License as published by the Free Software Foundation; either
-+ * version 2 of the License, or (at your option) any later version.
-+ *
-+ * This library is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * Library General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU Library General Public
-+ * License along with this library; if not, write to the
-+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
-+ * Boston, MA 02110-1301, USA.
-+ */
-+#ifdef HAVE_CONFIG_H
-+#include "config.h"
-+#endif
-+
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Library General Public
+@@ -17,22 +17,29 @@
+  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+  * Boston, MA 02110-1301, USA.
+  */
+-
+ #ifdef HAVE_CONFIG_H
+ #include "config.h"
+ #endif
+ 
+-#include "gstqt6elements.h"
+-#include "qt6glitem.h"
+-#include <QtQml/QQmlApplicationEngine>
 +#include "gstcamerabin-enum.h"
-+
+ 
+-void
+-qt6_element_init (GstPlugin * plugin)
 +/**
 + * GstCameraBin2Mode:
 + */
 +GType
 +gst_camerabin_mode_get_type (void)
-+{
+ {
+-  static gsize res = FALSE;
+-  if (g_once_init_enter (&res)) {
+-    /* this means the plugin must be loaded before the qml engine is loaded */
+-    qmlRegisterType<Qt6GLVideoItem> ("org.freedesktop.gstreamer.Qt6GLVideoItem", 1, 0, "GstGLQt6VideoItem");
+-    g_once_init_leave (&res, TRUE);
 +  static GType gtype = 0;
 +
 +  if (gtype == 0) {
@@ -916,9 +946,12 @@ Forwarded: not-needed
 +    };
 +
 +    gtype = g_enum_register_static ("GstCameraBin2Mode", values);
-+  }
+   }
 +  return gtype;
-+}
+ }
+diff --git a/gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.h b/gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.h
+new file mode 100644
+index 0000000..bba15c0
 --- /dev/null
 +++ b/gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.h
 @@ -0,0 +1,68 @@
@@ -990,6 +1023,9 @@ Forwarded: not-needed
 +G_END_DECLS
 +
 +#endif                          /* #ifndef __GST_CAMERABIN_ENUM_H__ */
+diff --git a/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c b/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c
+new file mode 100644
+index 0000000..2a46490
 --- /dev/null
 +++ b/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c
 @@ -0,0 +1,409 @@
@@ -1402,6 +1438,9 @@ Forwarded: not-needed
 +
 +  return ret;
 +}
+diff --git a/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.h b/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.h
+new file mode 100644
+index 0000000..a0f3c0f
 --- /dev/null
 +++ b/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.h
 @@ -0,0 +1,69 @@
@@ -1474,6 +1513,9 @@ Forwarded: not-needed
 +gboolean gst_camerabin_preview_set_filter (GstCameraBinPreviewPipelineData * preview, GstElement * filter);
 +
 +#endif /* #ifndef __CAMERABIN_PREVIEW_H_ */
+diff --git a/gst-libs/gst/basecamerabinsrc/meson.build b/gst-libs/gst/basecamerabinsrc/meson.build
+new file mode 100644
+index 0000000..5a68a5f
 --- /dev/null
 +++ b/gst-libs/gst/basecamerabinsrc/meson.build
 @@ -0,0 +1,63 @@
@@ -1540,6 +1582,9 @@ Forwarded: not-needed
 +  sources: gen_sources,
 +  dependencies : [gstapp_dep])
 +meson.override_dependency(pkg_name, gstbasecamerabin_dep)
+diff --git a/gst-libs/gst/interfaces/meson.build b/gst-libs/gst/interfaces/meson.build
+new file mode 100644
+index 0000000..6031c25
 --- /dev/null
 +++ b/gst-libs/gst/interfaces/meson.build
 @@ -0,0 +1,33 @@
@@ -1576,44 +1621,54 @@ Forwarded: not-needed
 +  sources : [photoenum_h])
 +
 +meson.override_dependency(pkg_name, gstphotography_dep)
---- /dev/null
+diff --git a/ext/raw1394/gst1394probe.h b/gst-libs/gst/interfaces/photography-prelude.h
+similarity index 62%
+copy from ext/raw1394/gst1394probe.h
+copy to gst-libs/gst/interfaces/photography-prelude.h
+index 54a3232..dbb7f13 100644
+--- a/ext/raw1394/gst1394probe.h
 +++ b/gst-libs/gst/interfaces/photography-prelude.h
-@@ -0,0 +1,35 @@
+@@ -1,5 +1,7 @@
+-/* GStreamer
+- * Copyright (C) 2007 Julien Puydt <jpuydt@free.fr>
 +/* GStreamer Photography Library
 + * Copyright (C) 2018 GStreamer developers
 + *
 + * photography-prelude.h: prelude include header for gst-photography library
-+ *
-+ * This library is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU Library General Public
-+ * License as published by the Free Software Foundation; either
-+ * version 2 of the License, or (at your option) any later version.
-+ *
-+ * This library is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * Library General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU Library General Public
-+ * License along with this library; if not, write to the
-+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
-+ * Boston, MA 02110-1301, USA.
-+ */
-+
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Library General Public
+@@ -17,18 +19,17 @@
+  * Boston, MA 02110-1301, USA.
+  */
+ 
+-#ifndef GST_1394_PROBE_H
+-#define GST_1394_PROBE_H
 +#ifndef __GST_PHOTOGRAPHY_PRELUDE_H__
 +#define __GST_PHOTOGRAPHY_PRELUDE_H__
-+
-+#include <gst/gst.h>
-+
+ 
+ #include <gst/gst.h>
+ 
+-G_BEGIN_DECLS
+-
+-#if 0
+-void gst_1394_type_add_property_probe_interface (GType type);
 +#ifndef GST_PHOTOGRAPHY_API
 +# ifdef BUILDING_GST_PHOTOGRAPHY
 +#  define GST_PHOTOGRAPHY_API GST_API_EXPORT         /* from config.h */
 +# else
 +#  define GST_PHOTOGRAPHY_API GST_API_IMPORT
 +# endif
-+#endif
-+
+ #endif
+ 
+-G_END_DECLS
+-
+-#endif /* __GST_1394_PROBE_H */
+-
 +#endif /* __GST_PHOTOGRAPHY_PRELUDE_H__ */
+diff --git a/gst-libs/gst/interfaces/photography.c b/gst-libs/gst/interfaces/photography.c
+new file mode 100644
+index 0000000..70836d6
 --- /dev/null
 +++ b/gst-libs/gst/interfaces/photography.c
 @@ -0,0 +1,732 @@
@@ -2349,6 +2404,9 @@ Forwarded: not-needed
 +          GST_TYPE_PHOTOGRAPHY_EXPOSURE_MODE,
 +          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 +}
+diff --git a/gst-libs/gst/interfaces/photography.h b/gst-libs/gst/interfaces/photography.h
+new file mode 100644
+index 0000000..e9ac9e6
 --- /dev/null
 +++ b/gst-libs/gst/interfaces/photography.h
 @@ -0,0 +1,685 @@
@@ -3037,11 +3095,17 @@ Forwarded: not-needed
 +G_END_DECLS
 +
 +#endif /* __GST_PHOTOGRAPHY_H__ */
+diff --git a/gst-libs/gst/meson.build b/gst-libs/gst/meson.build
+new file mode 100644
+index 0000000..93fa52b
 --- /dev/null
 +++ b/gst-libs/gst/meson.build
 @@ -0,0 +1,2 @@
 +subdir('basecamerabinsrc')
 +subdir('interfaces')
+diff --git a/gst-libs/meson.build b/gst-libs/meson.build
+new file mode 100644
+index 0000000..330246b
 --- /dev/null
 +++ b/gst-libs/meson.build
 @@ -0,0 +1,4 @@
@@ -3049,6 +3113,9 @@ Forwarded: not-needed
 +libs_c_sources = {}
 +
 +subdir('gst')
+diff --git a/gst/camerabin2/PORTING b/gst/camerabin2/PORTING
+new file mode 100644
+index 0000000..322a7d8
 --- /dev/null
 +++ b/gst/camerabin2/PORTING
 @@ -0,0 +1,39 @@
@@ -3091,6 +3158,9 @@ Forwarded: not-needed
 +  audio-capture-caps
 +  viewfinder-caps
 +
+diff --git a/gst/camerabin2/camerabin2-src.txt b/gst/camerabin2/camerabin2-src.txt
+new file mode 100644
+index 0000000..716d959
 --- /dev/null
 +++ b/gst/camerabin2/camerabin2-src.txt
 @@ -0,0 +1,73 @@
@@ -3167,6 +3237,9 @@ Forwarded: not-needed
 +camera source pads. The camera source can simply get_caps on the peer of
 +each of its pads to know what are the allowed caps for that pad.
 +
+diff --git a/gst/camerabin2/camerabingeneral.c b/gst/camerabin2/camerabingeneral.c
+new file mode 100644
+index 0000000..8453613
 --- /dev/null
 +++ b/gst/camerabin2/camerabingeneral.c
 @@ -0,0 +1,260 @@
@@ -3430,6 +3503,9 @@ Forwarded: not-needed
 +  }
 +  gst_iterator_free (iter);
 +}
+diff --git a/gst/camerabin2/camerabingeneral.h b/gst/camerabin2/camerabingeneral.h
+new file mode 100644
+index 0000000..b0cd05c
 --- /dev/null
 +++ b/gst/camerabin2/camerabingeneral.h
 @@ -0,0 +1,37 @@
@@ -3470,6 +3546,9 @@ Forwarded: not-needed
 +void gst_camerabin_remove_elements_from_bin (GstBin * bin);
 +
 +#endif /* #ifndef __CAMERABIN_GENERAL_H_ */
+diff --git a/gst/camerabin2/gstcamerabin2.c b/gst/camerabin2/gstcamerabin2.c
+new file mode 100644
+index 0000000..6727dcb
 --- /dev/null
 +++ b/gst/camerabin2/gstcamerabin2.c
 @@ -0,0 +1,2399 @@
@@ -5872,6 +5951,9 @@ Forwarded: not-needed
 +      break;
 +  }
 +}
+diff --git a/gst/camerabin2/gstcamerabin2.h b/gst/camerabin2/gstcamerabin2.h
+new file mode 100644
+index 0000000..f478daa
 --- /dev/null
 +++ b/gst/camerabin2/gstcamerabin2.h
 @@ -0,0 +1,168 @@
@@ -6043,6 +6125,9 @@ Forwarded: not-needed
 +G_END_DECLS
 +
 +#endif
+diff --git a/gst/camerabin2/gstdigitalzoom.c b/gst/camerabin2/gstdigitalzoom.c
+new file mode 100644
+index 0000000..041bffc
 --- /dev/null
 +++ b/gst/camerabin2/gstdigitalzoom.c
 @@ -0,0 +1,386 @@
@@ -6432,6 +6517,9 @@ Forwarded: not-needed
 +      "Digital zoom bin", "Generic/Video",
 +      "Digital zoom bin", "Thiago Santos <thiagoss@osg.samsung.com>");
 +}
+diff --git a/gst/camerabin2/gstdigitalzoom.h b/gst/camerabin2/gstdigitalzoom.h
+new file mode 100644
+index 0000000..de7a300
 --- /dev/null
 +++ b/gst/camerabin2/gstdigitalzoom.h
 @@ -0,0 +1,79 @@
@@ -6514,54 +6602,56 @@ Forwarded: not-needed
 +G_END_DECLS
 +
 +#endif /* __GST_DIGITAL_ZOOM_H__ */
---- /dev/null
+diff --git a/gst/avi/gstavi.c b/gst/camerabin2/gstplugin.c
+similarity index 69%
+copy from gst/avi/gstavi.c
+copy to gst/camerabin2/gstplugin.c
+index 012f5c4..bc0c816 100644
+--- a/gst/avi/gstavi.c
 +++ b/gst/camerabin2/gstplugin.c
-@@ -0,0 +1,45 @@
-+/* GStreamer
+@@ -1,7 +1,7 @@
+ /* GStreamer
+- * Copyright (C) <1999> Erik Walthinsen <omega@temple-baptist.com>
 + * Copyright (C) <2010> Thiago Santos <thiago.sousa.santos@collabora.co.uk>
-+ *
+  *
+- * gstavi.c: plugin registering
 + * gstplugin.c: camerabin2 plugin registering
-+ *
-+ * This library is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU Library General Public
-+ * License as published by the Free Software Foundation; either
-+ * version 2 of the License, or (at your option) any later version.
-+ *
-+ * This library is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * Library General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU Library General Public
-+ * License along with this library; if not, write to the
-+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
-+ * Boston, MA 02110-1301, USA.
-+ */
-+
-+#ifdef HAVE_CONFIG_H
-+#include "config.h"
-+#endif
-+
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Library General Public
+@@ -23,22 +23,23 @@
+ #include "config.h"
+ #endif
+ 
+-#include "gstavielements.h"
 +#include "gstviewfinderbin.h"
 +#include "gstwrappercamerabinsrc.h"
 +#include "gstcamerabin2.h"
-+
-+static gboolean
-+plugin_init (GstPlugin * plugin)
-+{
-+  gboolean ret = FALSE;
-+
+ 
+ static gboolean
+ plugin_init (GstPlugin * plugin)
+ {
+   gboolean ret = FALSE;
+ 
+-  ret |= GST_ELEMENT_REGISTER (avidemux, plugin);
+-  ret |= GST_ELEMENT_REGISTER (avimux, plugin);
+-  ret |= GST_ELEMENT_REGISTER (avisubtitle, plugin);
 +  ret |= GST_ELEMENT_REGISTER (viewfinderbin, plugin);
 +  ret |= GST_ELEMENT_REGISTER (wrappercamerabinsrc, plugin);
 +  ret |= GST_ELEMENT_REGISTER (camerabin, plugin);
-+
-+  return ret;
-+}
-+
-+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-+    GST_VERSION_MINOR,
+ 
+   return ret;
+ }
+ 
+ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+     GST_VERSION_MINOR,
+-    avi,
+-    "AVI stream handling",
 +    camerabin, "Take image snapshots and record movies from camera",
-+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+diff --git a/gst/camerabin2/gstviewfinderbin.c b/gst/camerabin2/gstviewfinderbin.c
+new file mode 100644
+index 0000000..1ff7046
 --- /dev/null
 +++ b/gst/camerabin2/gstviewfinderbin.c
 @@ -0,0 +1,365 @@
@@ -6930,6 +7020,9 @@ Forwarded: not-needed
 +      break;
 +  }
 +}
+diff --git a/gst/camerabin2/gstviewfinderbin.h b/gst/camerabin2/gstviewfinderbin.h
+new file mode 100644
+index 0000000..28845db
 --- /dev/null
 +++ b/gst/camerabin2/gstviewfinderbin.h
 @@ -0,0 +1,60 @@
@@ -6993,6 +7086,9 @@ Forwarded: not-needed
 +G_END_DECLS
 +
 +#endif
+diff --git a/gst/camerabin2/gstwrappercamerabinsrc.c b/gst/camerabin2/gstwrappercamerabinsrc.c
+new file mode 100644
+index 0000000..cf21f43
 --- /dev/null
 +++ b/gst/camerabin2/gstwrappercamerabinsrc.c
 @@ -0,0 +1,1169 @@
@@ -8165,6 +8261,9 @@ Forwarded: not-needed
 +  self->mode = GST_BASE_CAMERA_SRC_CAST (self)->mode;
 +  self->app_vid_filter = NULL;
 +}
+diff --git a/gst/camerabin2/gstwrappercamerabinsrc.h b/gst/camerabin2/gstwrappercamerabinsrc.h
+new file mode 100644
+index 0000000..66a6723
 --- /dev/null
 +++ b/gst/camerabin2/gstwrappercamerabinsrc.h
 @@ -0,0 +1,131 @@
@@ -8299,6 +8398,9 @@ Forwarded: not-needed
 +G_END_DECLS
 +
 +#endif /* __GST_WRAPPER_CAMERA_BIN_SRC_H__ */
+diff --git a/gst/camerabin2/meson.build b/gst/camerabin2/meson.build
+new file mode 100644
+index 0000000..12fbf79
 --- /dev/null
 +++ b/gst/camerabin2/meson.build
 @@ -0,0 +1,40 @@
@@ -8342,6 +8444,8 @@ Forwarded: not-needed
 +  install_dir : plugins_install_dir,
 +)
 +plugins += [gstcamerabin]
+diff --git a/gst/meson.build b/gst/meson.build
+index 1a29025..f48b98e 100644
 --- a/gst/meson.build
 +++ b/gst/meson.build
 @@ -1,5 +1,5 @@
@@ -8351,9 +8455,11 @@ Forwarded: not-needed
                    'dtmf', 'effectv', 'equalizer', 'flv', 'flx', 'goom',
                    'goom2k1', 'icydemux', 'id3demux', 'imagefreeze',
                    'interleave', 'isomp4', 'law', 'level', 'matroska',
+diff --git a/meson.build b/meson.build
+index ceb0001..b916c15 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -32,6 +32,12 @@
+@@ -32,6 +32,12 @@ else
  endif
  
  api_version = '1.0'
@@ -8366,7 +8472,7 @@ Forwarded: not-needed
  
  plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
  plugins = []
-@@ -112,15 +118,28 @@
+@@ -112,15 +118,28 @@ if have_cxx and cxx.has_link_argument('-Wl,-z,nodelete')
    add_project_link_arguments('-Wl,-z,nodelete', language: 'cpp')
  endif
  
@@ -8397,7 +8503,7 @@ Forwarded: not-needed
  # Disable strict aliasing
  if cc.has_argument('-fno-strict-aliasing')
    add_project_arguments('-fno-strict-aliasing', language: 'c')
-@@ -150,7 +169,7 @@
+@@ -150,7 +169,7 @@ if not get_option('glib_checks')
    add_project_arguments('-DG_DISABLE_CHECKS', language: 'c')
  endif
  
@@ -8406,7 +8512,7 @@ Forwarded: not-needed
  
  check_headers = [
    ['HAVE_DLFCN_H', 'dlfcn.h'],
-@@ -304,6 +323,11 @@
+@@ -304,6 +323,11 @@ endif
  cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
  cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
  
@@ -8418,7 +8524,7 @@ Forwarded: not-needed
  # Mandatory GST deps
  gst_dep = dependency('gstreamer-1.0', version : gst_req,
    fallback : ['gstreamer', 'gst_dep'])
-@@ -511,6 +535,10 @@
+@@ -511,6 +535,10 @@ else
    message('GStreamer debug system is enabled')
  endif
  
@@ -8429,7 +8535,7 @@ Forwarded: not-needed
  presetdir = join_paths(get_option('datadir'), 'gstreamer-' + api_version, 'presets')
  
  python3 = import('python').find_installation()
-@@ -527,6 +555,16 @@
+@@ -527,6 +555,16 @@ else
    pathsep = ':'
  endif
  
@@ -8446,6 +8552,21 @@ Forwarded: not-needed
  subdir('gst')
  subdir('sys')
  subdir('ext')
+diff --git a/meson.options b/meson.options
+index c19c01c..dc8588d 100644
+--- a/meson.options
++++ b/meson.options
+@@ -6,6 +6,7 @@ option('audioparsers', type : 'feature', value : 'auto')
+ option('auparse', type : 'feature', value : 'auto')
+ option('autodetect', type : 'feature', value : 'auto')
+ option('avi', type : 'feature', value : 'auto')
++option('camerabin2', type : 'feature', value : 'auto')
+ option('cutter', type : 'feature', value : 'auto')
+ option('debugutils', type : 'feature', value : 'auto')
+ option('deinterlace', type : 'feature', value : 'auto')
+diff --git a/tests/check/elements/camerabin.c b/tests/check/elements/camerabin.c
+new file mode 100644
+index 0000000..8d52d0f
 --- /dev/null
 +++ b/tests/check/elements/camerabin.c
 @@ -0,0 +1,2006 @@
@@ -10455,9 +10576,11 @@ Forwarded: not-needed
 +}
 +
 +GST_CHECK_MAIN (camerabin);
+diff --git a/tests/check/meson.build b/tests/check/meson.build
+index 6f9d9e2..c230460 100644
 --- a/tests/check/meson.build
 +++ b/tests/check/meson.build
-@@ -30,6 +30,7 @@
+@@ -30,6 +30,7 @@ good_tests = [
    [ 'elements/alpha', get_option('alpha').disabled()],
    [ 'elements/avimux', get_option('avi').disabled(), [gstriff_dep] ],
    [ 'elements/avisubtitle', get_option('avi').disabled(), [gstriff_dep] ],
@@ -10465,7 +10588,7 @@ Forwarded: not-needed
    [ 'elements/capssetter', get_option('debugutils').disabled()],
    [ 'elements/aacparse', get_option('audioparsers').disabled(), [libparser_dep] ],
    [ 'elements/ac3parse', get_option('audioparsers').disabled(), [libparser_dep] ],
-@@ -198,7 +199,7 @@
+@@ -198,7 +199,7 @@ state_ignore_elements = '''aasink autoaudiosrc autoaudiosink autovideosrc
   pulsesink pulsesrc pulsemixer v4l2src'''
  
  # FIXME: check, also + PTHREAD_CFLAGS
@@ -10474,6 +10597,9 @@ Forwarded: not-needed
    gstvideo_dep, gstpbutils_dep, gstrtp_dep, gstrtsp_dep, gsttag_dep,
    gstapp_dep, gio_dep, valgrind_dep]
  
+diff --git a/tests/examples/camerabin2/gst-camera2.c b/tests/examples/camerabin2/gst-camera2.c
+new file mode 100644
+index 0000000..d85a839
 --- /dev/null
 +++ b/tests/examples/camerabin2/gst-camera2.c
 @@ -0,0 +1,338 @@
@@ -10815,6 +10941,9 @@ Forwarded: not-needed
 +  gst_object_unref (camera);
 +  return 0;
 +}
+diff --git a/tests/examples/camerabin2/gst-camera2.h b/tests/examples/camerabin2/gst-camera2.h
+new file mode 100644
+index 0000000..57f43ea
 --- /dev/null
 +++ b/tests/examples/camerabin2/gst-camera2.h
 @@ -0,0 +1,54 @@
@@ -10872,6 +11001,9 @@ Forwarded: not-needed
 +on_zoomScale_value_changed (GtkWidget * widget, gpointer data);
 +
 +#endif /* __GST_CAMERA_BIN_H__ */
+diff --git a/tests/examples/camerabin2/gst-camera2.ui b/tests/examples/camerabin2/gst-camera2.ui
+new file mode 100644
+index 0000000..52bcfc6
 --- /dev/null
 +++ b/tests/examples/camerabin2/gst-camera2.ui
 @@ -0,0 +1,203 @@
@@ -11078,6 +11210,9 @@ Forwarded: not-needed
 +    </child>
 +  </object>
 +</interface>
+diff --git a/tests/examples/camerabin2/gst-camerabin2-test.c b/tests/examples/camerabin2/gst-camerabin2-test.c
+new file mode 100644
+index 0000000..dda85e3
 --- /dev/null
 +++ b/tests/examples/camerabin2/gst-camerabin2-test.c
 @@ -0,0 +1,1323 @@
@@ -12404,6 +12539,9 @@ Forwarded: not-needed
 +
 +  return 0;
 +}
+diff --git a/tests/examples/camerabin2/meson.build b/tests/examples/camerabin2/meson.build
+new file mode 100644
+index 0000000..4cbb404
 --- /dev/null
 +++ b/tests/examples/camerabin2/meson.build
 @@ -0,0 +1,25 @@
@@ -12432,6 +12570,8 @@ Forwarded: not-needed
 +    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
 +    install: false)
 +endif
+diff --git a/tests/examples/meson.build b/tests/examples/meson.build
+index c1726f4..c051278 100644
 --- a/tests/examples/meson.build
 +++ b/tests/examples/meson.build
 @@ -1,5 +1,6 @@
@@ -12441,13 +12581,3 @@ Forwarded: not-needed
  subdir('level')
  subdir('qt')
  subdir('qt6')
---- a/meson.options
-+++ b/meson.options
-@@ -6,6 +6,7 @@
- option('auparse', type : 'feature', value : 'auto')
- option('autodetect', type : 'feature', value : 'auto')
- option('avi', type : 'feature', value : 'auto')
-+option('camerabin2', type : 'feature', value : 'auto')
- option('cutter', type : 'feature', value : 'auto')
- option('debugutils', type : 'feature', value : 'auto')
- option('deinterlace', type : 'feature', value : 'auto')

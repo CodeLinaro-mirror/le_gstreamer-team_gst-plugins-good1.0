@@ -5,24 +5,27 @@ Subject: This is a copy of the jpegformat plugin from gst-plugins-good. It's
 
 ===================================================================
 ---
- gst/jpegformat/gstjifmux.c     | 759 ++++++++++++++++++++++++++++++++++
- gst/jpegformat/gstjifmux.h     |  68 ++++
- gst/jpegformat/gstjpegformat.c |  45 ++
- gst/jpegformat/gstjpegformat.h |  92 +++++
- gst/jpegformat/gstjpegparse.c  | 901 +++++++++++++++++++++++++++++++++++++++++
- gst/jpegformat/gstjpegparse.h  |  94 +++++
- gst/jpegformat/meson.build     |  16 +
- gst/meson.build                |   2 +-
- meson.options			|   2 +
- 9 files changed, 1978 insertions(+), 1 deletion(-)
+ gst/jpegformat/gstjifmux.c                         | 759 +++++++++++++++++
+ gst/jpegformat/gstjifmux.h                         |  68 ++
+ .../gstspeex.c => gst/jpegformat/gstjpegformat.c   |  26 +-
+ gst/jpegformat/gstjpegformat.h                     |  92 +++
+ gst/jpegformat/gstjpegparse.c                      | 901 +++++++++++++++++++++
+ gst/jpegformat/gstjpegparse.h                      |  94 +++
+ gst/jpegformat/meson.build                         |  16 +
+ gst/meson.build                                    |   2 +-
+ meson.options                                      |   2 +
+ 9 files changed, 1948 insertions(+), 12 deletions(-)
  create mode 100644 gst/jpegformat/gstjifmux.c
  create mode 100644 gst/jpegformat/gstjifmux.h
- create mode 100644 gst/jpegformat/gstjpegformat.c
+ copy ext/speex/gstspeex.c => gst/jpegformat/gstjpegformat.c (57%)
  create mode 100644 gst/jpegformat/gstjpegformat.h
  create mode 100644 gst/jpegformat/gstjpegparse.c
  create mode 100644 gst/jpegformat/gstjpegparse.h
  create mode 100644 gst/jpegformat/meson.build
 
+diff --git a/gst/jpegformat/gstjifmux.c b/gst/jpegformat/gstjifmux.c
+new file mode 100644
+index 0000000..79241bb
 --- /dev/null
 +++ b/gst/jpegformat/gstjifmux.c
 @@ -0,0 +1,759 @@
@@ -785,6 +788,9 @@ Subject: This is a copy of the jpegformat plugin from gst-plugins-good. It's
 +
 +  return ret;
 +}
+diff --git a/gst/jpegformat/gstjifmux.h b/gst/jpegformat/gstjifmux.h
+new file mode 100644
+index 0000000..96830bb
 --- /dev/null
 +++ b/gst/jpegformat/gstjifmux.h
 @@ -0,0 +1,68 @@
@@ -856,54 +862,73 @@ Subject: This is a copy of the jpegformat plugin from gst-plugins-good. It's
 +G_END_DECLS
 +
 +#endif /* __GST_JFIF_MUX_H__ */
---- /dev/null
+diff --git a/ext/speex/gstspeex.c b/gst/jpegformat/gstjpegformat.c
+similarity index 57%
+copy from ext/speex/gstspeex.c
+copy to gst/jpegformat/gstjpegformat.c
+index f904efb..bc37045 100644
+--- a/ext/speex/gstspeex.c
 +++ b/gst/jpegformat/gstjpegformat.c
-@@ -0,0 +1,45 @@
-+/* GStreamer
+@@ -1,41 +1,45 @@
+ /* GStreamer
+- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
 + *
 + * jpegformat: a plugin for JPEG Interchange Format
 + *
 + * Copyright (C) <2010> Stefan Kost <ensonic@users.sf.net>
-+ *
-+ * This library is free software; you can redistribute it and/or
+  *
+  * This library is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU Library General Public
 + * modify it under the terms of the GNU Lesser General Public
-+ * License as published by the Free Software Foundation; either
+  * License as published by the Free Software Foundation; either
+- * version 2 of the License, or (at your option) any later version.
 + * version 2.1 of the License, or (at your option) any later version.
-+ *
-+ * This library is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  *
+  * This library is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * Library General Public License for more details.
 + * Lesser General Public License for more details.
-+ *
+  *
+- * You should have received a copy of the GNU Library General Public
 + * You should have received a copy of the GNU Lesser General Public
-+ * License along with this library; if not, write to the
-+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
-+ * Boston, MA 02110-1301, USA.
-+ */
+  * License along with this library; if not, write to the
+  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+  * Boston, MA 02110-1301, USA.
+  */
 +
-+#ifdef HAVE_CONFIG_H
-+#include <config.h>
-+#endif
-+
+ #ifdef HAVE_CONFIG_H
+ #include <config.h>
+ #endif
+ 
+-#include "gstspeexelements.h"
+-
 +#include "gstjpegparse.h"
 +#include "gstjifmux.h"
-+
-+static gboolean
-+plugin_init (GstPlugin * plugin)
-+{
-+  gboolean ret = FALSE;
-+
+ 
+ static gboolean
+ plugin_init (GstPlugin * plugin)
+ {
+   gboolean ret = FALSE;
+ 
+-  ret |= GST_ELEMENT_REGISTER (speexenc, plugin);
+-  ret |= GST_ELEMENT_REGISTER (speexdec, plugin);
 +  ret |= GST_ELEMENT_REGISTER (jpegparse, plugin);
 +  ret |= GST_ELEMENT_REGISTER (jifmux, plugin);
-+
-+  return ret;
-+}
-+
-+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-+    GST_VERSION_MINOR,
+ 
+   return ret;
+ }
+ 
+ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+     GST_VERSION_MINOR,
+-    speex,
+-    "Speex plugin library",
 +    jpegformat,
 +    "JPEG interchange format plugin",
-+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+diff --git a/gst/jpegformat/gstjpegformat.h b/gst/jpegformat/gstjpegformat.h
+new file mode 100644
+index 0000000..be69268
 --- /dev/null
 +++ b/gst/jpegformat/gstjpegformat.h
 @@ -0,0 +1,92 @@
@@ -999,6 +1024,9 @@ Subject: This is a copy of the jpegformat plugin from gst-plugins-good. It's
 +G_END_DECLS
 +
 +#endif /* __GST_JPEG_FORMAT_H__ */
+diff --git a/gst/jpegformat/gstjpegparse.c b/gst/jpegformat/gstjpegparse.c
+new file mode 100644
+index 0000000..5231879
 --- /dev/null
 +++ b/gst/jpegformat/gstjpegparse.c
 @@ -0,0 +1,901 @@
@@ -1903,6 +1931,9 @@ Subject: This is a copy of the jpegformat plugin from gst-plugins-good. It's
 +
 +  return TRUE;
 +}
+diff --git a/gst/jpegformat/gstjpegparse.h b/gst/jpegformat/gstjpegparse.h
+new file mode 100644
+index 0000000..e777421
 --- /dev/null
 +++ b/gst/jpegformat/gstjpegparse.h
 @@ -0,0 +1,94 @@
@@ -2000,6 +2031,9 @@ Subject: This is a copy of the jpegformat plugin from gst-plugins-good. It's
 +G_END_DECLS
 +
 +#endif /* __GST_JPEG_PARSE_H__ */
+diff --git a/gst/jpegformat/meson.build b/gst/jpegformat/meson.build
+new file mode 100644
+index 0000000..4fd78c0
 --- /dev/null
 +++ b/gst/jpegformat/meson.build
 @@ -0,0 +1,16 @@
@@ -2019,9 +2053,11 @@ Subject: This is a copy of the jpegformat plugin from gst-plugins-good. It's
 +)
 +pkgconfig.generate(gstjpegformat, install_dir : plugins_pkgconfig_install_dir)
 +plugins += [gstjpegformat]
+diff --git a/gst/meson.build b/gst/meson.build
+index f48b98e..c541bfc 100644
 --- a/gst/meson.build
 +++ b/gst/meson.build
-@@ -2,7 +2,7 @@
+@@ -2,7 +2,7 @@ foreach plugin : ['alpha', 'apetag', 'audiofx', 'audioparsers', 'auparse',
                    'autodetect', 'avi', 'camerabin2', 'cutter', 'debugutils', 'deinterlace',
                    'dtmf', 'effectv', 'equalizer', 'flv', 'flx', 'goom',
                    'goom2k1', 'icydemux', 'id3demux', 'imagefreeze',
@@ -2030,9 +2066,11 @@ Subject: This is a copy of the jpegformat plugin from gst-plugins-good. It's
                    'monoscope', 'multifile', 'multipart', 'replaygain', 'rtp',
                    'rtpmanager', 'rtsp', 'shapewipe', 'smpte', 'spectrum',
                    'udp', 'videobox', 'videocrop', 'videofilter', 'videomixer',
+diff --git a/meson.options b/meson.options
+index dc8588d..37ee5dc 100644
 --- a/meson.options
 +++ b/meson.options
-@@ -22,6 +22,7 @@
+@@ -22,6 +22,7 @@ option('id3demux', type : 'feature', value : 'auto')
  option('imagefreeze', type : 'feature', value : 'auto')
  option('interleave', type : 'feature', value : 'auto')
  option('isomp4', type : 'feature', value : 'auto')
@@ -2040,7 +2078,7 @@ Subject: This is a copy of the jpegformat plugin from gst-plugins-good. It's
  option('law', type : 'feature', value : 'auto')
  option('level', type : 'feature', value : 'auto')
  option('matroska', type : 'feature', value : 'auto')
-@@ -118,6 +119,7 @@
+@@ -118,6 +119,7 @@ option('v4l2-gudev', type : 'feature', value : 'auto', description : 'Use libgud
  # Common feature options
  option('examples', type : 'feature', value : 'auto', yield : true)
  option('tests', type : 'feature', value : 'auto', yield : true)
