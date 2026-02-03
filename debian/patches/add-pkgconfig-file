@@ -11,11 +11,9 @@ Forwarded: not-needed
  create mode 100644 pkgconfig/gstreamer-plugins-good.pc.in
  create mode 100644 pkgconfig/meson.build
 
-diff --git a/meson.build b/meson.build
-index db38a56..6090359 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -563,6 +563,7 @@ gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' +
+@@ -566,6 +566,7 @@
  
  subdir('gst-libs')
  subdir('gst')
@@ -23,9 +21,6 @@ index db38a56..6090359 100644
  subdir('sys')
  subdir('ext')
  subdir('tests')
-diff --git a/pkgconfig/gstreamer-plugins-good.pc.in b/pkgconfig/gstreamer-plugins-good.pc.in
-new file mode 100644
-index 0000000..cab8003
 --- /dev/null
 +++ b/pkgconfig/gstreamer-plugins-good.pc.in
 @@ -0,0 +1,12 @@
@@ -41,9 +36,6 @@ index 0000000..cab8003
 +Version: @VERSION@
 +Libs: -L${libdir} -lgstphotography-@GST_API_VERSION@
 +Cflags: -I${includedir}
-diff --git a/pkgconfig/meson.build b/pkgconfig/meson.build
-new file mode 100644
-index 0000000..5ef99bb
 --- /dev/null
 +++ b/pkgconfig/meson.build
 @@ -0,0 +1,25 @@

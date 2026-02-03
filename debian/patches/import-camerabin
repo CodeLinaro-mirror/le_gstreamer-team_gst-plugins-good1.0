@@ -8418,7 +8418,7 @@ Forwarded: not-needed
  # Mandatory GST deps
  gst_dep = dependency('gstreamer-1.0', version : gst_req,
    fallback : ['gstreamer', 'gst_dep'])
-@@ -508,6 +532,10 @@
+@@ -511,6 +535,10 @@
    message('GStreamer debug system is enabled')
  endif
  
@@ -8429,7 +8429,7 @@ Forwarded: not-needed
  presetdir = join_paths(get_option('datadir'), 'gstreamer-' + api_version, 'presets')
  
  python3 = import('python').find_installation()
-@@ -524,6 +552,16 @@
+@@ -527,6 +555,16 @@
    pathsep = ':'
  endif
  

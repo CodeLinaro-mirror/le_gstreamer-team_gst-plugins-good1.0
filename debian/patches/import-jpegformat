@@ -2047,4 +2047,4 @@ Subject: This is a copy of the jpegformat plugin from gst-plugins-good. It's
 +option('introspection', type : 'feature', value : 'auto', yield : true, description : 'Generate gobject-introspection bindings')
  option('nls', type : 'feature', value : 'auto', yield: true, description : 'Enable native language support (translations)')
  option('orc', type : 'feature', value : 'auto', yield : true)
- option('asm', type : 'feature', value : 'auto', yield : true)
+ option('orc-compiler', type : 'feature', value : 'auto', yield: true, description : 'Enable targets to allow regeneration of disted orc files')
