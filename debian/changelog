@@ -15,7 +15,7 @@ gst-plugins-good1.0 (1.28.0-1ubuntu3) resolute; urgency=medium
       bringing codecparsers over with it.) (LP: #2089260)
     - The pkgconfig patch needed for gstphotography has also been
       removed as part of this change.
-  * Recommend gstreamer1.0-plugins-extra.
+  * Recommend gstreamer1.0-plugins-extra. (LP: #2121050)
     - To avoid breaking packages that depend on earlier versions of
       gst-plugins-good1.0, in which packaging hacks were made to
       incorporate some -bad plugins. These are going to be moved to
