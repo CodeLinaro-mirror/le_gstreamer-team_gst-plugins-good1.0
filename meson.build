@@ -1,5 +1,5 @@
 project('gst-plugins-good', 'c',
-  version : '1.28.0',
+  version : '1.28.1',
   meson_version : '>= 1.4',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
@@ -39,8 +39,16 @@ plugin_sources = {}
 static_build = get_option('default_library') == 'static'
 
 host_system = host_machine.system()
+subsystem = ''
+if host_system == 'ios'
+  warning('Setting system = \'ios\' in the cross file is deprecated, please use subsystem names')
+  host_system = 'darwin'
+  subsystem = 'ios'
+elif host_system == 'darwin'
+  subsystem = host_machine.subsystem()
+endif
 
-if host_system in ['ios', 'darwin']
+if host_system == 'darwin'
   have_objc = add_languages('objc', native: false)
   have_objcpp = add_languages('objcpp', native: false)
 
@@ -223,8 +231,6 @@ foreach f : check_functions
     cdata.set(f.get(0), 1)
   endif
 endforeach
-
-cdata.set('HAVE_IOS', host_system == 'ios')
 
 cdata.set('SIZEOF_CHAR', cc.sizeof('char'))
 cdata.set('SIZEOF_INT', cc.sizeof('int'))
@@ -580,6 +586,11 @@ endif
 configure_file(output : 'config.h', configuration : cdata)
 
 meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.26.0', meson.project_version())
+
+# dist common files from monorepo root
+if not meson.is_subproject()
+  meson.add_dist_script('scripts/dist-common-files.py', meson.project_version())
+endif
 
 plugin_names = []
 gst_plugins = []
