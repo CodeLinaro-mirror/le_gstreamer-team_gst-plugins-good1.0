@@ -165,7 +165,7 @@ Depends: ${misc:Depends},
          gstreamer1.0-plugins-base (>= 1.28.0),
          libgstreamer-plugins-good1.0-0 (= ${binary:Version}),
          libsoup-3.0-0
-Recommends: gstreamer1.0-x, gstreamer1.0-plugins-extra
+Recommends: gstreamer1.0-x
 Replaces: gstreamer1.0-plugins-bad (<< 1.15.1),
           gstreamer1.0-plugins-ugly (<< 1.24),
           gstreamer1.0-pulseaudio (<< 1.18.0)
