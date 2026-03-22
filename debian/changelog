@@ -1,3 +1,22 @@
+gst-plugins-good1.0 (1.28.1-1ubuntu1) resolute; urgency=medium
+
+  * Resynchronize on Debian. Remaining changes:
+    + Add a library package containing the shared library and a -dev package for
+      compiling against it. Add Breaks and Replaces against the plugins packages
+      which formerly contained files shipped here.
+    + debian/gbp.conf: Update Vcs-* for Ubuntu
+    + debian/rules: Disable amrnb and amrwbdec because opencore-amr is
+      currently in universe in Ubuntu, and packages in main cannot
+      depend on it
+    + debian/contorl: Drop recommendation of plugins-extra. The
+      packages affected by this are either demoted, or depend directly
+      on -extra.
+    + debian/gstreamer1.0-plugins-good.install: Drop
+      usr/lib/*/gstreamer-1.0/libgstamrnb.so and
+      usr/lib/*/gstreamer-1.0/libgstamrwbdec.so
+
+ -- Charles <charles05@canonical.com>  Sun, 22 Mar 2026 12:24:52 +0000
+
 gst-plugins-good1.0 (1.28.1-1) unstable; urgency=medium
 
   * d/control: update to Standards-Version 4.7.3
