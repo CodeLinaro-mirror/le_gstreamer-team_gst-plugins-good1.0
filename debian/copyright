@@ -888,11 +888,6 @@ Files: ext/raw1394/gsthdv1394src.c
 Copyright: <2008> Edward Hervey <bilboed@bilboed.com>
 License: LGPL-2+
 
-Files: gst/rtp/gstrtpqdmdepay.c
- gst/rtp/gstrtpqdmdepay.h
-Copyright: <2009> Edward Hervey <bilboed@bilboed.com>
-License: LGPL-2+
-
 Files: gst/rtp/gstrtpmparobustdepay.c
  gst/rtp/gstrtpmparobustdepay.h
 Copyright: <2010> Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
