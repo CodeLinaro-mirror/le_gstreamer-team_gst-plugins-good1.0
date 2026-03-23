@@ -87,6 +87,7 @@
 #define GST_MATROSKA_ID_CODECNAME                  0x258688
 #define GST_MATROSKA_ID_TRACKNAME                  0x536E
 #define GST_MATROSKA_ID_TRACKLANGUAGE              0x22B59C
+#define GST_MATROSKA_ID_TRACKLANGUAGEBCP47         0x22B59D
 #define GST_MATROSKA_ID_TRACKFLAGENABLED           0xB9
 #define GST_MATROSKA_ID_TRACKFLAGDEFAULT           0x88
 #define GST_MATROSKA_ID_TRACKFLAGFORCED            0x55AA
@@ -780,6 +781,18 @@ typedef struct _GstMatroskaTrackEncoding {
   guint   enc_cipher_mode : 2;
 } GstMatroskaTrackEncoding;
 
+/* VP9 CodecPrivate feature IDs are defined by WebM:
+ * https://www.webmproject.org/docs/container/#vp9-codec-feature-metadata-codecprivate
+ * The IETF Matroska codec mapping draft points to the same definitions:
+ * https://datatracker.ietf.org/doc/html/draft-ietf-cellar-codec/
+ */
+typedef enum {
+  GST_MATROSKA_VP9_FEATURE_PROFILE_ID = 1,
+  GST_MATROSKA_VP9_FEATURE_LEVEL_ID = 2,
+  GST_MATROSKA_VP9_FEATURE_BIT_DEPTH_ID = 3,
+  GST_MATROSKA_VP9_FEATURE_CHROMA_SUBSAMPLING_ID = 4
+} GstMatroskaVP9CodecPrivateFeatureId;
+
 gboolean gst_matroska_track_init_video_context    (GstMatroskaTrackContext ** p_context);
 gboolean gst_matroska_track_init_audio_context    (GstMatroskaTrackContext ** p_context);
 gboolean gst_matroska_track_init_subtitle_context (GstMatroskaTrackContext ** p_context);
@@ -797,6 +810,13 @@ GstBufferList * gst_matroska_parse_opus_stream_headers  (gpointer codec_data,
 
 GstBufferList * gst_matroska_parse_flac_stream_headers  (gpointer codec_data,
                                                          gsize codec_data_size);
+
+gboolean gst_matroska_get_vpx_config_from_codec_private (const guint8 * data,
+                                                         gsize          size,
+                                                         guint8       * profile,
+                                                         guint8       * level,
+                                                         guint8       * bit_depth,
+                                                         guint8       * chroma_subsampling);
 void gst_matroska_track_free (GstMatroskaTrackContext * track);
 GstClockTime gst_matroska_track_get_buffer_timestamp (GstMatroskaTrackContext * track, GstBuffer *buf);
 
