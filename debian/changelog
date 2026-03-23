@@ -1,3 +1,11 @@
+gst-plugins-good1.0 (1.29.1-1) experimental; urgency=medium
+
+  * d/gbp.conf: adjust for experimental
+  * New upstream version 1.29.1
+  * d/control: update gst dep to >= 1.29.1
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Mon, 23 Mar 2026 10:58:17 +0100
+
 gst-plugins-good1.0 (1.28.1-1) unstable; urgency=medium
 
   * d/control: update to Standards-Version 4.7.3
