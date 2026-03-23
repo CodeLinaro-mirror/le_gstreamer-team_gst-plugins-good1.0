@@ -1,6 +1,5 @@
 Source: gst-plugins-good1.0
 Section: libs
-Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Maintainers of GStreamer packages <gst-plugins-good1.0@packages.debian.org>
 Uploaders: Sebastian Dröge <slomo@debian.org>,
@@ -61,7 +60,7 @@ Build-Depends: debhelper,
                libv4l-dev [linux-any],
                libgudev-1.0-dev (>= 147) [linux-any],
                nasm (>= 2.13) [any-amd64]
-Standards-Version: 4.7.2
+Standards-Version: 4.7.3
 Vcs-Git: https://salsa.debian.org/gstreamer-team/gst-plugins-good1.0.git
 Vcs-Browser: https://salsa.debian.org/gstreamer-team/gst-plugins-good1.0/
 Homepage: https://gstreamer.freedesktop.org
