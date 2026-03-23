@@ -113,7 +113,7 @@
  *   The convenience signal 'set-mikey-parameter' can be used to build a
  *   'KeyMgmt' parameter with a MIKEY payload.
  * * After the server accepts the new parameter, the user can call
- *   'remove-key' and prepare for the new key(s) to be served by signals
+ *   'invalidate-key' and prepare for the new key(s) to be served by signals
  *   'request-rtp-key' & 'request-rtcp-key'.
  * * The signals 'soft-limit' & 'hard-limit' are called when a key
  *   reaches the limits of its utilisation.
@@ -183,6 +183,7 @@ enum
   SIGNAL_PUSH_BACKCHANNEL_SAMPLE,
   SIGNAL_SET_MIKEY_PARAMETER,
   SIGNAL_REMOVE_KEY,
+  SIGNAL_INVALIDATE_KEY,
   LAST_SIGNAL
 };
 
@@ -343,6 +344,7 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_ONVIF_RATE_CONTROL TRUE
 #define DEFAULT_IS_LIVE TRUE
 #define DEFAULT_IGNORE_X_SERVER_REPLY FALSE
+#define DEFAULT_BACKCHANNEL_HTTP_METHOD GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST
 #define DEFAULT_TCP_TIMESTAMP FALSE
 #define DEFAULT_FORCE_NON_COMPLIANT_URL FALSE
 #define DEFAULT_CLIENT_MANAGED_MIKEY FALSE
@@ -396,6 +398,7 @@ enum
   PROP_ONVIF_RATE_CONTROL,
   PROP_IS_LIVE,
   PROP_IGNORE_X_SERVER_REPLY,
+  PROP_BACKCHANNEL_HTTP_METHOD,
   PROP_EXTRA_HTTP_REQUEST_HEADERS,
   PROP_TCP_TIMESTAMP,
   PROP_FORCE_NON_COMPLIANT_URL,
@@ -519,6 +522,7 @@ static gboolean set_mikey_parameter (GstRTSPSrc * src, const guint id,
     GstCaps * mikey, GstPromise * promise);
 
 static gboolean remove_key (GstRTSPSrc * src, const guint id);
+static gboolean invalidate_key (GstRTSPSrc * src, const guint id);
 
 typedef struct
 {
@@ -1145,6 +1149,36 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           DEFAULT_IGNORE_X_SERVER_REPLY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRTSPSrc:backchannel-http-method
+   *
+   * Select how backchannel data is sent in HTTP tunnel mode.
+   *
+   * In HTTP tunnel mode, "post" sends backchannel interleaved RTP data
+   * base64-encoded via the POST connection as per the RTSP over HTTP
+   * specification. "get" sends it as raw binary on the GET connection,
+   * which is required for compatibility with some servers that only parse
+   * RTSP text commands from POST and cannot process interleaved RTP there.
+   *
+   * If the server closes the connection after backchannel data is sent,
+   * automatically reconnects using the other method.
+   *
+   * ONVIF Streaming Specification Section 5.1.1.5 requires POST data to
+   * be base64-encoded, but does not specify which connection should carry
+   * backchannel data in HTTP tunnel mode (Section 5.3).
+   *
+   * This property has no effect when not using HTTP tunneling.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_BACKCHANNEL_HTTP_METHOD,
+      g_param_spec_enum ("backchannel-http-method",
+          "Backchannel HTTP method",
+          "HTTP method for sending backchannel data in tunnel mode",
+          GST_TYPE_RTSP_BACKCHANNEL_HTTP_METHOD,
+          DEFAULT_BACKCHANNEL_HTTP_METHOD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
    /**
    * GstRTSPSrc:extra-http-request-headers
    *
@@ -1570,6 +1604,28 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
           remove_key), NULL, NULL, NULL, G_TYPE_BOOLEAN, 1, G_TYPE_UINT);
 
+  /**
+   * GstRTSPSrc::invalidate-key:
+   * @rtspsrc: a #GstRTSPSrc
+   * @parameter: the id of the stream for which to invalidate the key.
+   *
+   * Invalidates the key for a specific stream.
+   *
+   * When the 'client-managed-mikey' mode is enabled, this can be used
+   * after informing the server of the new crypto params (see signal
+   * 'set-mikey-parameter') to invalidate previous keys and force srtpdec
+   * to request new keys. When accepting the new keys the existing ROC
+   * value of the stream will be preserved.
+   *
+   * Returns: %TRUE when the command could be issued, %FALSE otherwise
+   *
+   * Since: 1.30
+   */
+  gst_rtspsrc_signals[SIGNAL_INVALIDATE_KEY] =
+      g_signal_new ("invalidate-key", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
+          invalidate_key), NULL, NULL, NULL, G_TYPE_BOOLEAN, 1, G_TYPE_UINT);
+
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
   gstelement_class->change_state = gst_rtspsrc_change_state;
@@ -1592,6 +1648,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   klass->set_parameter = GST_DEBUG_FUNCPTR (set_parameter);
   klass->set_mikey_parameter = GST_DEBUG_FUNCPTR (set_mikey_parameter);
   klass->remove_key = GST_DEBUG_FUNCPTR (remove_key);
+  klass->invalidate_key = GST_DEBUG_FUNCPTR (invalidate_key);
 
   gst_rtsp_ext_list_init ();
 
@@ -2146,6 +2203,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_IGNORE_X_SERVER_REPLY:
       rtspsrc->ignore_x_server_reply = g_value_get_boolean (value);
       break;
+    case PROP_BACKCHANNEL_HTTP_METHOD:
+      rtspsrc->backchannel_http_method = g_value_get_enum (value);
+      break;
     case PROP_EXTRA_HTTP_REQUEST_HEADERS:{
       const GstStructure *s = gst_value_get_structure (value);
       if (rtspsrc->prop_extra_http_request_headers) {
@@ -2337,6 +2397,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_IGNORE_X_SERVER_REPLY:
       g_value_set_boolean (value, rtspsrc->ignore_x_server_reply);
+      break;
+    case PROP_BACKCHANNEL_HTTP_METHOD:
+      g_value_set_enum (value, rtspsrc->backchannel_http_method);
       break;
     case PROP_EXTRA_HTTP_REQUEST_HEADERS:
       gst_value_set_structure (value, rtspsrc->prop_extra_http_request_headers);
@@ -3771,6 +3834,12 @@ gst_rtspsrc_push_backchannel_sample (GstRTSPSrc * src, guint id,
 
     GST_DEBUG_OBJECT (src, "sending %u bytes backchannel RTP",
         (guint) gst_buffer_get_size (buffer));
+
+    if (!src->backchannel_fallback_armed) {
+      src->backchannel_fallback_armed = TRUE;
+      GST_DEBUG_OBJECT (src, "backchannel http fallback armed");
+    }
+
     ret = gst_rtspsrc_connection_send (src, conninfo, &message, 0);
     GST_DEBUG_OBJECT (src, "sent backchannel RTP, %d", ret);
 
@@ -5803,9 +5872,19 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
       }
 
       if (info->url->transports & GST_RTSP_LOWER_TRANS_HTTP) {
+        GstRTSPBackchannelHttpMethod method = src->backchannel_http_method;
+
         gst_rtsp_connection_set_tunneled (info->connection, TRUE);
         gst_rtsp_connection_set_ignore_x_server_reply (info->connection,
             src->ignore_x_server_reply);
+
+        if (src->backchannel_fallen_back) {
+          method = (method == GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST) ?
+              GST_RTSP_BACKCHANNEL_HTTP_METHOD_GET :
+              GST_RTSP_BACKCHANNEL_HTTP_METHOD_POST;
+        }
+
+        gst_rtsp_connection_set_backchannel_method (info->connection, method);
       }
 
       if (src->proxy_host) {
@@ -6381,6 +6460,19 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 server_eof:
   {
     GST_DEBUG_OBJECT (src, "we got an eof from the server");
+
+    if (src->backchannel_fallback_armed && !src->backchannel_fallen_back) {
+      GST_WARNING_OBJECT (src,
+          "server closed connection after backchannel send, "
+          "falling back to other HTTP method");
+      src->backchannel_fallback_armed = FALSE;
+      src->backchannel_fallen_back = TRUE;
+      src->conninfo.connected = FALSE;
+      gst_rtsp_message_unset (&message);
+      gst_rtspsrc_loop_send_cmd (src, CMD_RECONNECT, CMD_LOOP);
+      return GST_FLOW_OK;
+    }
+
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("The server closed the connection."));
     src->conninfo.connected = FALSE;
@@ -6587,6 +6679,23 @@ gst_rtspsrc_reconnect (GstRTSPSrc * src, gboolean async)
   gboolean restart;
 
   GST_DEBUG_OBJECT (src, "doing reconnect");
+
+  /* backchannel HTTP method fallback: reconnect with other method */
+  if (src->backchannel_fallen_back) {
+    GST_DEBUG_OBJECT (src,
+        "backchannel fallback: reconnecting with other HTTP method");
+
+    if ((res = gst_rtspsrc_close (src, async, FALSE)) < 0)
+      goto done;
+
+    if (gst_rtspsrc_open (src, async) < 0)
+      goto open_failed;
+
+    if (gst_rtspsrc_play (src, &src->segment, async, NULL) < 0)
+      goto play_failed;
+
+    goto done;
+  }
 
   GST_OBJECT_LOCK (src);
   /* only restart when the pads were not yet activated, else we were
@@ -8526,11 +8635,12 @@ set_mikey_parameter (GstRTSPSrc * src, const guint id, GstCaps * mikey_caps,
 }
 
 static gboolean
-remove_key (GstRTSPSrc * src, const guint id)
+manage_key (GstRTSPSrc * src, const guint id, gboolean remove)
 {
   GstRTSPStream *stream;
 
-  GST_LOG_OBJECT (src, "Removing key for stream with id %u", id);
+  GST_LOG_OBJECT (src, "%s key for stream with id %u", (remove ? "Removing" :
+          "Invalidating"), id);
 
   if (src->state == GST_RTSP_STATE_INVALID) {
     GST_ERROR_OBJECT (src, "invalid state");
@@ -8554,7 +8664,11 @@ remove_key (GstRTSPSrc * src, const guint id)
     return FALSE;
   }
 
-  g_signal_emit_by_name (stream->srtpdec, "remove-key", stream->ssrc, NULL);
+  if (remove)
+    g_signal_emit_by_name (stream->srtpdec, "remove-key", stream->ssrc, NULL);
+  else
+    g_signal_emit_by_name (stream->srtpdec, "invalidate-key", stream->ssrc,
+        NULL);
   if (stream->mikey) {
     gst_mikey_message_unref (stream->mikey);
     stream->mikey = NULL;
@@ -8563,6 +8677,18 @@ remove_key (GstRTSPSrc * src, const guint id)
   GST_OBJECT_UNLOCK (src);
 
   return TRUE;
+}
+
+static gboolean
+remove_key (GstRTSPSrc * src, const guint id)
+{
+  return manage_key (src, id, TRUE);
+}
+
+static gboolean
+invalidate_key (GstRTSPSrc * src, const guint id)
+{
+  return manage_key (src, id, FALSE);
 }
 
 static gboolean
@@ -9326,68 +9452,227 @@ not_supported:
 
 /* RTP-Info is of the format:
  *
- * url=<URL>;[seq=<seqbase>;rtptime=<timebase>] [, url=...]
+ * RTSP 1.0: url=<URL>;[seq=<seqbase>;rtptime=<timebase>] [, url=...]
+ * RTSP 2.0: url="<URL>"<SP>ssrc=<SSRC>[:seq=<seqbase>;rtptime=<timebase>;key=value] [<SP>ssrc=...] [, url=...]
  *
  * rtptime corresponds to the timestamp for the NPT time given in the header
  * seqbase corresponds to the next sequence number we received. This number
  * indicates the first seqnum after the seek and should be used to discard
  * packets that are from before the seek.
+ *
+ * FIXME: We only make use of the first SSRC in case of RTSP 2.0!
  */
 static gboolean
 gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
 {
-  gchar **infos;
-  gint i, j;
+  gchar *rtpinfo_end;
 
   GST_DEBUG_OBJECT (src, "parsing RTP-Info %s", rtpinfo);
 
-  infos = g_strsplit (rtpinfo, ",", 0);
-  for (i = 0; infos[i]; i++) {
-    gchar **fields;
-    GstRTSPStream *stream;
-    gint32 seqbase;
-    gint64 timebase;
+  rtpinfo_end = rtpinfo + strlen (rtpinfo);
 
-    GST_DEBUG_OBJECT (src, "parsing info %s", infos[i]);
+  /* Check for an actual RTSP 2.0 RTP-Info in addition because gst-rtsp-server
+   * was outputting RTSP 1.0 RTP-Infos in the past for both versions */
+  if (src->version >= GST_RTSP_VERSION_2_0
+      && strstr (rtpinfo, "url=\"") != NULL) {
+    while (*rtpinfo) {
+      gchar *tmp1, *tmp2;
+      gchar *url;
+      GstRTSPStream *stream;
+      gint32 seqbase;
+      gint64 timebase;
 
-    /* init values, types of seqbase and timebase are bigger than needed so we
-     * can store -1 as uninitialized values */
-    stream = NULL;
-    seqbase = -1;
-    timebase = -1;
+      /* init values, types of seqbase and timebase are bigger than needed so we
+       * can store -1 as uninitialized values */
+      stream = NULL;
+      seqbase = -1;
+      timebase = -1;
 
-    /* parse url, find stream for url.
-     * parse seq and rtptime. The seq number should be configured in the rtp
-     * depayloader or session manager to detect gaps. Same for the rtptime, it
-     * should be used to create an initial time newsegment. */
-    fields = g_strsplit (infos[i], ";", 0);
-    for (j = 0; fields[j]; j++) {
-      GST_DEBUG_OBJECT (src, "parsing field %s", fields[j]);
-      /* remove leading whitespace */
-      fields[j] = g_strchug (fields[j]);
-      if (g_str_has_prefix (fields[j], "url=")) {
-        /* get the url and the stream */
-        stream =
-            find_stream (src, (fields[j] + 4), (gpointer) find_stream_by_setup);
-      } else if (g_str_has_prefix (fields[j], "seq=")) {
-        seqbase = atoi (fields[j] + 4);
-      } else if (g_str_has_prefix (fields[j], "rtptime=")) {
-        timebase = g_ascii_strtoll (fields[j] + 8, NULL, 10);
+      /* Find url=" */
+      tmp1 = strstr (rtpinfo, "url=\"");
+      if (!tmp1) {
+        return FALSE;
+      }
+
+      /* Right after the " */
+      tmp1 += sizeof ("url=\"") - 1;
+      tmp2 = tmp1;
+
+      while (*tmp2) {
+        if (tmp2[0] == '\\') {
+          if (tmp2[1] != '\0') {
+            tmp2 += 2;
+          } else {
+            return FALSE;
+          }
+        } else if (tmp2[0] == '"') {
+          break;
+        } else {
+          tmp2++;
+        }
+      }
+
+      url = g_strndup (tmp1, tmp2 - tmp1);
+      GST_DEBUG_OBJECT (src, "url=%s", url);
+      /* get the url and the stream */
+      stream = find_stream (src, url, (gpointer) find_stream_by_setup);
+      g_free (url);
+      url = NULL;
+
+      rtpinfo = tmp2 + 1;
+
+      /* At the start of the SSRCs, a space-separated list ending at the next
+       * URL which would start with a comma */
+      while (*rtpinfo && *rtpinfo != ',') {
+        tmp1 = rtpinfo;
+        if (tmp1[0] != ' ')
+          return FALSE;
+        tmp1++;
+
+        if (!g_str_has_prefix (tmp1, "ssrc="))
+          return FALSE;
+        tmp1 += sizeof ("ssrc=") - 1;
+
+        /* At the start of the first SSRC now, which is optionally followed by
+         * a colon and key=value pairs separated by semicolon. The values
+         * might be in quotes. */
+        if (rtpinfo_end - tmp1 <= 8)
+          return FALSE;
+        tmp1 += 8;
+
+        /* New SSRC following, or next URL */
+        rtpinfo = tmp1;
+        if (*rtpinfo != ':') {
+          continue;
+        }
+
+        rtpinfo++;
+
+        /* Key-value pairs following */
+        while (*rtpinfo && *rtpinfo != ' ' && *rtpinfo != ',') {
+          gchar *key, *value;
+          gboolean in_quotes = FALSE;
+
+          tmp1 = rtpinfo;
+          tmp2 = strchr (tmp1, '=');
+          if (!tmp2)
+            return FALSE;
+
+          key = g_strndup (tmp1, tmp2 - tmp1);
+          tmp2++;
+
+          /* Start of the value */
+          tmp1 = tmp2;
+          while (*tmp2) {
+            if (in_quotes && tmp2[0] == '"') {
+              in_quotes = FALSE;
+              tmp2++;
+            } else if (!in_quotes && tmp2[0] == '"') {
+              in_quotes = TRUE;
+              tmp2++;
+            } else if (in_quotes && tmp2[0] == '\\') {
+              if (tmp2[1] != '\0') {
+                tmp2 += 2;
+              } else {
+                g_free (key);
+                return FALSE;
+              }
+            } else if (in_quotes) {
+              tmp2++;
+            } else if (tmp2[0] == ';' || tmp2[0] == ' ' || tmp2[0] == ',') {
+              break;
+            } else {
+              tmp2++;
+            }
+          }
+
+          if (tmp1 == tmp2) {
+            g_free (key);
+            break;
+          }
+
+          value = g_strndup (tmp1, tmp2 - tmp1);
+
+          if (strcmp (key, "seq") == 0) {
+            seqbase = atoi (value);
+          } else if (strcmp (key, "rtptime") == 0) {
+            timebase = g_ascii_strtoll (value, NULL, 10);
+          }
+
+          g_free (key);
+          g_free (value);
+
+          rtpinfo = tmp2;
+          if (tmp2[0] != ';')
+            break;
+          rtpinfo += 1;
+        }
+      }
+
+      /* now we need to store the values for the caps of the stream */
+      if (stream != NULL) {
+        GST_DEBUG_OBJECT (src,
+            "found stream %p, setting: seqbase %d, timebase %" G_GINT64_FORMAT,
+            stream, seqbase, timebase);
+
+        /* we have a stream, configure detected params */
+        stream->seqbase = seqbase;
+        stream->timebase = timebase;
       }
     }
-    g_strfreev (fields);
-    /* now we need to store the values for the caps of the stream */
-    if (stream != NULL) {
-      GST_DEBUG_OBJECT (src,
-          "found stream %p, setting: seqbase %d, timebase %" G_GINT64_FORMAT,
-          stream, seqbase, timebase);
+  } else {
+    gchar **infos;
+    gint i, j;
 
-      /* we have a stream, configure detected params */
-      stream->seqbase = seqbase;
-      stream->timebase = timebase;
+    infos = g_strsplit (rtpinfo, ",", 0);
+    for (i = 0; infos[i]; i++) {
+      gchar **fields;
+      GstRTSPStream *stream;
+      gint32 seqbase;
+      gint64 timebase;
+
+      GST_DEBUG_OBJECT (src, "parsing info %s", infos[i]);
+
+      /* init values, types of seqbase and timebase are bigger than needed so we
+       * can store -1 as uninitialized values */
+      stream = NULL;
+      seqbase = -1;
+      timebase = -1;
+
+      /* parse url, find stream for url.
+       * parse seq and rtptime. The seq number should be configured in the rtp
+       * depayloader or session manager to detect gaps. Same for the rtptime, it
+       * should be used to create an initial time newsegment. */
+      fields = g_strsplit (infos[i], ";", 0);
+      for (j = 0; fields[j]; j++) {
+        GST_DEBUG_OBJECT (src, "parsing field %s", fields[j]);
+        /* remove leading whitespace */
+        fields[j] = g_strchug (fields[j]);
+        if (g_str_has_prefix (fields[j], "url=")) {
+          /* get the url and the stream */
+          stream =
+              find_stream (src, (fields[j] + 4),
+              (gpointer) find_stream_by_setup);
+        } else if (g_str_has_prefix (fields[j], "seq=")) {
+          seqbase = atoi (fields[j] + 4);
+        } else if (g_str_has_prefix (fields[j], "rtptime=")) {
+          timebase = g_ascii_strtoll (fields[j] + 8, NULL, 10);
+        }
+      }
+      g_strfreev (fields);
+      /* now we need to store the values for the caps of the stream */
+      if (stream != NULL) {
+        GST_DEBUG_OBJECT (src,
+            "found stream %p, setting: seqbase %d, timebase %" G_GINT64_FORMAT,
+            stream, seqbase, timebase);
+
+        /* we have a stream, configure detected params */
+        stream->seqbase = seqbase;
+        stream->timebase = timebase;
+      }
     }
+    g_strfreev (infos);
   }
-  g_strfreev (infos);
 
   return TRUE;
 }
