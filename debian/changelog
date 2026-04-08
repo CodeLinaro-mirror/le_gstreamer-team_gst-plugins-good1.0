@@ -1,3 +1,10 @@
+gst-plugins-good1.0 (1.28.2-1) unstable; urgency=medium
+
+  * d/watch: pin to 1.28.x
+  * New upstream version 1.28.2
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Wed, 08 Apr 2026 10:23:52 +0200
+
 gst-plugins-good1.0 (1.28.1-1) unstable; urgency=medium
 
   * d/control: update to Standards-Version 4.7.3
