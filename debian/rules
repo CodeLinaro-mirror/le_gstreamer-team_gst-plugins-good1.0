@@ -13,6 +13,9 @@ gst_version=$(shell echo $(DEB_VERSION) | cut -d '-' -f 1)
 
 built_binaries := $(shell dh_listpackages)
 
+conf_flags = -Dpackage-name=$(GST_PACKAGE_NAME) -Dpackage-origin=$(GST_PACKAGE_ORIGIN)
+conf_flags += -Dauto_features=enabled -Ddoc=disabled -Drpicamsrc=disabled
+
 # Let's decide the package name and url depending on the distribution
 DISTRO = "$(shell dpkg-vendor --query vendor)"
 
@@ -27,10 +30,9 @@ endif
 ifeq ($(DISTRO),"Ubuntu")
 GST_PACKAGE_NAME := "GStreamer Good Plugins (Ubuntu)"
 GST_PACKAGE_ORIGIN="https://launchpad.net/ubuntu/+source/gst-plugins-good1.0"
+# opencore-amr is in Ubuntu 'universe' instead of 'main'
+conf_flags += -Damrnb=disabled -Damrwbdec=disabled
 endif
-
-conf_flags = -Dpackage-name=$(GST_PACKAGE_NAME) -Dpackage-origin=$(GST_PACKAGE_ORIGIN)
-conf_flags += -Dauto_features=enabled -Ddoc=disabled -Drpicamsrc=disabled
 
 ifeq ($(DEB_HOST_ARCH_OS),hurd)
 conf_flags += -Doss4=disabled
@@ -87,6 +89,11 @@ endif
 ifeq ($(DEB_HOST_ARCH_OS),linux)
 	dh_install -pgstreamer1.0-plugins-good debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/gstreamer-1.0/libgst1394.so
 	dh_install -pgstreamer1.0-plugins-good debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/gstreamer-1.0/libgstvideo4linux2.so
+endif
+
+ifneq ($(DISTRO),"Ubuntu")
+	dh_install -pgstreamer1.0-plugins-good debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/gstreamer-1.0/libgstamrnb.so
+	dh_install -pgstreamer1.0-plugins-good debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/gstreamer-1.0/libgstamrwbdec.so
 endif
 
 	mkdir -p $(CURDIR)/fake-home
