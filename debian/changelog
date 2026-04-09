@@ -1,3 +1,11 @@
+gst-plugins-good1.0 (1.28.2-2) unstable; urgency=medium
+
+  * Team upload
+  * Disable amr features for Ubuntu becuase opencore-amr is not in Ubuntu main
+    (LP: #2147649)
+
+ -- Jeremy Bícha <jbicha@ubuntu.com>  Thu, 09 Apr 2026 10:53:00 -0400
+
 gst-plugins-good1.0 (1.28.2-1) unstable; urgency=medium
 
   * d/watch: pin to 1.28.x
