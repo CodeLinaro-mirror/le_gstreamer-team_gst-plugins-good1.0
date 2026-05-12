@@ -1258,7 +1258,17 @@ gst_wavparse_stream_headers (GstWavParse * wav)
       case GST_RIFF_WAVE_FORMAT_PCM:
         if (wav->blockalign > wav->channels * ((wav->depth + 7) / 8))
           goto invalid_blockalign;
-        /* fall through */
+        /* For PCM, av_bps is fully determined by blockalign * rate. Some
+         * writers produce bogus av_bps values; recompute instead of failing
+         * so playback and seeking work correctly. */
+        if (wav->av_bps != wav->blockalign * wav->rate) {
+          GST_WARNING_OBJECT (wav,
+              "Stream claims av_bps = %u, expected %u for PCM - recomputing",
+              wav->av_bps, wav->blockalign * wav->rate);
+          wav->av_bps = wav->blockalign * wav->rate;
+        }
+        wav->bps = wav->av_bps;
+        break;
       default:
         if (wav->av_bps > wav->blockalign * wav->rate)
           goto invalid_bps;
@@ -1360,11 +1370,14 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     }
 
     /* Clip to upstream size if known */
-    if (upstream_size > 0 && size + 8 + wav->offset > upstream_size) {
-      GST_WARNING_OBJECT (wav, "Clipping chunk size to file size");
-      g_assert (upstream_size >= wav->offset);
-      g_assert (upstream_size - wav->offset >= 8);
-      size = upstream_size - wav->offset - 8;
+    if (upstream_size > 0) {
+      if (upstream_size < wav->offset + 8) {
+        GST_WARNING_OBJECT (wav, "Bogus file size");
+        upstream_size = -1;
+      } else if (size > upstream_size - wav->offset - 8) {
+        GST_WARNING_OBJECT (wav, "Clipping chunk size to file size");
+        size = upstream_size - wav->offset - 8;
+      }
     }
 
     /* wav is a st00pid format, we don't know for sure where data starts.
