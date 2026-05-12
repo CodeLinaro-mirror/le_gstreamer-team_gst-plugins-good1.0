@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.28.2\n"
+"Project-Id-Version: gst-plugins-good-1.28.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-07 20:02+0100\n"
+"POT-Creation-Date: 2026-05-11 18:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -111,7 +111,7 @@ msgstr ""
 #: gst/isomp4/qtdemux.c:4744 gst/isomp4/qtdemux.c:9639
 #: gst/isomp4/qtdemux.c:9646 gst/isomp4/qtdemux.c:10990
 #: gst/isomp4/qtdemux.c:11435 gst/isomp4/qtdemux.c:11442
-#: gst/isomp4/qtdemux.c:17540
+#: gst/isomp4/qtdemux.c:17619
 msgid "This file is corrupt and cannot be played."
 msgstr ""
 
@@ -131,17 +131,17 @@ msgstr ""
 msgid "This file is incomplete and cannot be played."
 msgstr ""
 
-#: gst/isomp4/qtdemux.c:15178
+#: gst/isomp4/qtdemux.c:15252
 msgid "The video in this file might not play correctly."
 msgstr ""
 
-#: gst/rtsp/gstrtspsrc.c:8439
+#: gst/rtsp/gstrtspsrc.c:8464
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
 
-#: gst/rtsp/gstrtspsrc.c:8444
+#: gst/rtsp/gstrtspsrc.c:8469
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
@@ -302,15 +302,15 @@ msgstr ""
 msgid "Video device uses an unsupported pixel format."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:6064
+#: sys/v4l2/gstv4l2object.c:6069
 msgid "Failed to configure internal buffer pool."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:6070
+#: sys/v4l2/gstv4l2object.c:6075
 msgid "Video device did not suggest any buffer size."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:6076
+#: sys/v4l2/gstv4l2object.c:6081
 msgid "No downstream pool to import from."
 msgstr ""
 

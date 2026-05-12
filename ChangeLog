@@ -1,3 +1,183 @@
+=== release 1.28.3 ===
+
+2026-05-11 18:28:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.28.3
+
+2026-04-16 17:03:44 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Check for minimum stride requirements and width/height constraints with uncompressed video
+	  And return an explicit error on mismatches.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5043
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11591>
+
+2026-05-08 22:58:24 +1000  Jan Schmidt <jan@centricular.com>
+
+	* ext/adaptivedemux2/hls/gsthlsdemux.c:
+	  hlsdemux2: Abort wait for variant playlist on shutdown
+	  If the element is stopped while waiting for the variant playlist,
+	  exit the loop.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11572>
+
+2026-05-08 22:24:52 +1000  Jan Schmidt <jan@centricular.com>
+
+	* ext/adaptivedemux2/gstadaptivedemux-stream.c:
+	  adaptivedemux2: Fix mismatched clock-time vs clock-stime check
+	  Adaptive demux stream start_position is an unsigned clock-time value,
+	  it should not be compared against GST_CLOCK_STIME_NONE
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11572>
+
+2026-05-08 22:09:46 +1000  Jan Schmidt <jan@centricular.com>
+
+	* ext/adaptivedemux2/hls/gsthlsdemux-stream.c:
+	* ext/adaptivedemux2/hls/gsthlsdemux.c:
+	* ext/adaptivedemux2/hls/gsthlsdemux.h:
+	  hlsdemux2: Error out cleanly on resync failure
+	  Instead of asserting when the variant stream doesn't have a current
+	  position to resynchronise to after a discontinuity, throw an element
+	  error instead.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11572>
+
+2026-04-09 09:59:52 +0900  Shigeharu Kamiya <s_kamiya@toa.co.jp>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: include user-agent property in HTTP tunnel requests
+	  The user-agent property is correctly sent in regular RTSP
+	  requests via gst_rtspsrc_init_request(), but was missing from
+	  HTTP tunnel GET and POST requests. Add it to the connection's
+	  extra HTTP headers when tunneled mode is configured.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11286>
+
+2026-05-06 19:50:35 +0100  Arthur Chan <arthur.chan@adalogics.com>
+
+	* gst/isomp4/qtdemux.c:
+	  isomp4: Fix memory leak when file is corrupted
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11564>
+
+2026-04-07 13:09:24 +0100  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Require C std gnu11 or c11
+	  When using gcc or clang, gnu11 will be used, and when using MSVC c11
+	  will be used which will pass /std:c11. This provides us with the
+	  `restrict` keyword on all supported platforms.
+	  We can do this now because we require Visual Studio 2019.
+	  This feature was added in Meson 1.3
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11563>
+
+2026-05-06 19:49:33 +0100  Arthur Chan <arthur.chan@adalogics.com>
+
+	* gst/matroska/ebml-read.c:
+	  matroska: Fix wrong object type bug
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11561>
+
+2026-04-30 12:57:35 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: Remove assertion about upstream file size
+	  Upstream can report bogus values and we shouldn't assert on that but just ignore
+	  it in that case.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5077
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11506>
+
+2026-04-21 10:43:37 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  gstrtspsrc: mki is optional upon crypto update
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5050
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11448>
+
+2026-04-04 20:34:19 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* sys/osxaudio/gstosxcoreaudiocommon.h:
+	  applemedia: Require Xcode 12.4 for all builds
+	  Xcode 12.4 is the newest Xcode that you can install on macOS 10.15. We
+	  require Xcode 12.4, but we only support macOS builds on it. For iOS,
+	  tvOS, etc a newer (currently unspecified) Xcode version is required.
+	  Fixes #4941
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11369>
+
+2026-04-20 15:36:34 +0900  Jeongmin Kwak <jeongmin.kwak@lge.com>
+
+	* gst/isomp4/qtdemux.c:
+	  isomp4: qtdemux: Add bounds checks for ESDS descriptors
+	  Validate minimum sizes before accessing descriptor fields to prevent
+	  out-of-bounds reads on truncated or malformed MP4 files.
+	  - ES_DESCRIPTOR_TAG: require 3 bytes
+	  - DECODER_CONFIG_DESC_TAG: require 13 bytes
+	  - SL_CONFIG_DESC_TAG: require 1 byte
+	  Skip short descriptors instead of reading invalid memory.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11382>
+
+2025-10-15 11:16:46 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* sys/v4l2/gstv4l2transform.c:
+	  v4l2transform: release input buffers earlier
+	  The transform operation is synchronous. So the input buffer is no longer needed
+	  once the output buffer is ready. Release it immediately so it can be reused by
+	  the upstream pipeline.
+	  This can reduce the number of buffers needed.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11368>
+
+2025-10-15 14:23:03 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2bufferpool.h:
+	  v4l2: pool: add helper to release buffers
+	  Factor out the code to dequeue and release buffers that are ready.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11368>
+
+2026-04-14 15:43:58 +0200  Tobias Koenig <tobias.koenig@kdab.com>
+
+	* ext/qt6/qt6glitem.cc:
+	  qml6glsink: Fix redraw issues on buffer change
+	  Mark the texture as dirty if the new buffer is different from
+	  the previous one to make sure the item is rerendered.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11338>
+
+2026-04-14 09:04:15 +0200  Michiel Westerbeek <happylinks@gmail.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: recover from invalid av_bps for PCM
+	  Some PCM WAV files in the wild have an av_bps field (nAvgBytesPerSec)
+	  that doesn't match blockalign * rate — only the metadata is wrong,
+	  the PCM data is valid. Previously wavparse rejected these with a
+	  fatal stream error.
+	  For PCM, av_bps is fully determined by blockalign * rate, so
+	  recompute to the authoritative value and warn. wav->bps is used at
+	  :367 and :734 to translate timestamps to byte offsets for seeking,
+	  so simply accepting the bogus value would silently produce wrong
+	  seeks.
+	  Non-PCM formats keep the strict rejection: for compressed formats
+	  (ADPCM, GSM, etc.) the actual av_bps is much less than
+	  blockalign * rate, so recomputing wouldn't give a correct value.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11331>
+
+2026-04-10 17:02:53 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Fix divide by zero if VPRP contains fields==0
+	  Thanks to RTV for reporting.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5027
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11305>
+
+2026-04-03 15:35:38 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: object: Fix caps filtering in caps negotiation
+	  The dmabuf caps feature was not properly added to the probed caps. This would
+	  lead to caps negotiation failure when trying to force DMABuf using a caps filter
+	  after the stateful v4l2h*dec elements.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11288>
+
+2026-04-07 20:07:19 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.28.2
+
 === release 1.28.2 ===
 
 2026-04-07 20:02:23 +0100  Tim-Philipp Müller <tim@centricular.com>

@@ -12784,14 +12784,14 @@ unsupported_feature:
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
-static void
+static gboolean
 qtdemux_set_info_from_uncv (GstQTDemux * qtdemux,
     QtDemuxStreamStsdEntry * entry, UncompressedFrameConfigBox * uncC,
     GstVideoInfo * info)
 {
   guint32 num_components = uncC->component_count;
   guint32 row_align_size = uncC->row_align_size;
-  gint height = entry->height;
+  guint height = entry->height;
 
   if (uncC->version == 1) {
     switch (uncC->profile) {
@@ -12805,38 +12805,84 @@ qtdemux_set_info_from_uncv (GstQTDemux * qtdemux,
       default:
         GST_WARNING_OBJECT (qtdemux, "Unsupported uncv profile: %u",
             uncC->profile);
-        return;
+        return FALSE;
     }
     info->stride[0] = entry->width * num_components;
     info->size = info->stride[0] * height;
-    return;
+    return TRUE;
   }
 
-  gint default_stride = 0;
+  guint default_stride;
+  // We only support 8/16 bit formats right now, and r210. Other formats need
+  // updating below to calculate the correct strides and sizes.
+  g_assert (uncC->components[0].bit_depth % 8 == 0
+      || info->finfo->format == GST_VIDEO_FORMAT_r210);
   if (row_align_size) {
     default_stride = row_align_size;
   } else {
-    default_stride = entry->width;
+    default_stride = (uncC->components[0].bit_depth / 8) * entry->width;
   }
 
   switch (uncC->sampling_type) {
-    case SAMPLING_444:
-      if (uncC->interleave_type == INTERLEAVE_PIXEL) {
-        if (row_align_size) {
-          info->stride[0] = row_align_size;
-        } else {
-          info->stride[0] = entry->width * num_components;
+    case SAMPLING_444:{
+      switch (uncC->interleave_type) {
+        case INTERLEAVE_PIXEL:{
+          guint min_stride =
+              (uncC->components[0].bit_depth / 8) * entry->width *
+              num_components;
+
+          // Special case for r210
+          if (info->finfo->format == GST_VIDEO_FORMAT_r210)
+            min_stride = entry->width * 4;
+
+          if (row_align_size) {
+            if (row_align_size < min_stride) {
+              GST_WARNING_OBJECT (qtdemux,
+                  "Invalid row align size %u smaller than minimum %u",
+                  row_align_size, min_stride);
+              return FALSE;
+            }
+            info->stride[0] = row_align_size;
+          } else {
+            info->stride[0] = min_stride;
+          }
+          info->size = info->stride[0] * height;
+          break;
         }
-        info->size = info->stride[0] * height;
-      } else {
-        for (gint i = 0; i < num_components; i++) {
-          info->stride[i] = default_stride;
+        case INTERLEAVE_COMPONENT:{
+          guint min_stride = (uncC->components[0].bit_depth / 8) * entry->width;
+          if (default_stride < min_stride) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Invalid row align size %u smaller than minimum %u",
+                default_stride, min_stride);
+            return FALSE;
+          }
+
+          for (gint i = 0; i < num_components; i++) {
+            info->stride[i] = default_stride;
+          }
+          info->size = info->stride[0] * height * num_components;
+          break;
         }
-        info->size = info->stride[0] * height * num_components;
+        default:
+          return FALSE;
       }
       break;
+    }
+    case SAMPLING_422:{
+      guint min_stride = (uncC->components[0].bit_depth / 8) * entry->width;
+      if (default_stride < min_stride) {
+        GST_WARNING_OBJECT (qtdemux,
+            "Invalid row align size %u smaller than minimum %u", default_stride,
+            min_stride);
+        return FALSE;
+      }
+      if (entry->width % 2 != 0) {
+        GST_WARNING_OBJECT (qtdemux,
+            "Require even widths for 4:2:2 subsampling");
+        return FALSE;
+      }
 
-    case SAMPLING_422:
       info->stride[0] = default_stride;
       switch (uncC->interleave_type) {
         case INTERLEAVE_COMPONENT:
@@ -12846,16 +12892,31 @@ qtdemux_set_info_from_uncv (GstQTDemux * qtdemux,
         case INTERLEAVE_MIXED:
           info->stride[1] = info->stride[0];
           break;
-        case INTERLEAVE_MULTI_Y:
-          // TODO
-          break;
         default:
-          break;                // Error
+          return FALSE;
       }
       info->size = info->stride[0] * height * 2;
       break;
+    }
+    case SAMPLING_420:{
+      guint min_stride = (uncC->components[0].bit_depth / 8) * entry->width;
+      if (default_stride < min_stride) {
+        GST_WARNING_OBJECT (qtdemux,
+            "Invalid row align size %u smaller than minimum %u", default_stride,
+            min_stride);
+        return FALSE;
+      }
+      if (entry->width % 2 != 0) {
+        GST_WARNING_OBJECT (qtdemux,
+            "Require even widths for 4:2:0 subsampling");
+        return FALSE;
+      }
+      if (entry->height % 2 != 0) {
+        GST_WARNING_OBJECT (qtdemux,
+            "Require even heights for 4:2:0 subsampling");
+        return FALSE;
+      }
 
-    case SAMPLING_420:
       info->stride[0] = default_stride;
       switch (uncC->interleave_type) {
         case INTERLEAVE_COMPONENT:
@@ -12866,12 +12927,25 @@ qtdemux_set_info_from_uncv (GstQTDemux * qtdemux,
           info->stride[1] = info->stride[0];
           break;
         default:
-          break;                // Error
+          return FALSE;
       }
       info->size = info->stride[0] * height * 3 / 2;
       break;
+    }
+    case SAMPLING_411:{
+      guint min_stride = (uncC->components[0].bit_depth / 8) * entry->width;
+      if (default_stride < min_stride) {
+        GST_WARNING_OBJECT (qtdemux,
+            "Invalid row align size %u smaller than minimum %u", default_stride,
+            min_stride);
+        return FALSE;
+      }
+      if (entry->width % 4 != 0) {
+        GST_WARNING_OBJECT (qtdemux,
+            "Require widths that are an integer multiple of 4 for 4:1:1 subsampling");
+        return FALSE;
+      }
 
-    case SAMPLING_411:
       info->stride[0] = default_stride;
       switch (uncC->interleave_type) {
         case INTERLEAVE_COMPONENT:
@@ -12881,17 +12955,17 @@ qtdemux_set_info_from_uncv (GstQTDemux * qtdemux,
         case INTERLEAVE_MIXED:
           info->stride[1] = info->stride[0];
           break;
-        case INTERLEAVE_MULTI_Y:
-          // TODO
         default:
-          break;                // Error
+          return FALSE;
       }
       info->size = info->stride[0] * height * 3 / 2;
       break;
+    }
     default:
-      break;
+      return FALSE;
   }
 
+  return TRUE;
 }
 
 /* *INDENT-OFF* */
@@ -16615,6 +16689,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
           dops = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_dops);
           if (dops == NULL) {
             GST_WARNING_OBJECT (qtdemux, "Opus Specific Box not found");
+            g_free (codec);
             goto corrupt_file;
           }
 
@@ -16640,12 +16715,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
           if (len < offset + dops_len) {
             GST_WARNING_OBJECT (qtdemux,
                 "Opus Sample Entry has bogus size %" G_GUINT32_FORMAT, len);
+            g_free (codec);
             goto corrupt_file;
           }
           if (dops_len < 19) {
             GST_WARNING_OBJECT (qtdemux,
                 "Opus Specific Box has bogus size %" G_GUINT32_FORMAT,
                 dops_len);
+            g_free (codec);
             goto corrupt_file;
           }
 
@@ -16658,6 +16735,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
               GST_WARNING_OBJECT (qtdemux,
                   "Opus Specific Box has bogus size %" G_GUINT32_FORMAT,
                   dops_len);
+              g_free (codec);
               goto corrupt_file;
             }
 
@@ -16680,6 +16758,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             GST_WARNING_OBJECT (qtdemux,
                 "Opus unexpected nb of channels %d without channel mapping",
                 n_channels);
+            g_free (codec);
             goto corrupt_file;
           }
 
@@ -18451,12 +18530,24 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     switch (tag) {
       case ES_DESCRIPTOR_TAG:
+        if (len < 3) {
+          GST_WARNING_OBJECT (qtdemux, "ES descriptor too short (%d < 3)", len);
+          ptr += len;
+          break;
+        }
         GST_DEBUG_OBJECT (qtdemux, "ID 0x%04x", QT_UINT16 (ptr));
         GST_DEBUG_OBJECT (qtdemux, "priority 0x%04x", QT_UINT8 (ptr + 2));
         ptr += 3;
         break;
       case DECODER_CONFIG_DESC_TAG:{
         guint max_bitrate, avg_bitrate;
+
+        if (len < 13) {
+          GST_WARNING_OBJECT (qtdemux,
+              "Decoder config descriptor too short (%d < 13)", len);
+          ptr += len;
+          break;
+        }
 
         object_type_id = QT_UINT8 (ptr);
         stream_type = QT_UINT8 (ptr + 1) >> 2;
@@ -18519,6 +18610,12 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
         ptr += len;
         break;
       case SL_CONFIG_DESC_TAG:
+        if (len < 1) {
+          GST_WARNING_OBJECT (qtdemux,
+              "SL config descriptor too short (%d < 1)", len);
+          ptr += len;
+          break;
+        }
         GST_DEBUG_OBJECT (qtdemux, "data %02x", QT_UINT8 (ptr));
         ptr += 1;
         break;
@@ -19337,10 +19434,13 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
       format = qtdemux_get_format_from_uncv (qtdemux, &uncC, &cmpd);
       if (format != GST_VIDEO_FORMAT_UNKNOWN) {
+        stream->alignment = 32;
+
         gst_video_info_set_format (&stream->pre_info, format, entry->width,
             entry->height);
-        qtdemux_set_info_from_uncv (qtdemux, entry, &uncC, &stream->pre_info);
-        stream->alignment = 32;
+        if (!qtdemux_set_info_from_uncv (qtdemux, entry, &uncC,
+                &stream->pre_info))
+          format = GST_VIDEO_FORMAT_UNKNOWN;
       }
 
       /* Free Memory */
