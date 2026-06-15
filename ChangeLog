@@ -1,3 +1,188 @@
+=== release 1.28.4 ===
+
+2026-06-12 13:19:43 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.28.4
+
+2026-06-11 15:43:40 +1000  Matthew Waters <matthew@centricular.com>
+
+	* ext/qt6/qt6glrenderer.cc:
+	  qt6: remove an unneeded QOpenGLContext->makeCurrent()
+	  This is no longer needed with Qt6.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11833>
+
+2026-06-05 12:33:30 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/audioparsers/gstsbcparse.c:
+	  sbcparse: Add bounds checking to header parsing
+	  Also the minimum valid frame size is 7 and not 6 (assertion) or 8 (header
+	  parsing).
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5087
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11817>
+
+2026-06-05 11:24:33 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/wavpack/gstwavpackdec.c:
+	  wavpackdec: Unmap input buffer directly after decoding
+	  In case of decoder errors we would otherwise unmap the buffer after
+	  finish_frame(), which potentially invalidates the input buffer already.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11811>
+
+2026-06-05 11:24:29 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/wavpack/gstwavpackdec.c:
+	  wavpackdec: Avoid integer overflow when checking input buffer size
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11811>
+
+2026-06-05 11:24:25 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/wavpack/gstwavpackdec.c:
+	  wavpackdec: Use correctly-sized variable types
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11811>
+
+2026-06-05 11:24:21 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/wavpack/gstwavpackdec.c:
+	  wavpackdec: Avoid integer overflow when calculating output buffer size
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5069
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11811>
+
+2026-05-31 14:46:21 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/wavpack/gstwavpackenc.c:
+	  wavpackenc: Handle >8 channels correctly when reordering
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11757>
+
+2026-05-31 13:42:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/audioparsers/gstwavpackparse.c:
+	  wavpackparse: Fix parsing of number of channels in new-style channel info chunks
+	  The number of channels is spread out over three bytes, not two.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11757>
+
+2026-05-31 13:41:36 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/audioparsers/gstwavpackparse.c:
+	  wavpackparse: Only default channel mask if no channels are given
+	  A zero channel mask is completely valid for unpositioned channels.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11757>
+
+2026-05-31 12:30:58 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/audioparsers/gstwavpackparse.c:
+	  wavpackparse: Map unsupported channel layouts to unpositioned channels
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11757>
+
+2026-05-31 12:13:47 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/wavpack/gstwavpackdec.c:
+	* ext/wavpack/gstwavpackdec.h:
+	  wavpackdec: Handle unsupported channel layouts by mapping to unpositioned channels
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11757>
+
+2026-05-31 12:03:49 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/wavpack/gstwavpackenc.c:
+	  wavpackenc: Handle unpositioned and unsupported channel layouts
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5129
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11757>
+
+2026-05-31 12:00:39 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/wavpack/gstwavpackcommon.c:
+	  wavpack: Map unknown/invalid channel positions to an unpositioned layout
+	  Instead of randomly failing or producing incomplete channel masks.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11757>
+
+2026-05-31 11:58:59 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/wavpack/gstwavpackcommon.c:
+	* ext/wavpack/gstwavpackcommon.h:
+	  wavpack: Remove unused function
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11757>
+
+2026-05-31 11:45:48 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/wavpack/gstwavpackcommon.c:
+	* ext/wavpack/gstwavpackcommon.h:
+	* ext/wavpack/gstwavpackdec.c:
+	* ext/wavpack/gstwavpackdec.h:
+	* ext/wavpack/gstwavpackenc.c:
+	* ext/wavpack/gstwavpackenc.h:
+	  wavpack: Use more correct types and add some const qualifiers
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11757>
+
+2026-05-29 11:53:08 +0900  Hou Qi <qi.hou@nxp.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2: Fix buffer leak on qbuf failure
+	  When gst_v4l2_buffer_pool_qbuf() fails in the output buffer processing
+	  path of gst_v4l2_buffer_pool_process(), the to_queue buffer is not
+	  unreferenced before jumping to the queue_failed error label. This buffer
+	  was either obtained via gst_buffer_ref() on the input buffer or acquired
+	  from the buffer pool, both of which take a reference that must be
+	  released on failure.
+	  Add the missing gst_buffer_unref() call to prevent leaking a buffer
+	  reference each time qbuf fails.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11759>
+
+2026-05-29 17:37:07 +0200  Jan Schmidt <jan@centricular.com>
+
+	* tests/check/elements/mpegaudioparse.c:
+	  tests/mpegaudioparse: Fix raciness in the state change handling
+	  This test_parse_gapless_and_skip_padding_samples test sometimes
+	  got stuck changing state synchronously if appsink prerolled too
+	  quickly. Fix it to use asynchronous state changes and waiting
+	  in all the required places.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11724>
+
+2026-05-29 11:00:33 +0800  Hou Qi <qi.hou@nxp.com>
+
+	* gst/matroska/matroska-mux.c:
+	* gst/matroska/matroska-mux.h:
+	  matroska-mux: Write ReferenceBlock for non-keyframe video in BlockGroups
+	  When writing video frames using BlockGroups, the muxer did not include
+	  a ReferenceBlock element for non-keyframe frames. According to the
+	  Matroska specification, the absence of ReferenceBlock in a BlockGroup
+	  signals that the block is a keyframe. Without it, demuxers have no way
+	  to distinguish keyframes from delta frames when parsing BlockGroups.
+	  This caused interoperability issues with demuxers that rely on
+	  ReferenceBlock presence to identify non-keyframe video frames as delta
+	  units, which is the standard behavior per the Matroska spec.
+	  Add a ReferenceBlock element to BlockGroups for non-keyframe video
+	  blocks so that demuxers can correctly flag them as delta units.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11722>
+
+2026-05-29 13:26:37 +0300  Rares Branici <rares.branici@senstar.com>
+
+	* gst/rtp/gstrtph265depay.c:
+	  rtph265depay: fix mem leak
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11715>
+
+2026-05-19 10:29:37 +0200  Piotr Brzeziński <piotr@centricular.com>
+
+	* sys/osxaudio/gstosxcoreaudio.c:
+	  osxaudio: Fix stack overflow with >64ch audio devices
+	  The fallback path for invalid channel positions didn't account for the
+	  64 channel limit we have in osxaudio including the positions array, and
+	  would overflow it if more channels were present.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11658>
+
+2026-05-19 18:09:25 +0200  dec05eba <dec05eba@protonmail.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: parse mastering luminance as u32 instead of u16
+	  According to the specification in ISO/IEC 14496-12 2020 12.1.7.1
+	  these fields should be u32, not u16.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11661>
+
+2026-05-11 18:33:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.28.3
+
 === release 1.28.3 ===
 
 2026-05-11 18:28:12 +0100  Tim-Philipp Müller <tim@centricular.com>
