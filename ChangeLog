@@ -1,3 +1,176 @@
+=== release 1.28.5 ===
+
+2026-07-08 23:42:39 +0200  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.28.5
+
+2026-07-02 18:33:04 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/lzo.c:
+	* gst/matroska/lzo.h:
+	  matroska: Update lzo decompression implementation from latest ffmpeg
+	  See also CVE-2014-4610.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5184
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12079>
+
+2026-06-26 12:03:09 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: Avoid NULL pointer dereference when parsing adtl in push mode
+	  Fix provided by Michael Bommarito, who also reported this.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5177
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12078>
+
+2026-06-23 10:34:39 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpjpegdepay.c:
+	  rtpjpegdepay: Ensure that quantization table is big enough
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5158
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12071>
+
+2026-06-19 13:20:04 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/gdk_pixbuf/gstgdkpixbufdec.c:
+	  gdkpixbufdec: Handle format and resolution changes correctly
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5121
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12060>
+
+2026-06-19 13:15:02 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/gdk_pixbuf/gstgdkpixbufdec.c:
+	  gdkpixbufdec: Drop rank to NONE
+	  gdk-pixbuf is not mean to be used on untrusted inputs so let's not ask for
+	  problems here.
+	  For the common image formats we have specialized elements with higher ranks and
+	  for a proper replacement follow this issue:
+	  https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs/-/issues/764
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12060>
+
+2026-06-19 13:00:27 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpsbcdepay.c:
+	  rtpsbcdepay: Remove wrong variable shadowing
+	  `samples` is expected to be set in the outer scope at a later time.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12059>
+
+2026-06-19 12:55:34 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpsbcdepay.c:
+	  rtpsbcdepay: Check that enough data is available for the payload header
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12059>
+
+2026-06-19 12:50:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpsbcdepay.c:
+	  rtpsbcdepay: Check for available data in the adapter before getting data
+	  Consider empty packets with the last flag as bad packets.
+	  Also reset buffers to NULL after giving away ownership of them to avoid
+	  returning an already freed buffer.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5119
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12059>
+
+2026-06-17 16:18:50 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/atomsrecovery.c:
+	  qtmoovrecover: Validate box sizes
+	  Also validate box versions where it matters.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5118
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5120
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12058>
+
+2026-06-14 23:46:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpceltdepay.c:
+	  rtpceltdepay: error out if anyone tries to use this element
+	  Forbid use of this element and comment out all processing code.
+	  There is no plausible reason this code should ever be executed in 2026
+	  seeing that this was an experimental audio codec that never really gained
+	  adoption and was superseded by (and included in) Opus more than a decade
+	  ago. There are no decoders or encoders in GStreamer for this, and the
+	  RTP mapping RFC never made it out of draft state either.
+	  We post an error message in the state change function, so this processing
+	  function should never be reached, we just ifdef the code out for clarity.
+	  If anyone actually does have a legitimate need for this and can provide
+	  sample streams, we will happily implement a depayloader in Rust.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5157
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12039>
+
+2026-07-03 09:22:31 +0200  Pablo García <pgarcia@fluendo.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/isomp4/gstqtmuxmap.c:
+	  qtmux: Allow connection to ac3parse
+	  ac3parse doesn't output the field 'parsed' so they cannot connect.
+	  'framed' is also required by the muxer.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12028>
+
+2026-07-03 08:50:07 +0900  amy.ko <amy.ko@lge.com>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  shapewipe: Fix missing mutex unlock in shutdown path
+	  A deadlock may occur if the function returns with the
+	  mask_mutex locked when the element is shutting down.
+	  Add the missing g_mutex_unlock() in the shutdown label.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12016>
+
+2026-03-27 17:27:47 -0300  L. E. Segovia <amy@centricular.com>
+
+	* ext/libpng/gstpngdec.c:
+	  pngdec: fix wrong macro being used for ICC support test
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11972>
+
+2026-06-22 12:14:35 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-read-common.c:
+	  matroskademux: Don't pass non-GstElement pointers to GST_ELEMENT_ERROR
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11918>
+
+2026-03-30 09:44:27 -0300  L. E. Segovia <amy@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/gdk_pixbuf/gstgdkpixbufdec.c:
+	* ext/gdk_pixbuf/meson.build:
+	  gdkpixbufdec: remove Sun and Andrew raster formats
+	  They were both removed in 2.32.1:
+	  https://github.com/GNOME/gdk-pixbuf/commit/af2fca9bba5c127ca092c3a4bf7656015d6168ad
+	  Moreover, the Andrew raster format (image/x-cmu-raster) doesn't match at
+	  all the Sun raster format, the former is similar to LaTeX while the
+	  latter is binary.
+	  As a double safety measure, let's bump the minimum gdk-pixbuf version as
+	  2.32.1 was released in 2015 [1] while 2.8.0 is from 2005 [2].
+	  Fixes #5004
+	  [1]: https://gitlab.gnome.org/GNOME/gdk-pixbuf/-/tags/2.32.0
+	  [2]: https://gitlab.gnome.org/GNOME/gdk-pixbuf/-/tags/GTK_2_8_0
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11901>
+
+2026-06-15 15:24:24 +0200  Benoît Mauduit <benoit.mauduit@devialet.com>
+
+	* ext/flac/gstflacenc.c:
+	  flacenc: Use dash for property name in DO_UPDATE
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11860>
+
+2026-05-06 14:31:21 +0200  Benoît Mauduit <benoit.mauduit@devialet.com>
+
+	* ext/flac/gstflacenc.c:
+	  flacenc: Fix g_object_notify on loose-mid-side-stereo property
+	  Fix an assertion warning on g_object_notify (in DO_UPDATE macro)
+	  because there is no Gobject property named `loose_mid_side` (property
+	  is loose_mid_side_stereo).
+	  Assertion was :
+	  ```
+	  g_object_notify: object class 'GstFlacEnc' has no property named
+	  'loose_mid_side'
+	  ```
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11860>
+
+2026-06-12 13:27:54 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.28.4
+
 === release 1.28.4 ===
 
 2026-06-12 13:19:43 +0100  Tim-Philipp Müller <tim@centricular.com>
