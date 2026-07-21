@@ -1,0 +1,40 @@
+From 4e7df779df525bb7dc7e2a960f140e17025c6741 Mon Sep 17 00:00:00 2001
+From: Haihua Hu <jared.hu@nxp.com>
+Date: Tue, 25 Mar 2025 17:22:41 +0900
+Subject: [PATCH] v4l2videodec: Fix alternative output format support
+
+Some decoder have the ability to output multiple formats.
+This has been supported for a while but stopped working
+after commit 77744c3d638. Restore this functionality
+by replacing acquired_caps with the new caps.
+
+Fixes #4528
+
+Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/8674>
+
+Upstream-Status: Backport [https://gitlab.freedesktop.org/gstreamer/gstreamer/-/commit/4e7df779df525bb7dc7e2a960f140e17025c6741]
+Signed-off-by: Kemal Rasim Sh <kshakir@qti.qualcomm.com>
+---
+ sys/v4l2/gstv4l2videodec.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/sys/v4l2/gstv4l2videodec.c b/sys/v4l2/gstv4l2videodec.c
+index 4934933..df1db49 100644
+--- a/sys/v4l2/gstv4l2videodec.c
++++ b/sys/v4l2/gstv4l2videodec.c
+@@ -532,9 +532,10 @@ gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
+   GST_DEBUG_OBJECT (self, "Chosen decoded caps: %" GST_PTR_FORMAT, caps);
+ 
+   /* Try to set negotiated format, on success replace acquired format */
+-  if (gst_v4l2_object_set_format (self->v4l2capture, caps, &error))
++  if (gst_v4l2_object_set_format (self->v4l2capture, caps, &error)) {
++    gst_caps_replace (&acquired_caps, caps);
+     info = self->v4l2capture->info;
+-  else
++  } else
+     gst_v4l2_clear_error (&error);
+ 
+ use_acquired_caps:
+-- 
+2.34.1
+

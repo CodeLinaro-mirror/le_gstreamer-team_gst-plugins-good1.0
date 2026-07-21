@@ -1,3 +1,24 @@
+gst-plugins-good1.0 (1.26.2-1+deb13u2+qcom1) UNRELEASED; urgency=medium
+
+  * add qcom patches for v1.26.2
+  * d/patches: add gst-qti-oss-patches/0001-v4l2-Add-support-for-V4L2_PIX_FMT_QC08C-format.patch
+  * d/patches: add gst-qti-oss-patches/0002-v4l2videoenc-Set-format-on-capture-queue-before-enco.patch
+  * d/patches: add gst-qti-oss-patches/0003-v4l2-Add-v4l2av1dec-stateful-decoder-support.patch
+  * d/patches: add gst-qti-oss-patches/0004-v4l2videodec-Prefer-colorimetry-from-acquired-caps.patch
+  * d/patches: add gst-qti-oss-patches/0005-v4l2object-Provide-padding-requirements-during-propo.patch
+  * d/patches: add gst-qti-oss-patches/0006-v4l2object-providing-aligned-size-when-propose-alloc.patch
+  * d/patches: add gst-qti-oss-patches/0007-v4l2-Drop-empty-bytesused-0-buffers.patch
+  * d/patches: add gst-qti-oss-patches/0008-v4l2-Handle-GAP-buffer-in-encoder.patch
+  * d/patches: add gst-qti-oss-patches/0009-v4l2object-Make-extra-controls-property-mutable-in-p.patch
+  * d/patches: add gst-qti-oss-patches/0010-v4l2-Add-support-for-V4L2_PIX_FMT_QC10C-format.patch
+  * d/patches: add gst-qti-oss-patches/0011-v4l2object-Add-support-for-colorimetry-bt2100-pq-and.patch
+  * d/patches: add gst-qti-oss-patches/0012-v4l2object-Add-support-for-colorimetry-1-4-16-3.patch
+  * d/patches: add gst-qti-oss-patches/0013-v4l2-Backport-alternative-output-format-support.patch
+  * d/patches: add gst-qti-oss-patches/0014-v4l2videodec-Fix-assertion-failure-when-acquiring-dr.patch
+  * d/patches: add gst-qti-oss-patches/0015-v4l2allocator-Add-KEEP_MAPPED-flag-to-the-allocated-.patch
+
+ -- Bala Sai Kosuri <bkosuri@qti.qualcomm.com>  Tue, 21 Jul 2026 09:43:53 -0700
+
 gst-plugins-good1.0 (1.26.2-1+deb13u2) trixie-security; urgency=medium
 
   * CVE-2026-39043
