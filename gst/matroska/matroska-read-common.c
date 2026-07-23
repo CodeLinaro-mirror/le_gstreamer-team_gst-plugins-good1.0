@@ -190,14 +190,14 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
       new_size += 4096;
       new_data = g_realloc (new_data, new_size);
       bzstream.next_out =
-          (char *) (new_data + ((guint64) bzstream.total_out_hi32 << 32) +
-          bzstream.total_out_lo32);
+          (char *) (new_data + (((guint64) bzstream.total_out_hi32 << 32) +
+              bzstream.total_out_lo32));
       /* avail_out is an unsigned int */
-      g_assert (new_size - ((guint64) bzstream.total_out_hi32 << 32) +
-          bzstream.total_out_lo32 <= G_MAXUINT);
+      g_assert (new_size - (((guint64) bzstream.total_out_hi32 << 32) +
+              bzstream.total_out_lo32 <= G_MAXUINT));
       bzstream.avail_out =
-          new_size - ((guint64) bzstream.total_out_hi32 << 32) +
-          bzstream.total_out_lo32;
+          new_size - (((guint64) bzstream.total_out_hi32 << 32) +
+          bzstream.total_out_lo32);
     } while (bzstream.avail_in > 0);
 
     if (result != BZ_STREAM_END) {
@@ -1654,14 +1654,14 @@ exit:
       }
       ret = GST_FLOW_OK;
     } else {
-      GST_ELEMENT_ERROR (common, STREAM, DEMUX, (NULL),
-          ("Demuxer version (2) is too old to read %s version %d",
+      GST_ELEMENT_ERROR (GST_OBJECT_PARENT (common->sinkpad), STREAM, DEMUX,
+          (NULL), ("Demuxer version (2) is too old to read %s version %d",
               GST_STR_NULL (doctype), version));
       ret = GST_FLOW_ERROR;
     }
   } else {
-    GST_ELEMENT_ERROR (common, STREAM, WRONG_TYPE, (NULL),
-        ("Input is not a matroska stream (doctype=%s)", doctype));
+    GST_ELEMENT_ERROR (GST_OBJECT_PARENT (common->sinkpad), STREAM, WRONG_TYPE,
+        (NULL), ("Input is not a matroska stream (doctype=%s)", doctype));
     ret = GST_FLOW_ERROR;
   }
 
