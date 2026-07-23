@@ -1,5 +1,4 @@
 usr/share/gstreamer-1.0/presets/
-usr/lib/*/gstreamer-1.0/libgstaasink.so
 usr/lib/*/gstreamer-1.0/libgstalaw.so
 usr/lib/*/gstreamer-1.0/libgstalphacolor.so
 usr/lib/*/gstreamer-1.0/libgstalpha.so
@@ -9,7 +8,6 @@ usr/lib/*/gstreamer-1.0/libgstaudioparsers.so
 usr/lib/*/gstreamer-1.0/libgstauparse.so
 usr/lib/*/gstreamer-1.0/libgstautodetect.so
 usr/lib/*/gstreamer-1.0/libgstavi.so
-usr/lib/*/gstreamer-1.0/libgstcacasink.so
 usr/lib/*/gstreamer-1.0/libgstcairo.so
 usr/lib/*/gstreamer-1.0/libgstcutter.so
 usr/lib/*/gstreamer-1.0/libgstdebug.so

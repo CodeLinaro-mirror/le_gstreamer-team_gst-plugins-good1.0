@@ -11,8 +11,7 @@ Files: *
 Copyright: Contributors to the GStreamer project
 License: LGPL-2+
 
-Files: ext/aalib/gstaasink.c
- ext/aalib/gstaasink.h
+Files:
  ext/dv/gstdv.c
  ext/dv/gstdvdec.c
  ext/dv/gstdvdec.h
@@ -26,8 +25,6 @@ Files: ext/aalib/gstaasink.c
  ext/jpeg/gstjpegdec.h
  ext/jpeg/gstjpegenc.c
  ext/jpeg/gstjpegenc.h
- ext/libcaca/gstcacasink.c
- ext/libcaca/gstcacasink.h
  ext/libpng/gstpngdec.h
  ext/libpng/gstpngenc.h
  ext/raw1394/gst1394.c
