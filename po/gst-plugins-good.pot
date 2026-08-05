@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.28.5\n"
+"Project-Id-Version: gst-plugins-good-1.28.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-08 23:42+0200\n"
+"POT-Creation-Date: 2026-08-05 12:59+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -213,104 +213,104 @@ msgstr ""
 msgid "Error reading %d bytes from device '%s'."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:1399
+#: sys/v4l2/gstv4l2object.c:1400
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:3523
+#: sys/v4l2/gstv4l2object.c:3520
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:3531
+#: sys/v4l2/gstv4l2object.c:3528
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:3538
+#: sys/v4l2/gstv4l2object.c:3535
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4678
+#: sys/v4l2/gstv4l2object.c:4679
 msgid "Invalid caps"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4685 sys/v4l2/gstv4l2object.c:4709
+#: sys/v4l2/gstv4l2object.c:4686 sys/v4l2/gstv4l2object.c:4710
 #, c-format
 msgid "Device '%s' has no supported format"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4691 sys/v4l2/gstv4l2object.c:4715
+#: sys/v4l2/gstv4l2object.c:4692 sys/v4l2/gstv4l2object.c:4716
 #, c-format
 msgid "Device '%s' failed during initialization"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4703
+#: sys/v4l2/gstv4l2object.c:4704
 #, c-format
 msgid "Device '%s' is busy"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4726
+#: sys/v4l2/gstv4l2object.c:4727
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4735
+#: sys/v4l2/gstv4l2object.c:4736
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4746
+#: sys/v4l2/gstv4l2object.c:4747
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4761
+#: sys/v4l2/gstv4l2object.c:4762
 #, c-format
 msgid "Device '%s' does not support %s interlacing"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4776
+#: sys/v4l2/gstv4l2object.c:4777
 #, c-format
 msgid "Device '%s' does not support %s colorimetry"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4788
+#: sys/v4l2/gstv4l2object.c:4789
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4796
+#: sys/v4l2/gstv4l2object.c:4797
 msgid "Video device did not accept new frame rate setting."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4950
+#: sys/v4l2/gstv4l2object.c:4951
 msgid "Video device did not provide output format."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4956
+#: sys/v4l2/gstv4l2object.c:4957
 msgid "Video device returned invalid dimensions."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4964
+#: sys/v4l2/gstv4l2object.c:4965
 msgid "Video device uses an unsupported interlacing method."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4971
+#: sys/v4l2/gstv4l2object.c:4972
 msgid "Video device uses an unsupported pixel format."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:6069
+#: sys/v4l2/gstv4l2object.c:6070
 msgid "Failed to configure internal buffer pool."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:6075
+#: sys/v4l2/gstv4l2object.c:6076
 msgid "Video device did not suggest any buffer size."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:6081
+#: sys/v4l2/gstv4l2object.c:6082
 msgid "No downstream pool to import from."
 msgstr ""
 

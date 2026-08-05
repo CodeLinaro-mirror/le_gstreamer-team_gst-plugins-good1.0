@@ -1,3 +1,184 @@
+=== release 1.28.6 ===
+
+2026-08-05 12:59:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.28.6
+
+2026-08-04 20:05:57 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtph264depay.c:
+	* gst/rtp/gstrtph265depay.c:
+	  rtph264depay: rtph265depay: Reset missing fields when resetting during fragmentation unit handling
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12244>
+
+2026-07-29 17:39:56 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/rtp/gstrtph264depay.c:
+	* gst/rtp/gstrtph264depay.h:
+	* gst/rtp/gstrtph265depay.c:
+	* gst/rtp/gstrtph265depay.h:
+	  rtph264depay: rtph265depay: Limit the maximum fragmentation unit size
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5224
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12244>
+
+2026-07-20 13:12:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpqcelpdepay.c:
+	  rtpqcelpdepay: use clear_packets also in finalize function
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12237>
+
+2026-07-09 10:28:00 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpqcelpdepay.c:
+	  rtpqcelp: Clear queued packets on invalid input packets
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12237>
+
+2026-07-09 10:26:20 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpqcelpdepay.c:
+	  rtpqcelpdepay: Don't push NULL buffers downstream
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12237>
+
+2026-07-09 10:24:34 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpqcelpdepay.c:
+	* gst/rtp/gstrtpqcelpdepay.h:
+	  rtpqcelpdepay: Handle changes in interleave value correctly
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5194
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12237>
+
+2026-07-14 13:39:30 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-ids.c:
+	  matroskademux: Make sure enough data is available when parsing FLAC headers
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5206
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12242>
+
+2026-07-14 13:22:38 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Don't read a subindex with too many items
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12241>
+
+2026-07-14 13:22:04 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Avoid integer overflow in bounds checks when parsing the index
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12241>
+
+2026-07-14 12:35:12 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Use correct divisor for calculating available number of vprp field infos
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5213
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12241>
+
+2026-07-14 12:29:14 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Check that at least 1 byte is available before dereferencing tag pointer
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12241>
+
+2026-07-14 12:27:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Don't modify read-only mapped buffer data
+	  And improve const-correctness in many places.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12241>
+
+2026-07-14 12:00:34 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Make sure enough data is available when parsing FUJIFILM strd
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5213
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12241>
+
+2026-07-16 14:12:56 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: Don't assert on parsing errors or insufficient data
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12143>
+
+2026-07-18 16:19:17 +0200  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/gdk_pixbuf/gstgdkanimation.h:
+	* sys/ximage/gstximagesrc.h:
+	  gdkpixbuf, ximage: remove incorrect G_GNUC_CONST annotation for get_type() functions
+	  G_GNUC_CONST must only be used for functions that don't modify global state.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12157>
+
+2026-07-30 01:45:49 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/elements/qtmux.c:
+	  tests: qtmux: drain to EOS before teardown in test_caps_renego
+	  The test pulled one output buffer and immediately tore the harness down.
+	  gst_harness_teardown() releases the request sink pad while the element is
+	  still running, racing the aggregator srcpad task inside
+	  gst_qt_mux_aggregate(): depending on the interleaving it either trips the
+	  buf/last_buf assertion there or leaks the clipped buffer stored into
+	  pad->last_buf after gst_qt_mux_pad_reset() ran. The window is wide under
+	  valgrind, which is where it shows up in CI.
+	  Pull events until EOS before teardown: once the muxer has pushed EOS it is
+	  in GST_QT_MUX_STATE_EOS and aggregate() no longer touches the sink pads, so
+	  releasing the request pad can't race. Does not fix the underlying element
+	  race, only the test.
+	  Example failed CI job:
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/jobs/104277021
+	  Relates: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/4970
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12200>
+
+2026-06-16 16:49:47 +0900  Qi Hou <qi.hou@nxp.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	  v4l2: Use MPLANE flag to determine n_v4l_planes directly
+	  Add GST_V4L2_MPLANE flag to GstV4L2FormatFlags and mark all
+	  non-contiguous multi-planar V4L2 formats (e.g. YUV420M, NV12M)
+	  with this flag in gst_v4l2_formats[].
+	  Instead of using prefered_non_contiguous field, determine
+	  the number of n_v4l_planes directly by checking the GST_V4L2_MPLANE
+	  flag of the selected format descriptor. This avoids the
+	  contiguity check for format lookup.
+	  Remove the prefered_non_contiguous field from GstV4l2Object as
+	  it's no longer needed.
+	  Fixes #4269
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12177>
+
+2026-06-09 20:31:25 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsource.c:
+	* gst/rtpmanager/rtpsource.h:
+	* gst/rtpmanager/rtpstats.h:
+	  rtpsource: fix bitrate estimation for RTX
+	  RTX packets with decreasing running times routinely come through
+	  send_rtp , causing miscalculation of elapsed.
+	  Fix by using current_time instead to calculate the bandwidth for RTX
+	  sources, and also guard against potential underflows in elapsed
+	  calculation.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12171>
+
+2026-07-16 12:56:53 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/y4m/gsty4mdec.c:
+	  y4mdec: Don't read more data than available when skipping over frame header
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12122>
+
+2026-07-16 12:56:16 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/y4m/gsty4mdec.c:
+	  y4mdec: Don't assert on too small header buffers
+	  This might happen on EOS before enough data is available.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12122>
+
+2026-07-08 23:48:39 +0200  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.28.5
+
 === release 1.28.5 ===
 
 2026-07-08 23:42:39 +0200  Tim-Philipp Müller <tim@centricular.com>
