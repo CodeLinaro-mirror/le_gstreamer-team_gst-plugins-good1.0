@@ -1,4 +1,4 @@
-gst-plugins-good1.0 (1.26.2-1+deb13u2+qcom1) UNRELEASED; urgency=medium
+gst-plugins-good1.0 (1.26.2-1+deb13u2+qcom1) trixie; urgency=medium
 
   * add qcom patches for v1.26.2
   * d/patches: add gst-qti-oss-patches/0001-v4l2-Add-support-for-V4L2_PIX_FMT_QC08C-format.patch
@@ -17,7 +17,7 @@ gst-plugins-good1.0 (1.26.2-1+deb13u2+qcom1) UNRELEASED; urgency=medium
   * d/patches: add gst-qti-oss-patches/0014-v4l2videodec-Fix-assertion-failure-when-acquiring-dr.patch
   * d/patches: add gst-qti-oss-patches/0015-v4l2allocator-Add-KEEP_MAPPED-flag-to-the-allocated-.patch
 
- -- Bala Sai Kosuri <bkosuri@qti.qualcomm.com>  Tue, 21 Jul 2026 09:43:53 -0700
+ -- Bala Sai Kosuri <bkosuri@qti.qualcomm.com>  Tue, 25 Aug 2026 09:20:03 -0700
 
 gst-plugins-good1.0 (1.26.2-1+deb13u2) trixie-security; urgency=medium
 
