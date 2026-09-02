@@ -1,3 +1,16 @@
+gst-plugins-good1.0 (1.28.2-4+qcom1) resolute; urgency=medium
+
+  * add qcom patches for v1.28.2
+  * d/patches: add gst-qti-oss-patches/0001-v4l2-Add-support-for-V4L2_PIX_FMT_QC08C-format.patch
+  * d/patches: add gst-qti-oss-patches/0002-v4l2videoenc-Set-format-on-capture-queue-before-enco.patch
+  * d/patches: add gst-qti-oss-patches/0004-v4l2videodec-Prefer-colorimetry-from-acquired-caps.patch
+  * d/patches: add gst-qti-oss-patches/0006-v4l2object-providing-aligned-size-when-propose-alloc.patch
+  * d/patches: add gst-qti-oss-patches/0007-v4l2-Drop-empty-bytesused-0-buffers.patch
+  * d/patches: add gst-qti-oss-patches/0008-v4l2-Handle-GAP-buffer-in-encoder.patch
+  * d/patches: add gst-qti-oss-patches/0010-v4l2-Add-support-for-V4L2_PIX_FMT_QC10C-format.patch
+
+ -- Bala Sai Kosuri <bkosuri@qti.qualcomm.com>  Wed, 02 Sep 2026 08:27:40 +0530
+
 gst-plugins-good1.0 (1.28.2-4) unstable; urgency=medium
 
   * Team upload
