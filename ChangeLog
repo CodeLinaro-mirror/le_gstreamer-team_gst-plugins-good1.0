@@ -1,3 +1,190 @@
+=== release 1.28.7 ===
+
+2026-09-07 20:11:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.28.7
+
+2026-07-10 20:47:29 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	* gst/rtpmanager/rtpsource.c:
+	* gst/rtpmanager/rtpsource.h:
+	* tests/check/elements/rtpsession.c:
+	  rtpsession: implement DoS protection mechanisms
+	  Prior to this commit, the number of sources tracked by RTPSession
+	  was unlimited, opening it up to malicious attacks.
+	  This implements two mechanisms:
+	  * A global maximum for the total number of non-internal sources, with
+	  a LRU mechanism for discarding the least-recently seen SSRC / CSRC.
+	  Selected default: 150
+	  * A per SSRC maximum for limiting the number of contributing sources
+	  for a single synchronization source, with a LRU mechanism for
+	  discarding the least-recently seen CSRC.
+	  Selected default: 15
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12436>
+
+2026-08-31 15:03:59 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/adaptivedemux2/downloadhelper.c:
+	* ext/adaptivedemux2/downloadhelper.h:
+	* ext/adaptivedemux2/gstadaptivedemux.c:
+	* ext/meson.build:
+	* ext/soup/gstsouploader.c:
+	* ext/soup/gstsouploader.h:
+	* ext/soup/stub/soup.h:
+	  adaptivedemux2: Use a SoupCookieJar and keep track of cookie origins correctly
+	  This makes sure we're not leaking cookies to different origins. Same fix as for
+	  souphttpsrc but not behind a property, which should be unnecessary here.
+	  Require libsoup 2.68 (released in 2019) for the soup_cookie_jar_add_cookie_full() API.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5174
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12438>
+
+2026-08-12 20:48:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/soup/gstsouphttpsrc.c:
+	* ext/soup/gstsouphttpsrc.h:
+	* ext/soup/gstsouploader.c:
+	* ext/soup/gstsouploader.h:
+	  souphttpsrc: Add new `location-trusted` property
+	  When disabled (default), explicitly set cookies or extra-headers or
+	  authentication information are not set when handling automatic redirects to a
+	  different origin.
+	  This is the same as CVE-2018-1000007 in curl and CVE-2021-31879 in wget, and the
+	  solution is the same as in curl.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5174
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12438>
+
+2026-08-07 16:21:42 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Don't try splitting CEA608 samples without known framerate
+	  Splitting them would lead to invalid sized buffers and divisions by zero for the
+	  timestamp calculations.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12437>
+
+2026-08-07 16:21:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Ensure enough data is available for reading closed caption boxes
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5235
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12437>
+
+2026-08-31 12:55:53 +0800  aisuneko icecat <aicecat@igalia.com>
+
+	* gst/effectv/gstquark.c:
+	* gst/effectv/gstquark.h:
+	  effectv: quarktv: apply proper stride for pixel iteration
+	  Iterate row by row with GST_VIDEO_FRAME_PLANE_STRIDE to ensure
+	  the last row is touched and the pixels are correctly indexed.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12422>
+
+2026-08-31 12:48:18 +0800  aisuneko icecat <aicecat@igalia.com>
+
+	* gst/effectv/gstquark.c:
+	  effectv: quarktv: add error checking for gst_buffer_map
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12422>
+
+2026-08-19 22:42:20 +0800  aisuneko icecat <aicecat@igalia.com>
+
+	* gst/effectv/gstquark.c:
+	  effectv: quarktv: read from mapped memory to improve performance
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12422>
+
+2026-08-12 11:13:39 +0200  Frank Wennerdahl <frank.wennerdahl@soundtrack.io>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  soup: fix redirect uri when not using automatic redirects
+	  If `automatic-redirects` is set to `false`, the resulting
+	  error should contain the redirect URI in the field
+	  `"http-redirect-uri"`. This isn't the case, as
+	  `src->redirection_uri` is never set before the error
+	  is constructed.
+	  This fix ensures that the URI is set when the status
+	  is a redirect, allowing manual handling of redirects.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12391>
+
+2026-09-01 10:51:50 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/flx/gstflxdec.c:
+	  flxdec: Actually read full palette
+	  The default 0 in file means there's a full 256 palette
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12387>
+
+2026-09-01 10:47:12 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/flx/gstflxdec.c:
+	  flxdec: Check for invalid header values
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12387>
+
+2026-08-25 10:55:23 -0400  Eric <eric.chandrasekhar@ipconfigure.com>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/rtpsession.c:
+	  rtpmanager: Fix malformed SDES processing segfault
+	  gst_rtcp_packet_sdes_get_entry can return FALSE when the SDES entry is
+	  malformed, and this wasn't being handled by the callers.
+	  Now if gst_rtcp_packet_sdes_get_entry returns FALSE, the rest of the
+	  SDES packet is skipped.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12375>
+
+2026-04-14 13:08:55 +0200  Pablo García <pgarcia@fluendo.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Add 'stream-format' field for AC-4 caps
+	  According to Annex G of the AC-4 spec, the syncframe is an optional
+	  layer for encapsulating AC-4 raw frames. This demuxer always outputs
+	  raw frames, but the AC-4 parser/decoder needs to know.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12371>
+
+2026-04-14 13:08:34 +0200  Pablo García <pgarcia@fluendo.com>
+
+	* gst/isomp4/fourcc.h:
+	* gst/isomp4/qtdemux_types.c:
+	  qtdemux: Add AC-4 atoms
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12371>
+
+2026-08-19 18:05:11 +1000  Matthew Waters <matthew@centricular.com>
+
+	* ext/qt6/qt6glrenderer.cc:
+	* ext/qt6/qt6glrenderer.h:
+	  qt6renderer: keep output GL memory alive until next render
+	  Qml seems to not correctly render an output if the output texture id is
+	  the same as previously set. This can easily happen if the output texture
+	  is destroyed and a new texture created with the same ID. This is
+	  particularly evident with a downstream element that reads from the
+	  texture and then unrefs it causing the texture to be destroyed.
+	  Fix by keeping the output texture alive until we have rendered the next
+	  frame.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12342>
+
+2026-08-19 15:13:43 +1000  Matthew Waters <matthew@centricular.com>
+
+	* ext/qt6/qt6glrenderer.cc:
+	  qml6gloverlay: map output memory write|gl
+	  So that if a gldownload is downstream, it can successfully transfer the
+	  contents.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12342>
+
+2026-08-06 21:28:28 +0200  Marcus Hanestad <marlhan@proton.me>
+
+	* gst/audiofx/gstscaletempo.c:
+	  scaletempo: fix integer overflow in output_overlap_s16
+	  The blend weights and sample delta can each approach 65535, so their product
+	  overflows the 32-bit intermediate.
+	  Compute the product and shift in 64 bits.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12265>
+
+2026-08-05 13:04:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.28.6
+
 === release 1.28.6 ===
 
 2026-08-05 12:59:39 +0100  Tim-Philipp Müller <tim@centricular.com>

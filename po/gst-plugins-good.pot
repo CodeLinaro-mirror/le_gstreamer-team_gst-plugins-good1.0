@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.28.6\n"
+"Project-Id-Version: gst-plugins-good-1.28.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-05 12:59+0100\n"
+"POT-Creation-Date: 2026-09-07 20:11+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -58,32 +58,32 @@ msgstr ""
 msgid "Could not connect to server"
 msgstr ""
 
-#: ext/soup/gstsouphttpsrc.c:1216
+#: ext/soup/gstsouphttpsrc.c:1291
 msgid "No URL set."
 msgstr ""
 
-#: ext/soup/gstsouphttpsrc.c:1770
+#: ext/soup/gstsouphttpsrc.c:1860
 msgid "Could not resolve server name."
 msgstr ""
 
-#: ext/soup/gstsouphttpsrc.c:1775
+#: ext/soup/gstsouphttpsrc.c:1865
 msgid "Could not establish connection to server."
 msgstr ""
 
-#: ext/soup/gstsouphttpsrc.c:1779
+#: ext/soup/gstsouphttpsrc.c:1869
 msgid "Secure connection setup failed."
 msgstr ""
 
-#: ext/soup/gstsouphttpsrc.c:1785
+#: ext/soup/gstsouphttpsrc.c:1875
 msgid ""
 "A network error occurred, or the server closed the connection unexpectedly."
 msgstr ""
 
-#: ext/soup/gstsouphttpsrc.c:1790
+#: ext/soup/gstsouphttpsrc.c:1880
 msgid "Server sent bad data."
 msgstr ""
 
-#: ext/soup/gstsouphttpsrc.c:2130
+#: ext/soup/gstsouphttpsrc.c:2252
 msgid "Server does not support seeking."
 msgstr ""
 
@@ -100,7 +100,7 @@ msgid "This file contains no playable streams."
 msgstr ""
 
 #: gst/isomp4/qtdemux.c:567 gst/isomp4/qtdemux.c:8284 gst/isomp4/qtdemux.c:8353
-#: gst/isomp4/qtdemux.c:8672 gst/isomp4/qtdemux.c:10257
+#: gst/isomp4/qtdemux.c:8672 gst/isomp4/qtdemux.c:10260
 msgid "This file is invalid and cannot be played."
 msgstr ""
 
@@ -109,9 +109,9 @@ msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr ""
 
 #: gst/isomp4/qtdemux.c:4744 gst/isomp4/qtdemux.c:9639
-#: gst/isomp4/qtdemux.c:9646 gst/isomp4/qtdemux.c:10990
-#: gst/isomp4/qtdemux.c:11435 gst/isomp4/qtdemux.c:11442
-#: gst/isomp4/qtdemux.c:17619
+#: gst/isomp4/qtdemux.c:9646 gst/isomp4/qtdemux.c:10993
+#: gst/isomp4/qtdemux.c:11438 gst/isomp4/qtdemux.c:11445
+#: gst/isomp4/qtdemux.c:17622
 msgid "This file is corrupt and cannot be played."
 msgstr ""
 
@@ -131,7 +131,7 @@ msgstr ""
 msgid "This file is incomplete and cannot be played."
 msgstr ""
 
-#: gst/isomp4/qtdemux.c:15252
+#: gst/isomp4/qtdemux.c:15255
 msgid "The video in this file might not play correctly."
 msgstr ""
 
