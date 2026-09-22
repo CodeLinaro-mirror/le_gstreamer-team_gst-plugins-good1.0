@@ -1,3 +1,11 @@
+gst-plugins-good1.0 (1.28.7-1+qcom2) forky; urgency=medium
+
+  * add patches for pulsedirectsink
+  * d/patches: add gst-qti-oss-patches/0011-pulse-NULL-check-before-de-reference.patch
+  * d/patches: add gst-qti-oss-patches/0012-pulse-add-pulsedirectsink-element.patch
+
+ -- Bala Sai Kosuri <bkosuri@qti.qualcomm.com>  Tue, 22 Sep 2026 03:00:00 -0700
+
 gst-plugins-good1.0 (1.28.7-1+qcom1) forky; urgency=medium
 
   * add qcom patches for v1.28.7
