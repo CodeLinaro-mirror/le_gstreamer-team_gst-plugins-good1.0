@@ -1,3 +1,250 @@
+=== release 1.28.8 ===
+
+2026-10-08 17:20:32 +0200  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.28.8
+
+2026-10-02 16:12:33 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtpmanager/rtpsession.c:
+	* tests/check/elements/rtpsession.c:
+	  rtpsession: Ignore SDES priv RTCP packets with invalid lengths
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5307
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12659>
+
+2026-09-24 13:19:05 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/matroska/matroska-ids.c:
+	  matroskademux: fix crash caused by bogus xiph codec data packet sizes
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5311
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12658>
+
+2026-09-24 11:59:50 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtp/gstrtpL16depay.c:
+	* gst/rtp/gstrtpL24depay.c:
+	* gst/rtp/gstrtpL8depay.c:
+	* gst/rtp/gstrtpchannels.c:
+	* gst/rtp/gstrtpchannels.h:
+	  rtpL8depay, rtpL16depay, rtpL24depay: fix out of bounds write for high channel count
+	  The positions array is only 64 entries large, but if a high channel count
+	  is signalled in the SDP we might try to initialise more entries than are
+	  available and write beyond the end of the array.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5271
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5306
+	  Fixes ZDI-CAN-31143
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12657>
+
+2026-09-23 09:37:22 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtph265depay.c:
+	  rtph265depay: Check for short packets before processing them
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5258
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12655>
+
+2026-10-01 17:30:59 +0200  David Lincoln <dave_exile@hotmail.com>
+
+	* gst/isomp4/gstqtmux.c:
+	* gst/isomp4/gstqtmux.h:
+	  qtmux: preserve earliest reordered presentation time
+	  Track the earliest presentation timestamp independently from the first buffer
+	  timestamp. Use it for global timeline and edit-list calculations so reordered
+	  streams retain leading presentation frames.
+	  This makes sure that correct edit lists and ctts are created for streams where
+	  the earliest PTS is not the first PTS, e.g. when the first frame is a B-frame.
+	  The Rust MP4 muxer uses the same approach.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12635>
+
+2026-10-04 20:58:08 +0530  Sanchayan Maity <sanchayan@centricular.com>
+
+	* gst/audiofx/audiofxbasefirfilter.c:
+	* tests/check/elements/audiofirfilter.c:
+	  audiofxbasefirfilter: Account for channels in FFT mode for push_residue
+	  This resulted in corruption of the final EoS tail in FFT mode for channels > 1.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12615>
+
+2026-10-04 20:52:32 +0530  Sanchayan Maity <sanchayan@centricular.com>
+
+	* gst/audiofx/audiofxbasefirfilter.c:
+	  audiofxbasefirfilter: Make sure we are not left with a dangling pointer
+	  When the frequency response is not re-built after being freed, we can be
+	  left with a dangling pointer resulting in a double free in finalize().
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12615>
+
+2026-10-04 20:49:15 +0530  Sanchayan Maity <sanchayan@centricular.com>
+
+	* gst/audiofx/audiofirfilter.c:
+	  audiofirfilter: Fix minor typo in latency
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12615>
+
+2026-09-28 19:46:40 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/audioparsers/gstflacparse.c:
+	  flacparse: Fix resyncing after a seek
+	  1d913768 introduced a regression in flacparse where seeking to a previously
+	  unindexed position (i.e. requiring resyncing) would error out instead of
+	  skipping to the next start of a frame. An invalid frame would be considered as a
+	  valid frame of size 0 and then error out.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5314
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12574>
+
+2026-09-23 18:56:50 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-ids.c:
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska-mux.c:
+	  matroska: Use the display unit for storing the display aspect ratio more accurately
+	  With Matroska (not WebM) the display aspect ratio can be stored directly as
+	  display size when setting the display unit to DAR. This allows to avoid rounding
+	  errors.
+	  For WebM the best we can do is the existing code as it requires pixels as
+	  display unit.
+	  In the demuxer, avoid some overflows in the code and also don't calculate the
+	  pixel aspect ratio for unknown display units.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5272
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12572>
+
+2026-09-20 13:37:47 +0200  Remus Lazar <remus@lazar.info>
+
+	* ext/adaptivedemux2/meson.build:
+	  adaptivedemux2: Remove redundant hls_dep fallback
+	  hls/meson.build unconditionally declares hls_dep, but the fallback
+	  assignment afterwards overwrites it. This makes hls_dep.found() always
+	  return false, silently skipping hlsdemux_m3u8.
+	  Remove the redundant fallback so the test runs again.
+	  The bug was introduced in 3de86b2b9725c111998d6e42b54a2f67582a3db7; the test
+	  has not run since 2025-01-13.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12553>
+
+2026-09-24 22:34:42 +0300  Maxandre Ogeret <maxandreogeret@gmail.com>
+
+	* gst/rtp/gstrtph265pay.c:
+	  rtph265pay: unmap the RTP header before appending the payload
+	  gst_rtp_h265_pay_payload_nal_single() kept the RTP header buffer mapped
+	  for writing while appending the payload. With aggregate-mode=zero-latency
+	  an aggregation packet can carry 16 memories, so the append merges all
+	  memories, the read map of the still write-mapped header fails, and the
+	  buffer ends up with a dangling memory.
+	  Unmap before appending, as the FU path and rtph264pay already do.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/5327
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12549>
+
+2026-09-23 15:31:30 +0900  Qi Hou <qi.hou@nxp.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: object: Don't corrupt the caller's filter caps when probing
+	  In gst_v4l2_object_probe_caps(), the DMABuf candidate branch built the
+	  temporary format_caps with gst_caps_append_structure() and then called
+	  gst_caps_set_features() on the incoming filter caps to attach
+	  GST_CAPS_FEATURE_MEMORY_DMABUF.
+	  That is wrong for three reasons:
+	  - filter is owned by the caller (the pad caps query), so modifying it
+	  leaks a side effect back to the caller and can hit a writability
+	  assertion when the caps refcount is greater than one.
+	  - only structure index 0 was touched, leaving any other structure in
+	  the filter untouched.
+	  - the feature belongs on the candidate caps we are about to intersect
+	  against the filter, not on the filter itself, so the pre-probe
+	  intersection test could pick the wrong formats.
+	  Attach the memory:DMABuf feature to the candidate structure directly via
+	  gst_caps_append_structure_full(), which is what the rest of the file
+	  (gst_v4l2_object_get_caps_helper(), gst_v4l2_object_update_and_append())
+	  already does, and leave filter untouched.
+	  No functional change intended for the resulting probed caps; this only
+	  fixes the filter corruption and makes the cheap pre-probe rejection test
+	  behave as documented.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12537>
+
+2026-09-23 09:55:11 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtph263depay.c:
+	  rtph263depay: Make payload buffer writable before modifying its content
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12533>
+
+2026-09-23 09:47:00 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpvp9depay.c:
+	  rtpvp9depay: Check for enough data before parsing scalability structure with PG description
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12533>
+
+2026-09-23 09:44:55 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpmparobustdepay.c:
+	  rtpmparobustdepay: Check for enough available data in all cases before parsing payload descriptor
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12533>
+
+2026-09-23 09:43:48 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpsv3vdepay.c:
+	  rtpsv3vdepay: Check for enough available data before parsing extending width/height
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12533>
+
+2026-09-23 09:42:36 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtph261depay.c:
+	  rtph261depay: Check for enough available data before checking for picture start code
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12533>
+
+2026-09-23 09:38:46 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtptheoradepay.c:
+	* gst/rtp/gstrtpvorbisdepay.c:
+	  rtpvorbisdepay: rtptheoradepay: Copy only the out-of-band config and not the whole payload
+	  This should be harmless because the length is included in the data but including
+	  unnecessary garbage at the end is not very clean.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12533>
+
+2026-09-14 18:59:25 +0530  Sanchayan Maity <sanchayan@centricular.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Fix handling of missing control attribute with multiple media sections
+	  Issue reported and fix suggested by Jeremiah Morrill.
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5270
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12504>
+
+2026-09-11 16:37:53 +0800  Zhaoxuan Zhai <zhai.zhaoxuan@canonical.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2object.h:
+	  v4l2: Fix sizeimage when VIDIOC_ENUM_FRAMESIZES is not supported
+	  This patch changes the behavior of calculate_max_sizeimage, it now
+	  calculates the sizeimage based on requested frame size instead of the
+	  probed max image size. And this patch also removed max_width/max_height
+	  field from GstV4l2Object, as they are no longer used.
+	  The new calculate_max_sizeimage uses guint64 to do the calculation to
+	  avoid overflow in `width * height * pixel_bitdepth`. For example,
+	  if width = height = 32768 (2^15) and pixel_bitdepth = 8,
+	  width * height * pixel_bitdepth = 8589934592 (2^33).
+	  And the return value is guarded by G_MAXSIZE in-case the return
+	  value is too large.
+	  Before this patch, when VIDIOC_ENUM_FRAMESIZES is not implemented
+	  by the V4L2 device driver, the `default_frame_sizes:` path in
+	  gst_v4l2_object_probe_caps_for_format() uses max_w = max_h =
+	  GST_V4L2_MAX_SIZE. And it results a overflow error in
+	  calculate_max_sizeimage().
+	  As a result, calculate_max_sizeimage() always returning 256 KiB when
+	  VIDIOC_ENUM_FRAMESIZES is not supported. And 256KiB is not sufficient
+	  for images with 4K resolution.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12494>
+
+2026-09-10 13:30:56 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/adaptivedemux2/downloadhelper.c:
+	  adaptivedemux2: Drain downloadhelper main context with the main context as the thread default
+	  The draining was introduced in 0fcb93a087cdc085563b52e9c2a0ac9610acd181 and not
+	  making the main context the thread default will lead to assertions in libsoup if
+	  a transfer was still running at this time.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5296
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12472>
+
+2026-09-07 20:17:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.28.7
+
 === release 1.28.7 ===
 
 2026-09-07 20:11:13 +0100  Tim-Philipp Müller <tim@centricular.com>

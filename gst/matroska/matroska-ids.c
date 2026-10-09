@@ -53,6 +53,7 @@ gst_matroska_track_init_video_context (GstMatroskaTrackContext ** p_context)
   (*p_context)->type = GST_MATROSKA_TRACK_TYPE_VIDEO;
   video_context->display_width = 0;
   video_context->display_height = 0;
+  video_context->display_unit = GST_MATROSKA_VIDEO_DISPLAY_UNIT_PIXELS;
   video_context->pixel_width = 0;
   video_context->pixel_height = 0;
   video_context->asr_mode = 0;
@@ -146,7 +147,7 @@ gst_matroska_parse_xiph_stream_headers (gpointer codec_data,
   GstBufferList *list = NULL;
   guint8 *p = codec_data;
   gint i, offset, num_packets;
-  guint *length, last;
+  gsize *length, last;
 
   GST_MEMDUMP ("xiph codec data", codec_data, codec_data_size);
 
@@ -159,7 +160,7 @@ gst_matroska_parse_xiph_stream_headers (gpointer codec_data,
   GST_DEBUG ("%u stream headers, total length=%" G_GSIZE_FORMAT " bytes",
       (guint) num_packets, codec_data_size);
 
-  length = g_alloca (num_packets * sizeof (guint));
+  length = g_alloca (num_packets * sizeof (gsize));
   last = 0;
   offset = 1;
 
@@ -167,6 +168,12 @@ gst_matroska_parse_xiph_stream_headers (gpointer codec_data,
   for (i = 0; i < num_packets - 1; i++) {
     length[i] = 0;
     while (offset < codec_data_size) {
+      if (last + length[i] > codec_data_size - offset) {
+        GST_ERROR ("Bogus xiph packet length for packet %d @ offset %u, "
+            "lengths > %zu, but codec_data_size = %zu", i, offset,
+            last + length[i], codec_data_size);
+        goto error;
+      }
       length[i] += p[offset];
       if (p[offset++] != 0xff)
         break;

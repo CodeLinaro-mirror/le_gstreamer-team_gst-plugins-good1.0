@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.28.7\n"
+"Project-Id-Version: gst-plugins-good-1.28.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-07 20:11+0100\n"
+"POT-Creation-Date: 2026-10-08 17:20+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -135,13 +135,13 @@ msgstr ""
 msgid "The video in this file might not play correctly."
 msgstr ""
 
-#: gst/rtsp/gstrtspsrc.c:8464
+#: gst/rtsp/gstrtspsrc.c:8469
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
 
-#: gst/rtsp/gstrtspsrc.c:8469
+#: gst/rtsp/gstrtspsrc.c:8474
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
@@ -218,99 +218,99 @@ msgstr ""
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:3520
+#: sys/v4l2/gstv4l2object.c:3511
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:3528
+#: sys/v4l2/gstv4l2object.c:3519
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:3535
+#: sys/v4l2/gstv4l2object.c:3526
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4679
+#: sys/v4l2/gstv4l2object.c:4668
 msgid "Invalid caps"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4686 sys/v4l2/gstv4l2object.c:4710
+#: sys/v4l2/gstv4l2object.c:4675 sys/v4l2/gstv4l2object.c:4699
 #, c-format
 msgid "Device '%s' has no supported format"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4692 sys/v4l2/gstv4l2object.c:4716
+#: sys/v4l2/gstv4l2object.c:4681 sys/v4l2/gstv4l2object.c:4705
 #, c-format
 msgid "Device '%s' failed during initialization"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4704
+#: sys/v4l2/gstv4l2object.c:4693
 #, c-format
 msgid "Device '%s' is busy"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4727
+#: sys/v4l2/gstv4l2object.c:4716
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4736
+#: sys/v4l2/gstv4l2object.c:4725
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4747
+#: sys/v4l2/gstv4l2object.c:4736
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4762
+#: sys/v4l2/gstv4l2object.c:4751
 #, c-format
 msgid "Device '%s' does not support %s interlacing"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4777
+#: sys/v4l2/gstv4l2object.c:4766
 #, c-format
 msgid "Device '%s' does not support %s colorimetry"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4789
+#: sys/v4l2/gstv4l2object.c:4778
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4797
+#: sys/v4l2/gstv4l2object.c:4786
 msgid "Video device did not accept new frame rate setting."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4951
+#: sys/v4l2/gstv4l2object.c:4940
 msgid "Video device did not provide output format."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4957
+#: sys/v4l2/gstv4l2object.c:4946
 msgid "Video device returned invalid dimensions."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4965
+#: sys/v4l2/gstv4l2object.c:4954
 msgid "Video device uses an unsupported interlacing method."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:4972
+#: sys/v4l2/gstv4l2object.c:4961
 msgid "Video device uses an unsupported pixel format."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:6070
+#: sys/v4l2/gstv4l2object.c:6060
 msgid "Failed to configure internal buffer pool."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:6076
+#: sys/v4l2/gstv4l2object.c:6066
 msgid "Video device did not suggest any buffer size."
 msgstr ""
 
-#: sys/v4l2/gstv4l2object.c:6082
+#: sys/v4l2/gstv4l2object.c:6072
 msgid "No downstream pool to import from."
 msgstr ""
 
