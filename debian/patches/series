@@ -22,3 +22,4 @@ gst-qti-oss-patches/0014-v4l2videodec-Fix-assertion-failure-when-acquiring-dr.pa
 gst-qti-oss-patches/0015-v4l2allocator-Add-KEEP_MAPPED-flag-to-the-allocated-.patch
 gst-qti-oss-patches/0016-pulse-NULL-check-before-de-reference.patch
 gst-qti-oss-patches/0017-pulse-add-pulsedirectsink-element.patch
+gst-qti-oss-patches/0018-pulsedirectsink-Support-AAC-adts-raw-formats.patch

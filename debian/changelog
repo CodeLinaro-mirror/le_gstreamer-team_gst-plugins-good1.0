@@ -1,3 +1,9 @@
+gst-plugins-good1.0 (1.26.2-1+deb13u2+qcom3) trixie; urgency=medium
+
+  * d/patches: add gst-qti-oss-patches/0018-pulsedirectsink-Support-AAC-adts-raw-formats.patch
+
+ -- Bala Sai Kosuri <bkosuri@qti.qualcomm.com>  Wed, 21 Oct 2026 21:52:15 -0700
+
 gst-plugins-good1.0 (1.26.2-1+deb13u2+qcom2) trixie; urgency=medium
 
   * add patches for pulsedirectsink
