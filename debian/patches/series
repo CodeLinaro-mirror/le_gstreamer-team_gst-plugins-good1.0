@@ -8,3 +8,4 @@ gst-qti-oss-patches/0008-v4l2-Handle-GAP-buffer-in-encoder.patch
 gst-qti-oss-patches/0010-v4l2-Add-support-for-V4L2_PIX_FMT_QC10C-format.patch
 gst-qti-oss-patches/0011-pulse-NULL-check-before-de-reference.patch
 gst-qti-oss-patches/0012-pulse-add-pulsedirectsink-element.patch
+gst-qti-oss-patches/0013-pulsedirectsink-Support-AAC-adts-raw-formats.patch
