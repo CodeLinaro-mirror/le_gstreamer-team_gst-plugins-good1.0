@@ -1,3 +1,9 @@
+gst-plugins-good1.0 (1.28.9-1) unstable; urgency=medium
+
+  * New upstream version 1.28.9
+
+ -- Marc Leeman <marc.leeman@gmail.com>  Fri, 06 Nov 2026 15:23:02 +0100
+
 gst-plugins-good1.0 (1.28.8-1) unstable; urgency=medium
 
   * New upstream version 1.28.8
