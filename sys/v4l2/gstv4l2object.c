@@ -113,36 +113,27 @@ typedef struct
 } GstV4l2ColorspaceVariant;
 
 /* Colorspace variant definitions */
-static const GstV4l2ColorspaceVariant rec709_full_range = {
-  .colorspace = V4L2_COLORSPACE_REC709,
-  .quantization = V4L2_QUANTIZATION_FULL_RANGE,
-  .xfer_func = 0,
-  .primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN
-};
-
-static const GstV4l2ColorspaceVariant bt470bg_full_range = {
-  .colorspace = V4L2_COLORSPACE_470_SYSTEM_BG,
-  .quantization = V4L2_QUANTIZATION_FULL_RANGE,
-  .xfer_func = 0,
-  .primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN
-};
-
-static const GstV4l2ColorspaceVariant bt2020_pq = {
-  .colorspace = V4L2_COLORSPACE_BT2020,
-  .quantization = 0,
-  .xfer_func = V4L2_XFER_FUNC_SMPTE2084,
-  .primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN
-};
-
-static const GstV4l2ColorspaceVariant smpte170m_full_range = {
-  .colorspace = V4L2_COLORSPACE_SMPTE170M,
-  .quantization = V4L2_QUANTIZATION_FULL_RANGE,
-  .xfer_func = 0,
-  .primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG
-};
-
 static const GstV4l2ColorspaceVariant colorspace_variants[] = {
-  rec709_full_range, bt470bg_full_range, bt2020_pq, smpte170m_full_range
+  [0] = {                       /* rec709_full_range */
+        .colorspace = V4L2_COLORSPACE_REC709,
+        .quantization = V4L2_QUANTIZATION_FULL_RANGE,
+        .xfer_func = 0,
+      .primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN},
+  [1] = {                       /* bt470bg_full_range */
+        .colorspace = V4L2_COLORSPACE_470_SYSTEM_BG,
+        .quantization = V4L2_QUANTIZATION_FULL_RANGE,
+        .xfer_func = 0,
+      .primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN},
+  [2] = {                       /* bt2020_pq */
+        .colorspace = V4L2_COLORSPACE_BT2020,
+        .quantization = 0,
+        .xfer_func = V4L2_XFER_FUNC_SMPTE2084,
+      .primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN},
+  [3] = {                       /* smpte170m_full_range */
+        .colorspace = V4L2_COLORSPACE_SMPTE170M,
+        .quantization = V4L2_QUANTIZATION_FULL_RANGE,
+        .xfer_func = 0,
+      .primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG},
 };
 
 /* *INDENT-OFF* */
@@ -1824,8 +1815,9 @@ add_non_colorimetry_caps (GstV4l2Object * v4l2object, GstCaps * caps)
     GstStructure *structure = gst_caps_get_structure (caps, i);
     GstCapsFeatures *features = gst_caps_get_features (caps, i);
 
-    if (gst_structure_has_name (structure, "video/x-raw")
-        && gst_structure_has_field (structure, "colorimetry")) {
+    if (gst_structure_has_field (structure, "colorimetry")
+        && (gst_structure_has_name (structure, "video/x-raw")
+            || V4L2_TYPE_IS_OUTPUT (v4l2object->type))) {
       GstStructure *alt_s = gst_structure_copy (structure);
       gst_structure_remove_field (alt_s, "colorimetry");
       if (gst_caps_features_contains (features,
@@ -4375,7 +4367,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       if (format.fmt.pix.field != field)
         goto invalid_field;
     }
-  } else {
+  } else if (try_only) {
     /* The driver (or libv4l2) is miss-behaving, just ignore interlace-mode from
      * the TRY_FMT */
     disable_interlacing = TRUE;
@@ -4389,7 +4381,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       if (!gst_v4l2_video_colorimetry_matches (&info.vinfo.colorimetry, caps))
         goto invalid_colorimetry;
     }
-  } else {
+  } else if (try_only) {
     /* The driver (or libv4l2) is miss-behaving, just ignore colorimetry from
      * the TRY_FMT */
     disable_colorimetry = TRUE;
@@ -5553,7 +5545,7 @@ gst_v4l2_object_get_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 static gboolean
 gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
     gsize offset[GST_VIDEO_MAX_PLANES], gint stride[GST_VIDEO_MAX_PLANES],
-    gsize buffer_size, guint padded_height)
+    guint padded_height)
 {
   gboolean need_fmt_update = FALSE;
   GstVideoInfo *info = &obj->info.vinfo;
@@ -5774,19 +5766,22 @@ gst_v4l2_object_match_buffer_layout_from_struct (GstV4l2Object * obj,
     return FALSE;
   }
 
-  if (GST_VIDEO_INFO_SIZE (&info) != buffer_size) {
-    GST_WARNING_OBJECT (obj->dbg_obj,
-        "Requested buffer size (%d) doesn't match video info size (%"
-        G_GSIZE_FORMAT ")", buffer_size, GST_VIDEO_INFO_SIZE (&info));
-    return FALSE;
-  }
-
   GST_DEBUG_OBJECT (obj->dbg_obj,
       "try matching buffer layout requested by downstream");
 
-  gst_v4l2_object_match_buffer_layout (obj, GST_VIDEO_INFO_N_PLANES (&info),
-      info.offset, info.stride, buffer_size,
-      GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size));
+  if (!gst_v4l2_object_match_buffer_layout (obj,
+          GST_VIDEO_INFO_N_PLANES (&info), info.offset, info.stride,
+          GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size))) {
+    GST_WARNING_OBJECT (obj->dbg_obj, "Failed to match buffer layout");
+    return FALSE;
+  }
+
+  if (GST_V4L2_SIZE (obj) < buffer_size) {
+    GST_WARNING_OBJECT (obj->dbg_obj,
+        "Buffer size mismatch: expected %lu, got %u", obj->info.vinfo.size,
+        buffer_size);
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -5845,8 +5840,18 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
     const GstStructure *params;
     gst_query_parse_nth_allocation_meta (query, video_idx, &params);
 
-    if (params)
-      gst_v4l2_object_match_buffer_layout_from_struct (obj, params, caps, size);
+    if (params) {
+      if (!gst_v4l2_object_match_buffer_layout_from_struct (obj, params, caps,
+              size)) {
+        if (pool) {
+          gst_object_unref (pool);
+          pool = NULL;
+          min = max = 0;
+          size = 0;
+          update = TRUE;
+        }
+      }
+    }
   }
 
   can_share_own_pool = (has_video_meta || !obj->need_video_meta);
@@ -6150,7 +6155,8 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
    * between aligned size and actual size as extra padding to the upstream
    * element */
   if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
-    /* FIXME */
+    for (guint i = 0; i < obj->format.fmt.pix_mp.num_planes; i++)
+      aligned_size += obj->format.fmt.pix_mp.plane_fmt[i].sizeimage;
   } else {
     aligned_size = obj->format.fmt.pix.sizeimage;
   }
@@ -6229,8 +6235,7 @@ gst_v4l2_object_try_import (GstV4l2Object * obj, GstBuffer * buffer)
     gst_video_meta_get_plane_height (vmeta, plane_height);
 
     if (!gst_v4l2_object_match_buffer_layout (obj, vmeta->n_planes,
-            vmeta->offset, vmeta->stride, gst_buffer_get_size (buffer),
-            plane_height[0]))
+            vmeta->offset, vmeta->stride, plane_height[0]))
       return FALSE;
   }
 

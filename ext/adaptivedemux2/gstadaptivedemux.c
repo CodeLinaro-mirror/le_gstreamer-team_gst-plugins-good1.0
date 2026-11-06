@@ -750,22 +750,11 @@ gst_adaptive_demux_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (g_atomic_int_compare_and_exchange (&demux->running, TRUE, FALSE))
         GST_DEBUG_OBJECT (demux, "demuxer has stopped running");
-
-      gst_adaptive_demux_loop_stop (demux->priv->scheduler_task, TRUE);
-      downloadhelper_stop (demux->download_helper);
-
-      TRACKS_LOCK (demux);
-      demux->priv->flushing = TRUE;
-      g_cond_signal (&demux->priv->tracks_add);
-      gst_task_stop (demux->priv->output_task);
-      TRACKS_UNLOCK (demux);
-
-      gst_task_join (demux->priv->output_task);
-
-      gst_adaptive_demux_reset (demux);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_MANIFEST_LOCK (demux);
       gst_adaptive_demux_reset (demux);
+      GST_MANIFEST_UNLOCK (demux);
 
       gst_adaptive_demux_loop_start (demux->priv->scheduler_task);
       if (g_atomic_int_get (&demux->priv->have_manifest))
@@ -785,6 +774,30 @@ gst_adaptive_demux_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* Start download task */
       downloadhelper_start (demux->download_helper);
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* Stop the streams first. This wakes any thread waiting in
+       * gst_adaptive_demux2_stream_wait_prepared() so that it can release the
+       * scheduler and manifest locks before we stop the loop and take them. */
+      TRACKS_LOCK (demux);
+      g_queue_foreach (demux->priv->periods,
+          (GFunc) gst_adaptive_demux_period_stop_tasks, NULL);
+      TRACKS_UNLOCK (demux);
+
+      gst_adaptive_demux_loop_stop (demux->priv->scheduler_task, TRUE);
+      downloadhelper_stop (demux->download_helper);
+
+      TRACKS_LOCK (demux);
+      demux->priv->flushing = TRUE;
+      g_cond_signal (&demux->priv->tracks_add);
+      gst_task_stop (demux->priv->output_task);
+      TRACKS_UNLOCK (demux);
+
+      gst_task_join (demux->priv->output_task);
+
+      GST_MANIFEST_LOCK (demux);
+      gst_adaptive_demux_reset (demux);
+      GST_MANIFEST_UNLOCK (demux);
       break;
     default:
       break;
@@ -1069,6 +1082,12 @@ handle_incoming_manifest (GstAdaptiveDemux * demux)
       ret = FALSE;
       goto unlock_out;
     }
+
+    /* Only a local manifest may reference local files. A remote manifest
+     * must not be able to make us read file:// URIs (BaseURL, xlink:href,
+     * segment or key URLs). */
+    downloadhelper_set_allow_file_uris (demux->download_helper,
+        g_str_has_prefix (demux->manifest_uri, "file://"));
   } else {
     GST_WARNING_OBJECT (demux, "Upstream URI query failed.");
   }
@@ -2481,6 +2500,7 @@ handle_stream_selection (GstAdaptiveDemux * demux, GList * streams,
     GST_WARNING_OBJECT (demux,
         "Stream selection while migrating between periods is not possible");
     TRACKS_UNLOCK (demux);
+    GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
     return FALSE;
   }
   /* Validate the streams and fill:
