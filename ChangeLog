@@ -1,3 +1,503 @@
+=== release 1.28.9 ===
+
+2026-11-06 12:54:37 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-plugins-good.doap:
+	* meson.build:
+	  Release 1.28.9
+
+2026-11-06 10:56:54 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* scripts/dist-common-files.py:
+	  scripts: dist-common-files: update for new release notes formatting
+
+2026-10-19 13:19:20 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/adaptivedemux2/gstadaptivedemux-stream.c:
+	* ext/adaptivedemux2/gstadaptivedemux.c:
+	* ext/adaptivedemux2/gstadaptivedemuxutils.c:
+	* ext/adaptivedemux2/gstadaptivedemuxutils.h:
+	  adaptivedemux2: Fix recursive scheduler lock double unlocks on stream preparation interruption
+	  When the scheduler loop was stopping, gst_adaptive_demux_loop_pause_and_lock()
+	  failed and gst_adaptive_demux2_stream_wait_prepared() returned without the
+	  scheduler lock. Its callers released the lock nonetheless, causing the recursive
+	  mutex to be unlocked too often and popping the thread default main context too
+	  often, too.
+	  To solve this, track threads that temporarily unlocked the scheduler lock for
+	  other operations (e.g. waiting for the stream preparation condition variable),
+	  and then wait for all of them to be finished before releasing the main context.
+	  Without this it can also happen that the main context would already have been
+	  released while the threads are actually still using it.
+	  Also add a missing scheduler unlock in handle_stream_selection() when stream
+	  selection is attempted during period migration.
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5202
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12974>
+
+2026-10-17 09:46:46 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/adaptivedemux2/gstadaptivedemux.c:
+	* ext/adaptivedemux2/gstadaptivedemuxutils.c:
+	  adaptivedemux2: Ensure period stream access is protected by the right mutexes everywhere
+	  Otherwise this can lead to a use-after-free during element shutdown at least.
+	  reset() must always be called with the manifest lock (as documented) but wasn't
+	  during state changes, and that allowed periods to be freed while they're still
+	  in use on other threads in e.g. handle_incoming_manifest() and prepare_streams(),
+	  which shortly releases the other lock (scheduler lock) while waiting for stream
+	  to be prepared.
+	  As part of this it's also required to stop all period tasks that are currently
+	  waiting for stream preparation, which would otherwise lead to a deadlock because
+	  another thread might try locking the manifest and scheduler lock for signalling
+	  the cond that loop_stop() would be waiting for.
+	  In addition, make sure to not keep the context lock locked when early-returning
+	  in loop_pause_and_lock() if context is NULL.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5202
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12974>
+
+2026-08-27 18:29:20 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/adaptivedemux2/gstadaptivedemux.c:
+	  adaptivedemux2: Fix TO_READY state transition
+	  If an element inside the stream parsebins is waiting, it will holds on the
+	  downloader mainloop, and the downloader will simply never stop, leading to
+	  a deadlock. Forward the PAUSED_TO_READY state transition before attempting to
+	  wait on the downloader thread to stop.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12974>
+
+2026-10-19 13:22:41 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/adaptivedemux2/gstadaptivedemux-private.h:
+	  adaptivedemux2: Fix GST_ADAPTIVE_SCHEDULER_LOCK() to actually use its argument
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12974>
+
+2026-11-01 23:11:12 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpvrawdepay.c:
+	  rtpvrawdepay: Make packet bounds checks underflow-proof
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/13005>
+
+2026-11-01 23:09:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpvrawdepay.c:
+	  rtpvrawdepay: Fix theoretical use-after-free of the source caps
+	  The negotiated caps were unreferenced before being passed
+	  to `gst_rtp_vraw_depay_negotiate_pool()`. The caps were
+	  stored on the pad so were still alive in practice.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/13005>
+
+2026-11-01 23:01:23 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtpvrawdepay.c:
+	  rtpvrawdepay: Validate caps before using them
+	  Parse fmtp integers strictly, reject dimensions below one sampling group or
+	  above the 15-bit line/offset fields, and check the return value of
+	  gst_video_info_set_format().
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5320
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/13005>
+
+2026-10-26 16:34:34 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtph264depay.c:
+	  rtph264depay: Fix out of bounds read in MTAP16/MTAP24 depayloading
+	  The MTAP16/MTAP24 aggregation unit loop compared the signed payload
+	  length against a size_t, so a negative payload length (possible with
+	  truncated packets, e.g. a single payload byte announcing MTAP16) was
+	  converted to a huge positive value and the loop was entered anyway.
+	  This read NAL sizes and data, and copied up to 65535 bytes, past the
+	  end of the RTP buffer.
+	  Require the MTAP payload header and decoding order number base to be
+	  present before stripping them, and make the aggregation unit size
+	  signed so the loop bounds and the NALU size clamping work as
+	  intended. Also add the missing check that the STAP-A/STAP-B payload
+	  header is present.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/5310
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/13003>
+
+2026-10-23 15:45:11 +0900  Qi Hou <qi.hou@nxp.com>
+
+	* ext/adaptivedemux2/downloadhelper.c:
+	* ext/adaptivedemux2/downloadhelper.h:
+	* ext/adaptivedemux2/gstadaptivedemux.c:
+	  adaptivedemux2: Restrict URI schemes in the download helper
+	  URIs taken from the manifest (BaseURL, xlink:href, segments, keys)
+	  were not scheme-checked, so a remote manifest could read local files
+	  through file://.
+	  Only allow http, https and data in downloadhelper_submit_request().
+	  file:// is allowed only when the manifest itself is a local file.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/13002>
+
+2026-10-02 09:46:07 -0600  Ben Ashby <mail@benashby.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: accept any colorimetry on coded OUTPUT caps
+	  For raw formats, add_non_colorimetry_caps() appends a copy of each
+	  probed structure without colorimetry, so any colorimetry from upstream
+	  still negotiates. Coded formats don't get that copy, so a V4L2 decoder
+	  refuses a stream whose colorimetry wasn't probed, and decodebin3 falls
+	  back to software. h264parse and h265parse report such values, 2:3:0:0
+	  and 2:3:0:1, for a VUI that leaves the primaries or the transfer
+	  unspecified.
+	  On the OUTPUT queue, coded caps are the decoder's input, and their
+	  colorimetry is only a hint the decoder passes in S_FMT. Append the copy
+	  for coded formats on that queue too. On CAPTURE, encoders and v4l2src
+	  report what they produce, so coded caps there keep the probed list.
+	  Fixes #5142
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12699>
+
+2026-10-01 17:45:23 -0600  Ben Ashby <mail@benashby.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: fix IS_MUTABLE assertion in set_format
+	  When the driver returns a field or a colorspace that GStreamer can't
+	  map, gst_v4l2_object_set_format_full() removes interlace-mode or
+	  colorimetry from the caps it was given. On S_FMT these are negotiated
+	  caps, which the m2m elements pass without a writable copy, and the
+	  call fails with:
+	  gst_structure_remove_field: assertion 'IS_MUTABLE (structure)' failed
+	  v4l2h264dec hits this on any H.264 stream without a colour description
+	  when the driver keeps V4L2_COLORSPACE_DEFAULT for the coded format.
+	  Only drop the fields on TRY_FMT, where v4l2src adjusts its own copy of
+	  the caps during fixation, and leave negotiated caps alone.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12699>
+
+2026-11-04 23:06:44 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtpmanager/rtpsession.c:
+	  rtpsession: fix potential ownership race condition on source removal
+	  When remove_source is called, the session lock may be released
+	  temporarily.
+	  In that interval, another thread may remove the source from the
+	  hashtable, thus invalidating the reference we got from find_source.
+	  By the time remove_source returns, old_source may have been invalidated,
+	  and we cannot safely access its ssrc field to remove it from the
+	  hashtable.
+	  Fix by using a steal variant of find_source()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12981>
+
+2026-11-03 15:54:12 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	  rtpsession: fix source use-after-free on DoS protection
+	  There were two issues at play:
+	  * Reference ownership: in obtain_source, the new source is added to the
+	  hashtable (ownership transfer), then add_source_to_lru_queue is called,
+	  which may release the session lock temporarily when the DoS protection
+	  mechanism kicks in. During that interval the source may be removed from
+	  our hash table, leading to a use after free when we tried to ref
+	  it afterwards. Fix by moving g_object_ref earlier.
+	  * Premature timeout: with the same mechanism, the source could get
+	  removed prematurely, as its last_activity fields hadn't been set yet.
+	  Fix by also moving the setting before any potential unlocking of the
+	  session as well
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/5402
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12981>
+
+2026-04-29 19:17:16 +0800  Qian Hu (胡骞) <qian.hu@mediatek.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: reject incompatible downstream allocation pool
+	  When the proposed allocation parameters from downstream do not match
+	  our buffer layout requirements, we must reject the pool and reset
+	  allocation parameters to force an update.
+	  Additionally, moved the buffer size validation to happen after
+	  matching the layout to properly check if the requested buffer size
+	  is at least the V4L2 object size.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12935>
+
+2025-11-27 15:32:24 +0800  Qian Hu (胡骞) <qian.hu@mediatek.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: providing aligned size when propose allocation
+	  for multiplane, we also calculate aligned size. otherwise size = 0, and
+	  upstream gst_v4l2_object_match_buffer_layout_from_struct will fail.
+	  and, since we pass driver align size for upstream element, upstream element
+	  should not just return when this size not match with calculated one
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12935>
+
+2026-10-30 19:37:36 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gst/imagefreeze/gstimagefreeze.c:
+	* tests/check/elements/imagefreeze.c:
+	  imagefreeze: keep the caps across a flush
+	  A flush from upstream reset the element, dropping the caps it had
+	  received along with the buffer. The caps stay on the pads across a
+	  flush though, so upstream doesn't send them again unless they change,
+	  and the next buffer then failed with not-negotiated.
+	  This happens when an upstream decoder is flushed and keeps producing
+	  the same caps, e.g. when it is reused to decode another image of the
+	  same size.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12925>
+
+2026-01-30 14:17:26 +0800  Qian Hu (胡骞) <qian.hu@mediatek.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2dec: fix POLLERR from dec loop when flush seek
+	  When playback starts, a flush seek is issued. The decoder receives
+	  a flush_start event, and at this moment, the decoder is in the
+	  handle_frame process, performing a process_buffer operation. Because
+	  the pool has been flushed, the acquire buffer operation inside fails,
+	  and as a result, input streamon will not be called. Also, since capture has
+	  not yet been streamon'ed, and the V4L2 framework has the following
+	  requirements, this will cause capture poll to return pollerr.
+	  https://elixir.bootlin.com/linux/v6.6/source/drivers/media/v4l2-core/v4l2-mem2mem.c#L925
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12921>
+
+2026-04-14 12:24:14 +0200  Ignacio Casal Quinteiro <qignacio@amazon.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: fix non-constant initializer in colorspace_variants
+	  In C, with old compilers like the one in Amazon Linux 2,
+	  const struct variables are not compile-time constants and cannot
+	  be used as initializers for static/global arrays. Inline the struct
+	  values directly into the colorspace_variants[] array definition.
+	  ```C
+	  ../sys/v4l2/gstv4l2object.c:144:3: error: initializer element is not constant
+	  rec709_full_range, bt470bg_full_range, bt2020_pq, smpte170m_full_range
+	  ^~~~~~~~~~~~~~~~~
+	  ../sys/v4l2/gstv4l2object.c:144:3: note: (near initialization for ‘colorspace_variants[0]’)
+	  ../sys/v4l2/gstv4l2object.c:144:22: error: initializer element is not constant
+	  rec709_full_range, bt470bg_full_range, bt2020_pq, smpte170m_full_range
+	  ^~~~~~~~~~~~~~~~~~
+	  ../sys/v4l2/gstv4l2object.c:144:22: note: (near initialization for ‘colorspace_variants[1]’)
+	  ../sys/v4l2/gstv4l2object.c:144:42: error: initializer element is not constant
+	  rec709_full_range, bt470bg_full_range, bt2020_pq, smpte170m_full_range
+	  ^~~~~~~~~
+	  ../sys/v4l2/gstv4l2object.c:144:42: note: (near initialization for ‘colorspace_variants[2]’)
+	  ../sys/v4l2/gstv4l2object.c:144:53: error: initializer element is not constant
+	  rec709_full_range, bt470bg_full_range, bt2020_pq, smpte170m_full_range
+	  ^~~~~~~~~~~~~~~~~~~~
+	  ../sys/v4l2/gstv4l2object.c:144:53: note: (near initialization for ‘colorspace_variants[3]’)
+	  ```
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12920>
+
+2026-10-26 14:55:51 +0800  Qian Hu (胡骞) <qian.hu@mediatek.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: deactivate other pool on start failure
+	  If startup fails after other_pool has been activated, the downstream
+	  pool remains active. Configuration changes are then rejected and later
+	  activation attempts skip its start callback, which can lead to
+	  negotiation failures in appsrc + v4l2convert pipelines.
+	  Deactivate other_pool in the common startup failure cleanup, including
+	  buffer acquisition and import failures, so it can be reconfigured and
+	  started again.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12865>
+
+2026-10-05 15:33:24 +0200  Andreas Cord-Landwehr <andreas.cord-landwehr@claas.com>
+
+	* ext/qt6/qt6glwindow.cc:
+	  qml6glsrc: Qt6GLWindow destructor abort due to active render thread callback
+	  This commit fixes a recorded abort in g_mutex_clear: The root cause is
+	  that Qt6GLWindow connects with Qt::DirectConnection to Qt render
+	  thread signals. Thus, connected callbacks are executed in context of
+	  the render thread. The callbacks beforeRendering and afterRendering
+	  further lock the priv->lock mutex. The recorded crash shows the abort
+	  upon g_mutex_clear in the destructor while the mutex is still locked in
+	  the render thread.
+	  This commit introduces a CallbackGuard to synchronize Qt6GLWindow
+	  lifetime with concurrent render thread callbacks. The new guard counts
+	  active callbacks to the render thread and rejects further callbacks after
+	  calling close(). By this, the Qt6GLWindow destructor can wait for all
+	  callbacks running in the render thread to be finished (further callbacks
+	  are not being created now because of QObject::disconnect; though this
+	  does not stop currently running callbacks), before detroying the mutex
+	  and destroying the object.
+	  Additional change is that Qt6GLWindowPrivate now is created with
+	  new/delete to call the new shared_ptr constructor/destructor.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12850>
+
+2026-09-01 16:45:26 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtph264depay.c:
+	* gst/rtp/gstrtph265depay.c:
+	  rtph264depay: rtph265depay: Drop delayed header extensions when dropping packets
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12826>
+
+2026-09-01 10:45:43 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtph264depay.c:
+	* gst/rtp/gstrtph265depay.c:
+	  rtph264depay: rtph265depay: Drop delayed header extensions when dropping all NALs of a packet
+	  If all NALs of a non-FU packet are dropped we need to drop the delayed header
+	  extensions of that packet too or otherwise they would leak into the next output
+	  buffer.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12826>
+
+2026-09-01 10:40:12 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtp/gstrtph265depay.c:
+	  rtph265depay: Flush when dropping a buffer because of waiting for a keyframe
+	  Otherwise delayed header extensions might still be queued.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12826>
+
+2026-04-24 16:15:12 +0200  RSWilli <bartel.wilhelm@gmail.com>
+
+	* gst/audiofx/gstscaletempo.c:
+	* tests/check/elements/scaletempo.c:
+	* tests/check/meson.build:
+	  scaletempo: drop empty buffer instead of outputting 0-sized with no GAP
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12817>
+
+2026-10-22 21:26:39 +0800  Qian Hu (胡骞) <qian.hu@mediatek.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: fix codec_data leak
+	  Delay the extra codec_data or frame input reference until pool configuration
+	  and activation succeed.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12823>
+
+2026-10-19 17:09:50 -0400  Xavier Claessens <xclaessens@netflix.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/level/gstlevel.c:
+	* tests/check/elements/level.c:
+	  level: Add 24bits support
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12816>
+
+2026-10-23 11:06:12 +0530  Nirbheek Chauhan <nirbheek.chauhan@coram.ai>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Reuse non-compliant URL fallback across tracks
+	  After a SETUP succeeds using an appended control URL, use that form
+	  for subsequent relative control URLs in the same SETUP pass.
+	  This avoids a second rejected SETUP when both video and audio need
+	  the workaround, as seen with Herospeed cameras.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12813>
+
+2021-11-15 14:43:06 +0000  Kushal Arora <kusarora@amazon.com>
+
+	* gst/isomp4/qtdemux.c:
+	* tests/check/elements/qtdemux.c:
+	  qtdemux: fix seek beyond the end of file in push mode
+	  When seeking past the file's duration, no segment was pushed in
+	  gst_qtdemux_map_and_push_segments() and the playback froze indefinitely.
+	  As a fix, always activate the last item in stream->segments[], which
+	  will generate a segment event followed by EOS, finishing te playback
+	  gracefully.
+	  Co-authored-by: Jakub Adam <jakub.adam@collabora.com>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12808>
+
+2026-10-06 09:20:07 +0200  Andreas Cord-Landwehr <andreas.cord-landwehr@claas.com>
+
+	* ext/qt6/qt6glwindow.cc:
+	  qml6glsrc: fix possible race with Qt6GLWindow::onSceneGraphInvalidated
+	  The onSceneGraphInvalidated callback runs in context of the Qt render
+	  thread and accesses priv->produced_buffer and priv->buffer.
+	  Concurrently, the priv->produced_buffer is accessed by
+	  qt6_gl_window_take_buffer(). Protect access to both buffers by locking
+	  the priv->lock mutex (locking priv->buffer is only for consistency).
+	  This race could possibly lead to a double unref or use-after-free of
+	  the produced_buffer.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12795>
+
+2026-09-28 12:20:28 +0900  Qi Hou <qi.hou@nxp.com>
+
+	* sys/v4l2/gstv4l2videodec.c:
+	  v4l2videodec: Fix race between drain and pending source change
+	  Clearing self->draining in gst_v4l2_video_dec_finish() before
+	  V4L2_DEC_CMD_STOP assumed that a drain always cancels a pending
+	  resolution change. However, the decoder may dequeue a source change
+	  event (setting draining = TRUE) just before finish() is called. This
+	  clearing causes the subsequent STREAMON after a seek to never
+	  complete, hanging the decoder.
+	  Remove the draining flag reset from finish() so that a pending source
+	  change is no longer cancelled by a drain. Instead, unconditionally
+	  clear the flag in flush(), which is the correct place: flush tears down
+	  and resets all decoder state, effectively cancelling any in-progress
+	  source change. This also covers the drain() path (finish + flush),
+	  where flush cleans up the flag after finish preserves it.
+	  Fixes #3522
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12769>
+
+2026-10-20 11:00:47 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/audioparsers/gstmpegaudioparse.c:
+	  mpegaudioparse: Avoid OOB read when looking for Xing header
+	  Found by oss-fuzz
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12774>
+
+2026-10-10 10:16:23 +0900  Qi Hou <qi.hou@nxp.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: bound PIFF and saiz sample_count
+	  sample_count in PIFF and saiz boxes is read from the file and was used
+	  to size allocations unchecked. g_try_new() is no fix as large
+	  allocations usually succeed with overcommit.
+	  - piff: reject sample_count larger than the remaining data allows,
+	  including the sub-sample encryption path.
+	  - saiz: reject sample_count larger than the total trun sample count
+	  of the traf.
+	  - cenc_aux_info: check the total aux info size against the available
+	  data and don't pre-allocate crypto_info from sample_count.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12781>
+
+2026-10-19 12:41:53 -0400  Dominique Leroux <dominique.p.leroux@gmail.com>
+
+	* ext/vpx/gstvpxdec.c:
+	  vpxdec: Implement no-op drain callback
+	  Supported libvpx versions (1.7.0 and newer) return decoded frames synchronously,
+	  and GstVPXDec retrieves all available output while handling each input frame.
+	  Consequently, there are no pending decoded frames to drain so a no-op is enough
+	  and also avoids the GstVideoDecoder FIXME message in logs.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12768>
+
+2026-10-14 15:27:34 +0200  Albert Sjölund <alberts@axis.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtsp: unset response even on error path
+	  There can still be underlying allocations on the error_path. Make sure
+	  that response is unset, even on error.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12756>
+
+2026-10-19 18:15:53 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/adaptivedemux2/hls/gsthlsdemux-stream.c:
+	  hlsdemux2: Validate PKCS7 padding before unpadding decrypted fragments
+	  The padding byte comes from the decrypted ciphertext, which is
+	  attacker-controlled. If it is 0, or larger than the AES block size
+	  or the buffer itself, the unpadded size computation can underflow
+	  and corrupt the heap when gst_buffer_resize() is called with a bogus
+	  size.
+	  Validate the padding byte before trusting it, and reject the
+	  fragment with a warning if it looks invalid.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12753>
+
+2026-09-23 20:37:56 +0800  Leo Zhen <leo.zhen@netint.cn>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: Don't report EOS on AVC/audio sequence end
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12751>
+
+2026-10-13 17:09:38 +0200  Edward Hervey <edward@centricular.com>
+
+	* tests/check/elements/parsebin.c:
+	* tests/check/meson.build:
+	* tests/files/id3-tagged.mp3:
+	  parsebin: Check exposed stream-starts are covered by a stream collection
+	  A parser creates its stream-id when it pushes its first buffer, so a chain
+	  exposed as soon as the parser is plugged publishes a stream collection built
+	  from an earlier stream-start and then emits a different one. decodebin3 finds
+	  no collection covering that stream and aborts.
+	  Collect the stream collections and the stream-starts a parsebin source pad
+	  publishes and assert every stream-start is described by one of them, which is
+	  the rule decodebin3 applies in find_collection_for_stream().
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12716>
+
+2026-08-26 09:00:14 +0200  Jens Kleintje <jens.kleintje@emlix.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: fix buffer leak on streamon failure
+	  When gst_v4l2_buffer_pool_streamon() fails, allocated buffers are not
+	  properly released on platforms such as the i.MX8MP, where the V4L2 driver
+	  validates the stream format during VIDIOC_STREAMON.
+	  When VIDIOC_STREAMON fails, clear the state of the buffers queued before
+	  the failure and perform the necessary cleanup.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12698>
+
+2026-10-08 17:42:50 +0200  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development after 1.28.8
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12673>
+
 === release 1.28.8 ===
 
 2026-10-08 17:20:32 +0200  Tim-Philipp Müller <tim@centricular.com>
